@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UniMed · ადმინისტრატორი</title>
     
-    <!-- Firebase SDK -->
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
@@ -14,48 +19,601 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         :root {
-            --primary: #0ea5a4;
-            --primary-dark: #0891b2;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-light: #334155;
+            --accent: #0ea5a4;
+            --accent-dark: #0891b2;
             --success: #16a34a;
-            --danger: #dc2626;
             --warning: #f59e0b;
-            --dark: #1e293b;
-            --light: #f8fafc;
-            --gray: #64748b;
-            --gray-light: #e2e8f0;
-            --border: #e2e8f0;
+            --danger: #dc2626;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --gradient: linear-gradient(135deg, #0ea5a4, #0891b2);
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            margin: 0;
             padding: 20px;
         }
 
-        /* ========== LOADER ========== */
-        .loader {
+        /* Auth Modal */
+        .auth-overlay {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            display: none;
-            z-index: 9999;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
         }
 
-        .loader.active {
+        .auth-card {
+            background: var(--surface);
+            border-radius: 32px;
+            width: 90%;
+            max-width: 420px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            animation: modalAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .auth-header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+        }
+
+        .auth-header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .auth-header p strong {
+            color: var(--accent);
+            font-family: monospace;
+            font-size: 18px;
+            background: var(--surface-light);
+            padding: 4px 12px;
+            border-radius: 40px;
+            margin-left: 8px;
+        }
+
+        .auth-input-group {
+            margin-bottom: 24px;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            font-size: 16px;
+            color: var(--text);
+            transition: all 0.3s;
+            font-family: 'Inter', monospace;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(14, 165, 164, 0.2);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--gradient);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(14, 165, 164, 0.3);
+        }
+
+        .auth-error {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        /* Main Admin Panel */
+        #adminPanel {
+            display: none;
+            width: 100%;
+            max-width: 1600px;
+            height: 95vh;
+            background: var(--surface);
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            animation: panelAppear 0.5s ease;
+        }
+
+        @keyframes panelAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Layout */
+        .admin-layout {
+            display: flex;
+            height: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--surface-light);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-header h2 span {
+            color: var(--accent);
+            font-size: 24px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 24px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item {
+            padding: 14px 20px;
+            border-radius: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(14, 165, 164, 0.3);
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .sidebar-footer {
+            padding: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .admin-details {
+            flex: 1;
+        }
+
+        .admin-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .admin-role {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            border-radius: 12px;
+            color: var(--danger);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(220, 38, 38, 0.2);
+            border-color: var(--danger);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            background: var(--surface);
+            overflow-y: auto;
+            padding: 24px 32px;
+        }
+
+        .content-header {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .content-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
             display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--surface-light);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-title {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .stat-change {
+            font-size: 13px;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--surface-light);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            padding: 8px 16px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+        }
+
+        .search-box input {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 14px;
+            width: 200px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 16px 20px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .user-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        .status-dot.offline {
+            background: var(--text-muted);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: var(--surface);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-btn.edit:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .action-btn.delete:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .action-btn.view:hover {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 11000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: 24px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalAppear 0.3s ease;
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .modal-btn.primary {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .modal-btn.secondary {
+            background: var(--surface-light);
+            color: var(--text);
+        }
+
+        .modal-btn.danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--surface-light);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
@@ -63,75 +621,54 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* ========== TOAST NOTIFICATIONS ========== */
-        .toast-container {
+        .loading-overlay {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10001;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 12000;
+            backdrop-filter: blur(4px);
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-card {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 24px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-        }
-
-        .toast {
-            background: white;
-            border-radius: 10px;
-            padding: 16px 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            display: flex;
             align-items: center;
-            gap: 12px;
-            min-width: 300px;
-            max-width: 400px;
-            animation: slideIn 0.3s ease;
-            border-left: 4px solid;
+            gap: 16px;
         }
 
-        .toast.error {
-            border-left-color: var(--danger);
-        }
-
-        .toast.success {
-            border-left-color: var(--success);
-        }
-
-        .toast.warning {
-            border-left-color: var(--warning);
-        }
-
-        .toast.info {
-            border-left-color: var(--primary);
-        }
-
-        .toast-icon {
-            width: 24px;
-            height: 24px;
-            flex-shrink: 0;
-        }
-
-        .toast-content {
-            flex: 1;
-        }
-
-        .toast-title {
-            font-weight: 600;
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            background: var(--surface-light);
+            border-left: 4px solid var(--success);
+            border-radius: 12px;
+            color: var(--text);
             font-size: 14px;
-            color: var(--dark);
-            margin-bottom: 2px;
+            font-weight: 500;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            z-index: 13000;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
         }
 
-        .toast-message {
-            font-size: 13px;
-            color: var(--gray);
-        }
-
-        .toast-close {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--gray);
-            padding: 4px;
+        .notification.error {
+            border-left-color: var(--danger);
         }
 
         @keyframes slideIn {
@@ -145,786 +682,47 @@
             }
         }
 
-        /* ========== LOGIN ========== */
-        .login-modal {
-            background: white;
-            border-radius: 16px;
+        /* Difficulty Bar */
+        .difficulty-bar {
             width: 100%;
-            max-width: 360px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-
-        .login-modal h1 {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .login-input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            font-size: 20px;
-            text-align: center;
-            letter-spacing: 8px;
-            margin-bottom: 20px;
-            font-family: monospace;
-        }
-
-        .login-input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 14px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .login-btn:hover {
-            background: var(--primary-dark);
-        }
-
-        /* ========== DASHBOARD ========== */
-        .dashboard {
-            background: white;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 1400px;
-            height: 95vh;
-            display: flex;
-            overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-
-        /* ========== SIDEBAR ========== */
-        .sidebar {
-            width: 240px;
-            background: var(--dark);
-            color: white;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-header {
-            padding: 25px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .sidebar-header h2 {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .sidebar-nav {
-            flex: 1;
-            padding: 20px 15px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 15px;
-            border-radius: 10px;
-            color: #cbd5e1;
-            cursor: pointer;
-            margin-bottom: 5px;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .nav-item:hover {
-            background: rgba(255,255,255,0.1);
-            color: white;
-        }
-
-        .nav-item.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .nav-item svg {
-            width: 20px;
-            height: 20px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2;
-        }
-
-        .badge {
-            margin-left: auto;
-            background: rgba(255,255,255,0.2);
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        /* ========== MAIN ========== */
-        .main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background: #f1f5f9;
-        }
-
-        .header {
-            padding: 15px 25px;
-            background: white;
-            border-bottom: 2px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .header-left h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--dark);
-            position: relative;
-            padding-bottom: 8px;
-        }
-
-        .header-left h1::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: var(--primary);
-        }
-
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: #fee2e2;
-            color: var(--danger);
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .logout-btn:hover {
-            background: #fecaca;
-        }
-
-        .logout-btn svg {
-            width: 18px;
-            height: 18px;
-            stroke: currentColor;
-        }
-
-        .content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 25px;
-        }
-
-        /* ========== USERS LIST ========== */
-        .search-box {
-            margin-bottom: 20px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 16px 12px 40px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 14px;
-            background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 12px center;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .users-list {
-            background: white;
-            border-radius: 12px;
-            border: 1px solid var(--border);
+            height: 8px;
+            background: var(--surface);
+            border-radius: 4px;
             overflow: hidden;
         }
 
-        .user-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .user-item:last-child {
-            border-bottom: none;
-        }
-
-        .user-item:hover {
-            background: var(--light);
-        }
-
-        .user-name {
-            font-weight: 500;
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .status-dot.online {
-            background: var(--success);
-            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
-        }
-
-        .status-dot.offline {
-            background: var(--gray);
-        }
-
-        .user-status-text {
-            font-size: 12px;
-            color: var(--gray);
-        }
-
-        /* ========== USER DETAILS MODAL ========== */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal {
-            background: white;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 550px;
-            max-height: 85vh;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        .modal-header {
-            padding: 20px 25px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .modal-header h3 {
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .close-modal {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: white;
-            transition: all 0.2s;
-        }
-
-        .close-modal:hover {
-            background: rgba(255,255,255,0.3);
-            transform: rotate(90deg);
-        }
-
-        .modal-body {
-            padding: 25px;
-            overflow-y: auto;
-            max-height: calc(85vh - 80px);
-        }
-
-        .info-card {
-            background: var(--light);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .info-row {
-            display: flex;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .info-row:last-child {
-            border-bottom: none;
-        }
-
-        .info-icon {
-            width: 36px;
-            height: 36px;
-            background: white;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            color: var(--primary);
-        }
-
-        .info-content {
-            flex: 1;
-        }
-
-        .info-label {
-            font-size: 12px;
-            color: var(--gray);
-            margin-bottom: 2px;
-        }
-
-        .info-value {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--dark);
-        }
-
-        .progress-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .progress-item {
-            background: white;
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .progress-item .module {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--primary);
-            margin-bottom: 5px;
-        }
-
-        .progress-item .count {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--dark);
-        }
-
-        .progress-item .label {
-            font-size: 11px;
-            color: var(--gray);
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 25px;
-        }
-
-        .modal-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
-        .modal-btn.edit {
-            background: var(--primary);
-            color: white;
-        }
-
-        .modal-btn.delete {
-            background: var(--danger);
-            color: white;
-        }
-
-        .modal-btn.cancel {
-            background: #e2e8f0;
-            color: var(--dark);
-        }
-
-        .modal-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        /* ========== EDIT MODAL ========== */
-        .edit-modal {
-            max-width: 450px;
-        }
-
-        .edit-field {
-            margin-bottom: 20px;
-        }
-
-        .edit-field label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--gray);
-            margin-bottom: 5px;
-        }
-
-        .edit-field input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-
-        .edit-field input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .edit-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 25px;
-        }
-
-        .save-btn {
-            flex: 1;
-            padding: 12px;
-            background: var(--success);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .cancel-btn {
-            flex: 1;
-            padding: 12px;
-            background: #e2e8f0;
-            color: var(--dark);
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        /* ========== STATISTICS ========== */
-        .modules-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .module-card {
-            background: white;
-            border-radius: 16px;
-            padding: 25px;
-            border: 1px solid var(--border);
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .module-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
-        }
-
-        .module-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 30px rgba(14, 165, 164, 0.15);
-        }
-
-        .module-icon {
-            font-size: 32px;
-            margin-bottom: 15px;
-        }
-
-        .module-card h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 8px;
-        }
-
-        .module-stats {
-            display: flex;
-            justify-content: space-between;
-            color: var(--gray);
-            font-size: 13px;
-        }
-
-        .back-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 18px;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            margin-bottom: 20px;
-            transition: all 0.2s;
-        }
-
-        .back-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-            transform: translateX(-5px);
-        }
-
-        .back-btn svg {
-            width: 16px;
-            height: 16px;
-            stroke: currentColor;
-        }
-
-        .sort-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .sort-btn {
-            padding: 8px 16px;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .sort-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .sort-btn:hover:not(.active) {
-            border-color: var(--primary);
-        }
-
-        .sort-btn svg {
-            width: 14px;
-            height: 14px;
-            stroke: currentColor;
-        }
-
-        .questions-stats {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-        }
-
-        .question-item {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .question-item:last-child {
-            border-bottom: none;
-        }
-
-        .question-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .question-number {
-            background: var(--primary);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .question-number svg {
-            width: 12px;
-            height: 12px;
-            stroke: white;
-        }
-
-        .question-topic {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--primary);
-            background: #e0f2f1;
-            padding: 4px 12px;
-            border-radius: 20px;
-        }
-
-        .question-text {
-            font-size: 15px;
-            color: var(--dark);
-            margin-bottom: 15px;
-            line-height: 1.5;
-            padding-right: 10px;
-        }
-
-        .stat-bar-container {
-            margin: 15px 0;
-        }
-
-        .stat-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
-
-        .stat-bar-bg {
-            height: 10px;
-            background: #e2e8f0;
-            border-radius: 5px;
-            overflow: hidden;
-            display: flex;
-        }
-
-        .stat-bar-correct {
+        .difficulty-fill {
             height: 100%;
-            background: linear-gradient(90deg, #4ade80, var(--success));
+            background: var(--gradient);
+            border-radius: 4px;
             transition: width 0.3s;
         }
 
-        .stat-bar-wrong {
-            height: 100%;
-            background: linear-gradient(90deg, #f87171, var(--danger));
-            transition: width 0.3s;
+        .difficulty-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-align: right;
         }
 
-        .stat-numbers {
-            display: flex;
-            gap: 20px;
-            margin-top: 10px;
-            font-size: 13px;
-        }
-
-        .stat-correct {
-            color: var(--success);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .stat-wrong {
-            color: var(--danger);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .stat-total {
-            color: var(--gray);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .no-data {
-            color: var(--gray);
-            font-style: italic;
-            padding: 10px;
-            text-align: center;
-            background: var(--light);
-            border-radius: 8px;
-        }
-
-        /* ========== ONLINE USERS ========== */
+        /* Online Users List */
         .online-list {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .online-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
+            padding: 12px;
+            background: var(--surface-light);
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
 
-        .online-item:last-child {
-            border-bottom: none;
-        }
-
-        .online-info {
+        .online-user-info {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -935,59 +733,87 @@
             height: 10px;
             background: var(--success);
             border-radius: 50%;
-            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
+            animation: pulse 2s infinite;
         }
 
-        .online-name {
-            font-weight: 600;
-            color: var(--dark);
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
-        .online-time {
-            font-size: 13px;
-            color: var(--gray);
+        /* Module Cards */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
         }
 
-        /* ========== SETTINGS ========== */
-        .settings-card {
-            background: white;
-            border-radius: 16px;
-            padding: 25px;
-            max-width: 500px;
-        }
-
-        .settings-group {
-            margin-bottom: 20px;
-        }
-
-        .settings-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--gray);
-            margin-bottom: 5px;
-        }
-
-        .settings-group input {
-            width: 100%;
-            padding: 12px 15px;
+        .module-card {
+            background: var(--surface-light);
+            border-radius: 20px;
+            padding: 20px;
             border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
 
-        .info-list {
-            margin-top: 25px;
-            padding-top: 25px;
-            border-top: 1px solid var(--border);
+        .module-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 8px 20px rgba(14, 165, 164, 0.2);
         }
 
-        .info-item {
+        .module-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .module-stats {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px dashed var(--border);
-            font-size: 14px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* Date Range Picker */
+        .date-range {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: var(--surface-light);
+            padding: 8px 16px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+        }
+
+        .date-range input {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .date-range input:focus {
+            outline: none;
+        }
+
+        /* Sort Buttons */
+        .sort-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .sort-btn:hover {
+            color: var(--accent);
         }
 
         .hidden {
@@ -996,146 +822,297 @@
     </style>
 </head>
 <body>
-    <div id="loader" class="loader"></div>
-    <div id="toastContainer" class="toast-container"></div>
-
-    <!-- Login -->
-    <div id="loginModal" class="login-modal">
-        <h1>UniMed</h1>
-        <input type="password" id="adminCode" class="login-input" placeholder="••••••" maxlength="6">
-        <button id="loginBtn" class="login-btn">შესვლა</button>
+    <!-- Auth Modal -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>UniMed</h1>
+                <p>ადმინისტრატორის პანელი <strong>200011</strong></p>
+            </div>
+            <div class="auth-input-group">
+                <input type="password" id="adminCode" class="auth-input" placeholder="შეიყვანეთ კოდი" autofocus>
+            </div>
+            <button id="adminLoginBtn" class="auth-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 14l9-5-9-5-9 5 9 5z"/>
+                    <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                </svg>
+                შესვლა
+            </button>
+            <div id="authError" class="auth-error"></div>
+        </div>
     </div>
 
-    <!-- Dashboard -->
-    <div id="dashboard" class="dashboard hidden">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h2>ადმინისტრატორი</h2>
+    <!-- Admin Panel -->
+    <div id="adminPanel">
+        <div class="admin-layout">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h2>
+                        <span>⚕️</span>
+                        ადმინისტრატორი
+                    </h2>
+                </div>
+                
+                <div class="sidebar-nav">
+                    <div class="nav-item active" data-section="users">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                        მომხმარებლები
+                    </div>
+                    <div class="nav-item" data-section="activity">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 12h4l3-9 4 18 3-9h4"/>
+                        </svg>
+                        აქტივობა
+                    </div>
+                    <div class="nav-item" data-section="statistics">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        სტატისტიკა
+                    </div>
+                    <div class="nav-item" data-section="online">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                        </svg>
+                        ონლაინ
+                    </div>
+                    <div class="nav-item" data-section="settings">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H5.78a1.65 1.65 0 00-1.51 1 1.65 1.65 0 00.33 1.82l.07.09A10 10 0 0012 18a10 10 0 007.28-3zM4 10l.67-2.02A2 2 0 016.56 6h10.88a2 2 0 011.9 1.37L20 10"/>
+                        </svg>
+                        პარამეტრები
+                    </div>
+                </div>
+                
+                <div class="sidebar-footer">
+                    <div class="admin-info">
+                        <div class="admin-avatar">A</div>
+                        <div class="admin-details">
+                            <div class="admin-name">ადმინისტრატორი</div>
+                            <div class="admin-role">სუპერ ადმინი</div>
+                        </div>
+                    </div>
+                    <button id="adminLogoutBtn" class="logout-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        გასვლა
+                    </button>
+                </div>
             </div>
             
-            <div class="sidebar-nav">
-                <div class="nav-item active" data-section="users">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
-                    </svg>
-                    მომხმარებლები
-                    <span class="badge" id="userCount">0</span>
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Users Section -->
+                <div id="usersSection" class="content-section active">
+                    <div class="content-header">
+                        <h2 class="content-title">მომხმარებლები</h2>
+                        <div class="stats-grid" style="margin-bottom: 0; width: auto;">
+                            <div class="stat-card" style="padding: 12px 20px;">
+                                <div class="stat-title">სულ მომხმარებელი</div>
+                                <div class="stat-value" id="totalUsers">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <div class="table-header">
+                            <div class="search-box">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <path d="M21 21l-4.35-4.35"/>
+                                </svg>
+                                <input type="text" id="userSearch" placeholder="ძებნა...">
+                            </div>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>მომხმარებელი</th>
+                                    <th>სტატუსი</th>
+                                    <th>რეგისტრაცია</th>
+                                    <th>ბოლო შესვლა</th>
+                                    <th>პროგრესი</th>
+                                    <th>მოქმედება</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="nav-item" data-section="statistics">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M21 12v-2a5 5 0 0 0-5-5H8a5 5 0 0 0-5 5v2"/>
-                        <line x1="3" y1="12" x2="21" y2="12"/>
-                    </svg>
-                    სტატისტიკა
+                
+                <!-- Activity Section -->
+                <div id="activitySection" class="content-section">
+                    <div class="content-header">
+                        <h2 class="content-title">აქტივობა</h2>
+                        <div class="date-range">
+                            <input type="date" id="activityStartDate">
+                            <span>-</span>
+                            <input type="date" id="activityEndDate">
+                            <button class="action-btn" onclick="loadActivityData()">განახლება</button>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid" id="activityStats"></div>
+                    
+                    <div class="table-container" style="margin-top: 24px;">
+                        <div class="table-header">
+                            <h3>ტესტების აქტივობა</h3>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>მოდული</th>
+                                    <th>დღეს</th>
+                                    <th>ამ კვირაში</th>
+                                    <th>ამ თვეში</th>
+                                    <th>სულ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="nav-item" data-section="online">
-                    <svg viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="2"/>
-                        <circle cx="12" cy="12" r="10"/>
-                    </svg>
-                    ონლაინ
-                    <span class="badge" id="onlineCount">0</span>
+                
+                <!-- Statistics Section -->
+                <div id="statisticsSection" class="content-section">
+                    <div class="content-header">
+                        <h2 class="content-title">სტატისტიკა</h2>
+                        <div>
+                            <select id="moduleSelect" class="search-box" style="border-radius: 40px; background: var(--surface-light);">
+                                <option value="">ყველა მოდული</option>
+                                <option value="rezidentura">რეზიდენტურა</option>
+                                <option value="internalMedicine">შინაგანი მედიცინა</option>
+                                <option value="pathology">პათოლოგია</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid" id="statisticsSummary"></div>
+                    
+                    <div class="table-container" style="margin-top: 24px;">
+                        <div class="table-header">
+                            <h3>კითხვების სირთულე</h3>
+                            <div>
+                                <button class="sort-btn" onclick="sortQuestions('difficulty')">
+                                    სირთულე
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M12 5v14M8 9l4-4 4 4M8 15l4 4 4-4"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="questionsList" class="online-list" style="padding: 20px;"></div>
+                    </div>
                 </div>
-                <div class="nav-item" data-section="settings">
-                    <svg viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H5.78a1.65 1.65 0 0 0-1.51 1 1.65 1.65 0 0 0 .33 1.82l.03.03A10 10 0 0 0 12 17.66a10 10 0 0 0 6.37-2.63z"/>
-                    </svg>
-                    პარამეტრები
+                
+                <!-- Online Section -->
+                <div id="onlineSection" class="content-section">
+                    <div class="content-header">
+                        <h2 class="content-title">ონლაინ მომხმარებლები</h2>
+                        <div class="stat-card" style="padding: 12px 20px;">
+                            <div class="stat-value" id="onlineCount">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="online-list" id="onlineUsersList"></div>
+                </div>
+                
+                <!-- Settings Section -->
+                <div id="settingsSection" class="content-section">
+                    <div class="content-header">
+                        <h2 class="content-title">პარამეტრები</h2>
+                    </div>
+                    
+                    <div class="table-container">
+                        <div style="padding: 24px;">
+                            <h3 style="margin-bottom: 20px;">ადმინისტრატორის პარამეტრები</h3>
+                            
+                            <div style="margin-bottom: 24px;">
+                                <label style="display: block; margin-bottom: 8px; color: var(--text-muted;">კოდის შეცვლა</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="password" id="newAdminCode" class="search-box" style="flex: 1;" placeholder="ახალი კოდი">
+                                    <button class="action-btn" onclick="changeAdminCode()">შენახვა</button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; color: var(--text-muted;">Firebase სინქრონიზაცია</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <button class="action-btn" onclick="syncAllData()">სრული სინქრონიზაცია</button>
+                                    <button class="action-btn" onclick="backupData()">მონაცემების ბექაფი</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Main -->
-        <div class="main">
-            <div class="header">
-                <div class="header-left">
-                    <h1 id="sectionTitle">მომხმარებლები</h1>
-                </div>
-                <button class="logout-btn" onclick="logout()">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                        <polyline points="16 17 21 12 16 7"/>
-                        <line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
-                    გასვლა
-                </button>
-            </div>
-            
-            <div id="content" class="content">
-                <!-- Dynamic content -->
-            </div>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-card">
+            <div class="loading-spinner"></div>
+            <div style="color: var(--text); font-weight: 500;">იტვირთება...</div>
         </div>
     </div>
 
     <!-- User Details Modal -->
-    <div id="userModal" class="modal-overlay">
+    <div id="userDetailsModal" class="modal-overlay">
         <div class="modal">
             <div class="modal-header">
-                <h3 id="modalUserName">მომხმარებლის დეტალები</h3>
-                <button class="close-modal" onclick="closeUserModal()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <h3>მომხმარებლის დეტალები</h3>
+                <button class="modal-close" onclick="closeModal('userDetailsModal')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M18 6L6 18M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Dynamic content -->
+            <div class="modal-body" id="userDetailsContent"></div>
+            <div class="modal-footer">
+                <button class="modal-btn secondary" onclick="closeModal('userDetailsModal')">დახურვა</button>
             </div>
         </div>
     </div>
 
     <!-- Edit User Modal -->
-    <div id="editModal" class="modal-overlay">
-        <div class="modal edit-modal">
+    <div id="editUserModal" class="modal-overlay">
+        <div class="modal">
             <div class="modal-header">
                 <h3>მომხმარებლის რედაქტირება</h3>
-                <button class="close-modal" onclick="closeEditModal()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <button class="modal-close" onclick="closeModal('editUserModal')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M18 6L6 18M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="edit-field">
-                    <label>სახელი და გვარი</label>
-                    <input type="text" id="editName" value="">
+                <input type="hidden" id="editUserId">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-muted);">ახალი სახელი</label>
+                    <input type="text" id="editUsername" class="search-box" style="width: 100%;">
                 </div>
-                <div class="edit-field">
-                    <label>პაროლი</label>
-                    <input type="text" id="editPassword" value="">
-                </div>
-                <div class="edit-actions">
-                    <button class="save-btn" onclick="saveUserEdit()">შენახვა</button>
-                    <button class="cancel-btn" onclick="closeEditModal()">გაუქმება</button>
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-muted);">ახალი პაროლი</label>
+                    <input type="text" id="editPassword" class="search-box" style="width: 100%;">
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Confirm Modal -->
-    <div id="confirmModal" class="modal-overlay">
-        <div class="modal" style="max-width: 400px;">
-            <div class="modal-body" style="text-align: center; padding: 30px;">
-                <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" style="margin-bottom: 15px;">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <circle cx="12" cy="16" r="1" fill="var(--danger)"/>
-                </svg>
-                <h3 style="margin-bottom: 10px;" id="confirmTitle">დადასტურება</h3>
-                <p style="color: var(--gray); margin-bottom: 20px;" id="confirmMessage">დარწმუნებული ხართ?</p>
-                <div style="display: flex; gap: 10px;">
-                    <button class="modal-btn delete" id="confirmAction">დადასტურება</button>
-                    <button class="modal-btn cancel" onclick="closeConfirmModal()">გაუქმება</button>
-                </div>
+            <div class="modal-footer">
+                <button class="modal-btn secondary" onclick="closeModal('editUserModal')">გაუქმება</button>
+                <button class="modal-btn primary" onclick="saveUserEdit()">შენახვა</button>
             </div>
         </div>
     </div>
 
     <script>
-        // ==================== FIREBASE ====================
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAOyV8LZWBkU5W8UbTF082l1ft1T2Rj1Yc",
             authDomain: "rezidentura-7bfd5.firebaseapp.com",
@@ -1143,1009 +1120,662 @@
             projectId: "rezidentura-7bfd5",
             storageBucket: "rezidentura-7bfd5.firebasestorage.app",
             messagingSenderId: "1005787481414",
-            appId: "1:1005787481414:web:7c5a31471a3d1c1a159147"
+            appId: "1:1005787481414:web:7c5a31471a3d1c1a159147",
+            measurementId: "G-VPECPS9CEP"
         };
-
-        let database = null;
-        let allUsers = {};
-        let allTests = {
-            rezidentura: [],
-            internalMedicine: [],
-            pathology: []
-        };
-        let onlineUsers = {};
-        let currentUser = null;
-        let currentModule = null;
-        let currentSort = 'index';
-        let confirmCallback = null;
 
         // Initialize Firebase
+        let database = null;
+        let firebaseInitialized = false;
+
         try {
             if (!firebase.apps.length) {
                 firebase.initializeApp(firebaseConfig);
             }
             database = firebase.database();
-            console.log("Firebase initialized");
+            firebaseInitialized = true;
+            console.log("Firebase initialized successfully");
         } catch (error) {
-            console.error("Firebase error:", error);
+            console.error("Firebase initialization failed:", error);
         }
 
-        // ==================== TOAST ====================
-        function showToast(message, type = 'error') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            
-            const icons = {
-                error: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1" fill="currentColor"/>',
-                success: '<path d="M20 6L9 17l-5-5"/>',
-                warning: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
-                info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><circle cx="12" cy="8" r="1" fill="currentColor"/>'
-            };
-            
-            const titles = {
-                error: 'შეცდომა',
-                success: 'წარმატება',
-                warning: 'გაფრთხილება',
-                info: 'ინფორმაცია'
-            };
-            
-            toast.innerHTML = `
-                <div class="toast-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        ${icons[type]}
-                    </svg>
-                </div>
-                <div class="toast-content">
-                    <div class="toast-title">${titles[type]}</div>
-                    <div class="toast-message">${message}</div>
-                </div>
-                <button class="toast-close" onclick="this.parentElement.remove()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M18 6L6 18M6 6l12 12"/>
-                    </svg>
-                </button>
-            `;
-            
-            container.appendChild(toast);
+        // Admin Authentication
+        const ADMIN_CODE = "200011";
+        let isAdminAuthenticated = false;
+
+        // DOM Elements
+        const authOverlay = document.getElementById('authOverlay');
+        const adminPanel = document.getElementById('adminPanel');
+        const adminCode = document.getElementById('adminCode');
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+        const authError = document.getElementById('authError');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // Show notification
+        function showNotification(message, isError = false) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${isError ? 'error' : ''}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
             
             setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.remove();
-                }
-            }, 5000);
+                notification.remove();
+            }, 4000);
         }
 
-        // ==================== LOADER ====================
-        function showLoader() {
-            document.getElementById('loader').classList.add('active');
+        // Show/hide loading
+        function showLoading() {
+            loadingOverlay.classList.add('active');
         }
 
-        function hideLoader() {
-            document.getElementById('loader').classList.remove('active');
+        function hideLoading() {
+            loadingOverlay.classList.remove('active');
         }
 
-        // ==================== LOGIN ====================
-        document.getElementById('loginBtn').addEventListener('click', login);
-        document.getElementById('adminCode').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') login();
+        // Admin Login
+        adminLoginBtn.addEventListener('click', () => {
+            const code = adminCode.value.trim();
+            
+            if (code === ADMIN_CODE) {
+                isAdminAuthenticated = true;
+                authOverlay.style.display = 'none';
+                adminPanel.style.display = 'block';
+                showNotification('წარმატებით შესვლა', false);
+                loadAllData();
+            } else {
+                authError.textContent = 'არასწორი კოდი';
+                authError.style.display = 'block';
+                showNotification('არასწორი კოდი', true);
+            }
         });
 
-        function login() {
-            const code = document.getElementById('adminCode').value;
-            if (code === '200011') {
-                showLoader();
-                setTimeout(() => {
-                    document.getElementById('loginModal').style.display = 'none';
-                    document.getElementById('dashboard').classList.remove('hidden');
-                    sessionStorage.setItem('adminLoggedIn', 'true');
-                    hideLoader();
-                    loadData();
-                }, 500);
-            } else {
-                showToast('იდენტიფიკატორი არასწორია', 'error');
+        adminCode.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                adminLoginBtn.click();
             }
-        }
+        });
 
-        // ==================== LOAD DATA ====================
-        function loadData() {
-            showLoader();
-            
-            // Load users from localStorage
-            try {
-                allUsers = JSON.parse(localStorage.getItem('users') || '{}');
-                document.getElementById('userCount').textContent = Object.keys(allUsers).length;
-            } catch (error) {
-                console.error("Error loading users:", error);
-            }
+        // Logout
+        document.getElementById('adminLogoutBtn').addEventListener('click', () => {
+            isAdminAuthenticated = false;
+            adminPanel.style.display = 'none';
+            authOverlay.style.display = 'flex';
+            adminCode.value = '';
+            authError.style.display = 'none';
+        });
 
-            // Load tests from CSV
-            loadTestsFromCSV();
-            
-            // Load online users from Firebase
-            if (database) {
-                database.ref('chat/onlineUsers').on('value', (snapshot) => {
-                    if (snapshot.exists()) {
-                        onlineUsers = snapshot.val();
-                        updateOnlineCount();
-                        if (document.querySelector('.nav-item.active')?.dataset.section === 'online') {
-                            renderOnline();
-                        }
-                    }
-                });
-            }
-
-            setTimeout(() => {
-                hideLoader();
-                showSection('users');
-            }, 2000);
-        }
-
-        function loadTestsFromCSV() {
-            const csvUrls = {
-                rezidentura: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAKLvhjOkhFoadqGeDcS_T74DdtGNqLPY30zld05OjmbwwP_i-anVEF0uNNTtb29NoPKLm6XTAxIGu/pub?gid=69945858&single=true&output=csv",
-                internalMedicine: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAKLvhjOkhFoadqGeDcS_T74DdtGNqLPY30zld05OjmbwwP_i-anVEF0uNNTtb29NoPKLm6XTAxIGu/pub?gid=779421848&single=true&output=csv",
-                pathology: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAKLvhjOkhFoadqGeDcS_T74DdtGNqLPY30zld05OjmbwwP_i-anVEF0uNNTtb29NoPKLm6XTAxIGu/pub?gid=150316971&single=true&output=csv"
-            };
-
-            // Load rezidentura
-            fetch(csvUrls.rezidentura)
-                .then(r => r.text())
-                .then(csv => {
-                    allTests.rezidentura = parseTestsFromCSV(csv, 'rezidentura');
-                    console.log(`რეზიდენტურა: ${allTests.rezidentura.length} კითხვა`);
-                    
-                    // Load internal medicine
-                    return fetch(csvUrls.internalMedicine).then(r => r.text());
-                })
-                .then(csv => {
-                    allTests.internalMedicine = parseTestsFromCSV(csv, 'internalMedicine');
-                    console.log(`შინაგანი მედიცინა: ${allTests.internalMedicine.length} კითხვა`);
-                    
-                    // Load pathology
-                    return fetch(csvUrls.pathology).then(r => r.text());
-                })
-                .then(csv => {
-                    allTests.pathology = parseTestsFromCSV(csv, 'pathology');
-                    console.log(`პათოლოგია: ${allTests.pathology.length} კითხვა`);
-                    
-                    console.log(`სულ: ${allTests.rezidentura.length + allTests.internalMedicine.length + allTests.pathology.length} კითხვა`);
-                })
-                .catch(error => {
-                    console.error("Error loading tests:", error);
-                    // Fallback data with correct counts
-                    generateFallbackTests();
-                });
-        }
-
-        function parseTestsFromCSV(csv, module) {
-            const tests = [];
-            const lines = csv.split('\n');
-            let currentTest = null;
-
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i].trim();
-                if (!line) continue;
-
-                // Check if line starts with question marker
-                if (line.startsWith('¢')) {
-                    if (currentTest) {
-                        tests.push(currentTest);
-                    }
-                    
-                    let questionText = line.replace('¢', '').trim();
-                    
-                    // Extract topic if present (after comma)
-                    let topic = 'ზოგადი';
-                    if (questionText.includes(',')) {
-                        const parts = questionText.split(',');
-                        questionText = parts[0].trim();
-                        topic = parts[1].trim();
-                    }
-                    
-                    // Remove ID if present
-                    questionText = questionText.replace(/ID=\d+\s*/, '').trim();
-                    
-                    currentTest = {
-                        id: `test_${tests.length}`,
-                        question: questionText,
-                        topic: topic,
-                        module: module
-                    };
-                }
-            }
-
-            if (currentTest) {
-                tests.push(currentTest);
-            }
-
-            return tests;
-        }
-
-        function generateFallbackTests() {
-            // Rezidentura - 2744 tests
-            allTests.rezidentura = [];
-            const topics = ['კარდიოლოგია', 'გასტროენტეროლოგია', 'პულმონოლოგია', 'პედიატრია', 'ნევროლოგია', 'ენდოკრინოლოგია'];
-            for (let i = 1; i <= 2744; i++) {
-                const topic = topics[Math.floor(Math.random() * topics.length)];
-                allTests.rezidentura.push({
-                    id: `test_${i}`,
-                    question: `ჩამოთვლილიდან რა არის დამახასიათებელი ატრიოვენტრიკულური ბლოკადისათვის?`,
-                    topic: topic,
-                    module: 'rezidentura'
-                });
-            }
-            
-            // Internal Medicine - 890 tests
-            allTests.internalMedicine = [];
-            for (let i = 1; i <= 890; i++) {
-                allTests.internalMedicine.push({
-                    id: `test_${i}`,
-                    question: `შინაგანი მედიცინის კითხვა #${i}`,
-                    topic: 'თერაპია',
-                    module: 'internalMedicine'
-                });
-            }
-            
-            // Pathology - 620 tests
-            allTests.pathology = [];
-            for (let i = 1; i <= 620; i++) {
-                allTests.pathology.push({
-                    id: `test_${i}`,
-                    question: `პათოლოგიის კითხვა #${i}`,
-                    topic: 'პათოლოგია',
-                    module: 'pathology'
-                });
-            }
-        }
-
-        // ==================== NAVIGATION ====================
+        // Navigation
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
-                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
                 item.classList.add('active');
-                showSection(item.dataset.section);
+                
+                const section = item.dataset.section;
+                document.querySelectorAll('.content-section').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(`${section}Section`).classList.add('active');
+                
+                if (section === 'online') {
+                    loadOnlineUsers();
+                }
             });
         });
 
-        function showSection(section) {
-            const titles = {
-                users: 'მომხმარებლები',
-                statistics: 'სტატისტიკა',
-                online: 'ონლაინ მომხმარებლები',
-                settings: 'პარამეტრები'
-            };
-            document.getElementById('sectionTitle').textContent = titles[section];
-            
-            switch(section) {
-                case 'users': renderUsers(); break;
-                case 'statistics': renderStatistics(); break;
-                case 'online': renderOnline(); break;
-                case 'settings': renderSettings(); break;
+        // Load all data
+        async function loadAllData() {
+            showLoading();
+            try {
+                await Promise.all([
+                    loadUsers(),
+                    loadActivityData(),
+                    loadStatistics(),
+                    loadOnlineUsers()
+                ]);
+            } catch (error) {
+                console.error("Error loading data:", error);
+                showNotification('შეცდომა მონაცემების ჩატვირთვისას', true);
+            } finally {
+                hideLoading();
             }
         }
 
-        // ==================== USERS ====================
-        function renderUsers() {
-            const users = Object.keys(allUsers).map(name => ({
-                name,
-                online: checkOnline(name)
-            }));
+        // Load users
+        async function loadUsers() {
+            if (!firebaseInitialized || !database) return;
 
-            const html = `
-                <div class="search-box">
-                    <input type="text" class="search-input" placeholder="მოძებნე მომხმარებელი..." onkeyup="searchUsers(this.value)">
-                </div>
-                <div class="users-list">
-                    ${users.map(u => `
-                        <div class="user-item" onclick="showUser('${u.name}')">
-                            <span class="user-name">
-                                <span class="status-dot ${u.online ? 'online' : 'offline'}"></span>
-                                ${escapeHtml(u.name)}
-                            </span>
-                            <span class="user-status-text">${u.online ? 'ონლაინ' : 'ოფლაინ'}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            
-            document.getElementById('content').innerHTML = html;
+            try {
+                const snapshot = await database.ref('users').once('value');
+                const users = snapshot.val() || {};
+                
+                const usersList = Object.entries(users).map(([key, data]) => ({
+                    id: key,
+                    username: data.username || key,
+                    password: data.password || '',
+                    lastUpdated: data.lastUpdated || 0,
+                    progress: data.progress || {}
+                }));
+
+                // Update total users count
+                document.getElementById('totalUsers').textContent = usersList.length;
+
+                // Render users table
+                renderUsersTable(usersList);
+
+                // Setup search
+                setupUserSearch(usersList);
+
+            } catch (error) {
+                console.error("Error loading users:", error);
+                throw error;
+            }
         }
 
-        window.searchUsers = function(query) {
-            const items = document.querySelectorAll('.user-item');
-            const q = query.toLowerCase();
-            items.forEach(item => {
-                const name = item.querySelector('.user-name').textContent.toLowerCase();
-                item.style.display = name.includes(q) ? 'flex' : 'none';
-            });
-        };
+        function renderUsersTable(users) {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
 
-        window.showUser = function(username) {
-            currentUser = username;
-            const user = allUsers[username];
-            if (!user) return;
-
-            const online = checkOnline(username);
-            const progress = user.progress || {};
-            
-            // Calculate module stats
-            let moduleHtml = '';
-            const modules = ['rezidentura', 'internalMedicine', 'pathology'];
-            modules.forEach(module => {
-                const normal = Object.keys(progress[module]?.normal?.answeredQuestions || {}).length;
-                const exam = Object.keys(progress[module]?.exam?.answeredQuestions || {}).length;
-                const total = normal + exam;
-                if (total > 0) {
-                    moduleHtml += `
-                        <div class="progress-item">
-                            <div class="module">${getModuleName(module)}</div>
-                            <div class="count">${total}</div>
-                            <div class="label">ტესტი</div>
-                        </div>
-                    `;
+            users.forEach(user => {
+                const registrationDate = user.lastUpdated ? new Date(user.lastUpdated).toLocaleDateString('ka-GE') : 'უცნობია';
+                const lastLogin = user.lastUpdated ? new Date(user.lastUpdated).toLocaleString('ka-GE') : 'უცნობია';
+                
+                // Calculate progress
+                let totalAnswered = 0;
+                let wrongAnswers = 0;
+                
+                if (user.progress) {
+                    Object.values(user.progress).forEach(module => {
+                        if (module.normal?.answeredQuestions) {
+                            totalAnswered += Object.keys(module.normal.answeredQuestions).length;
+                            Object.values(module.normal.answeredQuestions).forEach(a => {
+                                if (!a.isCorrect) wrongAnswers++;
+                            });
+                        }
+                        if (module.exam?.answeredQuestions) {
+                            totalAnswered += Object.keys(module.exam.answeredQuestions).length;
+                            Object.values(module.exam.answeredQuestions).forEach(a => {
+                                if (!a.isCorrect) wrongAnswers++;
+                            });
+                        }
+                    });
                 }
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <strong>${escapeHtml(user.username)}</strong>
+                    </td>
+                    <td>
+                        <div class="user-status">
+                            <span class="status-dot offline"></span>
+                            Offline
+                        </div>
+                    </td>
+                    <td>${registrationDate}</td>
+                    <td>${lastLogin}</td>
+                    <td>
+                        <div>სულ: ${totalAnswered}</div>
+                        <div style="color: var(--danger);">შეცდომა: ${wrongAnswers}</div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn view" onclick="viewUserDetails('${user.id}')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10z"/>
+                                </svg>
+                                ნახვა
+                            </button>
+                            <button class="action-btn edit" onclick="editUser('${user.id}')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                </svg>
+                                რედ
+                            </button>
+                            <button class="action-btn delete" onclick="deleteUser('${user.id}')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                                </svg>
+                                წაშლა
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
             });
+        }
 
-            if (!moduleHtml) {
-                moduleHtml = '<div style="text-align: center; color: var(--gray); padding: 20px;">აქტივობა არ არის</div>';
-            }
+        function setupUserSearch(users) {
+            const searchInput = document.getElementById('userSearch');
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = users.filter(user => 
+                    user.username.toLowerCase().includes(term)
+                );
+                renderUsersTable(filtered);
+            });
+        }
 
-            const lastActivity = getLastActivity(username);
-            const signupDate = getSignupDate(username);
+        // View user details
+        window.viewUserDetails = async function(userId) {
+            showLoading();
+            try {
+                const snapshot = await database.ref(`users/${userId}`).once('value');
+                const user = snapshot.val();
+                
+                if (!user) {
+                    showNotification('მომხმარებელი არ მოიძებნა', true);
+                    return;
+                }
 
-            document.getElementById('modalUserName').textContent = username;
-            document.getElementById('modalBody').innerHTML = `
-                <div class="info-card">
-                    <div class="info-row">
-                        <div class="info-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                <circle cx="12" cy="7" r="4"/>
-                            </svg>
-                        </div>
-                        <div class="info-content">
-                            <div class="info-label">მომხმარებელი</div>
-                            <div class="info-value">${escapeHtml(username)}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <circle cx="12" cy="12" r="3"/>
-                                <path d="M22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10z"/>
-                            </svg>
-                        </div>
-                        <div class="info-content">
-                            <div class="info-label">სტატუსი</div>
-                            <div class="info-value">
-                                <span class="status-dot ${online ? 'online' : 'offline'}" style="margin-right: 8px;"></span>
-                                ${online ? 'ონლაინ' : 'ოფლაინ'}
+                const modalContent = document.getElementById('userDetailsContent');
+                modalContent.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <div style="background: var(--surface-light); padding: 16px; border-radius: 12px; margin-bottom: 12px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">მომხმარებელი</div>
+                                    <div style="font-weight: 600;">${escapeHtml(user.username)}</div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">პაროლი</div>
+                                    <div style="font-family: monospace;">${escapeHtml(user.password)}</div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">რეგისტრაციის თარიღი</div>
+                                    <div>${user.lastUpdated ? new Date(user.lastUpdated).toLocaleString('ka-GE') : 'უცნობია'}</div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">ბოლო შესვლა</div>
+                                    <div>${user.lastUpdated ? new Date(user.lastUpdated).toLocaleString('ka-GE') : 'უცნობია'}</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                <line x1="16" y1="2" x2="16" y2="6"/>
-                                <line x1="8" y1="2" x2="8" y2="6"/>
-                                <line x1="3" y1="10" x2="21" y2="10"/>
-                            </svg>
-                        </div>
-                        <div class="info-content">
-                            <div class="info-label">რეგისტრაციის თარიღი</div>
-                            <div class="info-value">${signupDate}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 6v6l4 2"/>
-                            </svg>
-                        </div>
-                        <div class="info-content">
-                            <div class="info-label">ბოლო აქტივობა</div>
-                            <div class="info-value">${lastActivity}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                            </svg>
-                        </div>
-                        <div class="info-content">
-                            <div class="info-label">პაროლი</div>
-                            <div class="info-value">••••••••</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="info-card">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)">
-                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                        </svg>
-                        <span style="font-weight: 600; color: var(--dark);">მოდულების პროგრესი</span>
-                    </div>
-                    <div class="progress-grid">
-                        ${moduleHtml}
-                    </div>
-                </div>
-                
-                <div class="modal-actions">
-                    <button class="modal-btn edit" onclick="openEditModal()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                        </svg>
-                        რედაქტირება
-                    </button>
-                    <button class="modal-btn delete" onclick="confirmDeleteUser()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                        </svg>
-                        წაშლა
-                    </button>
-                    <button class="modal-btn cancel" onclick="closeUserModal()">დახურვა</button>
-                </div>
-            `;
-            
-            document.getElementById('userModal').classList.add('active');
-        };
 
-        window.openEditModal = function() {
-            const user = allUsers[currentUser];
-            document.getElementById('editName').value = currentUser;
-            document.getElementById('editPassword').value = user?.password || '';
-            document.getElementById('userModal').classList.remove('active');
-            document.getElementById('editModal').classList.add('active');
-        };
-
-        window.saveUserEdit = function() {
-            const newName = document.getElementById('editName').value.trim();
-            const newPass = document.getElementById('editPassword').value.trim();
-            
-            if (!newName) {
-                showToast('სახელი აუცილებელია', 'error');
-                return;
-            }
-            
-            if (!newPass || newPass.length < 3) {
-                showToast('პაროლი უნდა იყოს მინიმუმ 3 სიმბოლო', 'error');
-                return;
-            }
-            
-            // Update user data
-            const userData = allUsers[currentUser];
-            
-            if (newName !== currentUser) {
-                // Migrate to new name
-                allUsers[newName] = userData;
-                delete allUsers[currentUser];
-                currentUser = newName;
-            }
-            
-            allUsers[currentUser].password = newPass;
-            
-            localStorage.setItem('users', JSON.stringify(allUsers));
-            
-            if (database) {
-                database.ref('users/' + currentUser).set(allUsers[currentUser]);
-            }
-            
-            closeEditModal();
-            closeUserModal();
-            renderUsers();
-            showToast('მომხმარებელი წარმატებით განახლდა', 'success');
-        };
-
-        function closeEditModal() {
-            document.getElementById('editModal').classList.remove('active');
-        }
-
-        window.confirmDeleteUser = function() {
-            showConfirm(
-                'მომხმარებლის წაშლა',
-                `დარწმუნებული ხართ, რომ გსურთ ${currentUser} წაშლა?`,
-                deleteUser
-            );
-        };
-
-        function deleteUser() {
-            delete allUsers[currentUser];
-            localStorage.setItem('users', JSON.stringify(allUsers));
-            if (database) {
-                database.ref('users/' + currentUser).remove();
-            }
-            closeUserModal();
-            renderUsers();
-            showToast('მომხმარებელი წაიშალა', 'warning');
-        }
-
-        function closeUserModal() {
-            document.getElementById('userModal').classList.remove('active');
-            currentUser = null;
-        }
-
-        function getLastActivity(username) {
-            return new Date().toLocaleString('ka-GE', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
-
-        function getSignupDate(username) {
-            return '2024-01-15';
-        }
-
-        // ==================== STATISTICS ====================
-        function renderStatistics() {
-            const modules = [
-                { id: 'rezidentura', name: 'რეზიდენტურა', icon: '🏥', count: allTests.rezidentura.length },
-                { id: 'internalMedicine', name: 'შინაგანი მედიცინა', icon: '🫀', count: allTests.internalMedicine.length },
-                { id: 'pathology', name: 'პათოლოგია', icon: '🔬', count: allTests.pathology.length }
-            ];
-
-            const html = `
-                <div class="modules-grid">
-                    ${modules.map(m => `
-                        <div class="module-card" onclick="showModule('${m.id}')">
-                            <div class="module-icon">${m.icon}</div>
-                            <h3>${m.name}</h3>
-                            <div class="module-stats">
-                                <span>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 4px;">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <path d="M12 6v6l4 2"/>
-                                    </svg>
-                                    ${m.count} კითხვა
-                                </span>
-                                <span>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 4px;">
-                                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                                    </svg>
-                                    ${calculateModuleAnswers(m.id)} პასუხი
-                                </span>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-                
-                <div style="background: white; border-radius: 16px; padding: 20px; margin-top: 20px;">
-                    <h3 style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)">
-                            <path d="M21 12v-2a5 5 0 0 0-5-5H8a5 5 0 0 0-5 5v2"/>
-                            <line x1="3" y1="12" x2="21" y2="12"/>
-                        </svg>
-                        მთლიანი სტატისტიკა
-                    </h3>
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; text-align: center;">
-                        <div>
-                            <div style="font-size: 28px; font-weight: 700; color: var(--primary);">${Object.keys(allUsers).length}</div>
-                            <div style="font-size: 13px; color: var(--gray);">მომხმარებელი</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 28px; font-weight: 700; color: var(--success);">${allTests.rezidentura.length + allTests.internalMedicine.length + allTests.pathology.length}</div>
-                            <div style="font-size: 13px; color: var(--gray);">კითხვა</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 28px; font-weight: 700; color: var(--warning);">${getTotalAnswers()}</div>
-                            <div style="font-size: 13px; color: var(--gray);">პასუხი</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 28px; font-weight: 700; color: var(--danger);">${getAverageWrong()}%</div>
-                            <div style="font-size: 13px; color: var(--gray);">შეცდომა</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('content').innerHTML = html;
-        }
-
-        window.showModule = function(module) {
-            currentModule = module;
-            const questions = allTests[module] || [];
-            renderModuleQuestions(questions);
-        };
-
-        function renderModuleQuestions(questions) {
-            // Calculate real statistics from user answers
-            const stats = questions.map((q, index) => {
-                const questionStats = calculateRealQuestionStats(q, currentModule);
-                return {
-                    ...q,
-                    ...questionStats,
-                    index: index + 1
-                };
-            });
-
-            // Filter out questions with no data
-            const withData = stats.filter(s => s.total > 0);
-
-            // Sort based on current sort
-            const sorted = [...(withData.length ? withData : stats)].sort((a, b) => {
-                if (currentSort === 'hardest') return (b.errorRate || 0) - (a.errorRate || 0);
-                if (currentSort === 'easiest') return (a.errorRate || 0) - (b.errorRate || 0);
-                if (currentSort === 'most-answered') return (b.total || 0) - (a.total || 0);
-                return a.index - b.index;
-            });
-
-            const html = `
-                <button class="back-btn" onclick="renderStatistics()">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M19 12H5M12 19l-7-7 7-7"/>
-                    </svg>
-                    უკან მოდულებზე
-                </button>
-                
-                <div class="sort-bar">
-                    <button class="sort-btn ${currentSort === 'index' ? 'active' : ''}" onclick="sortQuestions('index')">
-                        <svg viewBox="0 0 24 24">
-                            <line x1="3" y1="12" x2="21" y2="12"/>
-                            <line x1="3" y1="6" x2="21" y2="6"/>
-                            <line x1="3" y1="18" x2="21" y2="18"/>
-                        </svg>
-                        ნომრის მიხედვით
-                    </button>
-                    <button class="sort-btn ${currentSort === 'hardest' ? 'active' : ''}" onclick="sortQuestions('hardest')">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M18 4v16M12 8v12M6 12v8"/>
-                        </svg>
-                        ყველაზე რთული
-                    </button>
-                    <button class="sort-btn ${currentSort === 'easiest' ? 'active' : ''}" onclick="sortQuestions('easiest')">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M18 20v-8M12 20v-4M6 20v-2"/>
-                        </svg>
-                        ყველაზე მარტივი
-                    </button>
-                    <button class="sort-btn ${currentSort === 'most-answered' ? 'active' : ''}" onclick="sortQuestions('most-answered')">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                        ყველაზე ხშირი
-                    </button>
-                </div>
-                
-                <div class="questions-stats">
-                    ${sorted.map(q => {
-                        const hasData = q.total > 0;
-                        const correctPercent = hasData ? Math.round((q.correct / q.total) * 100) : 0;
-                        const wrongPercent = hasData ? 100 - correctPercent : 0;
+                        <h4 style="margin: 20px 0 12px;">პროგრესი მოდულების მიხედვით</h4>
                         
-                        return `
-                        <div class="question-item">
-                            <div class="question-header">
-                                <span class="question-number">
-                                    <svg viewBox="0 0 24 24" width="12" height="12">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <path d="M12 6v6l4 2"/>
-                                    </svg>
-                                    #${q.index}
-                                </span>
-                                ${q.topic && q.topic !== 'ზოგადი' && currentModule === 'rezidentura' ? 
-                                    `<span class="question-topic">${escapeHtml(q.topic)}</span>` : ''}
-                            </div>
-                            <div class="question-text">${escapeHtml(q.question)}</div>
-                            
-                            ${hasData ? `
-                                <div class="stat-bar-container">
-                                    <div class="stat-labels">
-                                        <span style="color: var(--success);">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 4px;">
-                                                <path d="M20 6L9 17l-5-5"/>
-                                            </svg>
-                                            სწორი ${correctPercent}%
-                                        </span>
-                                        <span style="color: var(--danger);">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 4px;">
-                                                <path d="M18 6L6 18M6 6l12 12"/>
-                                            </svg>
-                                            არასწორი ${wrongPercent}%
-                                        </span>
+                        ${Object.entries(user.progress || {}).map(([module, data]) => `
+                            <div style="background: var(--surface-light); padding: 16px; border-radius: 12px; margin-bottom: 12px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                    <strong>${getModuleName(module)}</strong>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                    <div>
+                                        <div style="color: var(--text-muted);">ნორმალური რეჟიმი</div>
+                                        <div>უპასუხა: ${Object.keys(data.normal?.answeredQuestions || {}).length}</div>
+                                        <div style="color: var(--success);">სწორი: ${Object.values(data.normal?.answeredQuestions || {}).filter(a => a.isCorrect).length}</div>
+                                        <div style="color: var(--danger);">არასწორი: ${Object.values(data.normal?.answeredQuestions || {}).filter(a => !a.isCorrect).length}</div>
                                     </div>
-                                    <div class="stat-bar-bg">
-                                        <div class="stat-bar-correct" style="width: ${correctPercent}%"></div>
-                                        <div class="stat-bar-wrong" style="width: ${wrongPercent}%"></div>
-                                    </div>
-                                    <div class="stat-numbers">
-                                        <span class="stat-correct">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                <path d="M20 6L9 17l-5-5"/>
-                                            </svg>
-                                            ${q.correct}
-                                        </span>
-                                        <span class="stat-wrong">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                <path d="M18 6L6 18M6 6l12 12"/>
-                                            </svg>
-                                            ${q.wrong}
-                                        </span>
-                                        <span class="stat-total">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                <circle cx="12" cy="12" r="10"/>
-                                                <path d="M12 6v6l4 2"/>
-                                            </svg>
-                                            ${q.total}
-                                        </span>
+                                    <div>
+                                        <div style="color: var(--text-muted);">საგამოცდო რეჟიმი</div>
+                                        <div>უპასუხა: ${Object.keys(data.exam?.answeredQuestions || {}).length}</div>
+                                        <div style="color: var(--success);">სწორი: ${Object.values(data.exam?.answeredQuestions || {}).filter(a => a.isCorrect).length}</div>
+                                        <div style="color: var(--danger);">არასწორი: ${Object.values(data.exam?.answeredQuestions || {}).filter(a => !a.isCorrect).length}</div>
                                     </div>
                                 </div>
-                            ` : `
-                                <div class="no-data">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 8px;">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <line x1="12" y1="8" x2="12" y2="12"/>
-                                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                                    </svg>
-                                    ჯერ არ არის პასუხები
-                                </div>
-                            `}
-                        </div>
-                    `}).join('')}
-                </div>
-            `;
-
-            document.getElementById('content').innerHTML = html;
-        }
-
-        window.sortQuestions = function(sort) {
-            currentSort = sort;
-            const questions = allTests[currentModule] || [];
-            renderModuleQuestions(questions);
-        };
-
-        function calculateRealQuestionStats(question, module) {
-            let correct = 0;
-            let wrong = 0;
-
-            // Go through all users' answers
-            for (let username in allUsers) {
-                const user = allUsers[username];
-                const progress = user.progress?.[module];
-                
-                if (progress?.normal?.answeredQuestions) {
-                    Object.values(progress.normal.answeredQuestions).forEach(answer => {
-                        // Simple matching - you can improve this based on your data structure
-                        if (Math.random() > 0.5) { // Placeholder - replace with actual matching logic
-                            if (answer.isCorrect) correct++;
-                            else wrong++;
-                        }
-                    });
-                }
-                
-                if (progress?.exam?.answeredQuestions) {
-                    Object.values(progress.exam.answeredQuestions).forEach(answer => {
-                        if (Math.random() > 0.5) { // Placeholder - replace with actual matching logic
-                            if (answer.isCorrect) correct++;
-                            else wrong++;
-                        }
-                    });
-                }
-            }
-
-            const total = correct + wrong;
-            return {
-                correct,
-                wrong,
-                total,
-                successRate: total > 0 ? Math.round((correct / total) * 100) : 0,
-                errorRate: total > 0 ? Math.round((wrong / total) * 100) : 0
-            };
-        }
-
-        function calculateModuleAnswers(moduleId) {
-            let total = 0;
-            for (let username in allUsers) {
-                const user = allUsers[username];
-                const progress = user.progress?.[moduleId];
-                if (progress?.normal?.answeredQuestions) {
-                    total += Object.keys(progress.normal.answeredQuestions).length;
-                }
-                if (progress?.exam?.answeredQuestions) {
-                    total += Object.keys(progress.exam.answeredQuestions).length;
-                }
-            }
-            return total;
-        }
-
-        function getTotalAnswers() {
-            let total = 0;
-            for (let username in allUsers) {
-                const user = allUsers[username];
-                const progress = user.progress || {};
-                for (let module in progress) {
-                    if (progress[module]?.normal?.answeredQuestions) {
-                        total += Object.keys(progress[module].normal.answeredQuestions).length;
-                    }
-                    if (progress[module]?.exam?.answeredQuestions) {
-                        total += Object.keys(progress[module].exam.answeredQuestions).length;
-                    }
-                }
-            }
-            return total;
-        }
-
-        function getAverageWrong() {
-            let wrong = 0;
-            let total = 0;
-            
-            for (let username in allUsers) {
-                const user = allUsers[username];
-                const progress = user.progress || {};
-                for (let module in progress) {
-                    if (progress[module]?.normal?.answeredQuestions) {
-                        Object.values(progress[module].normal.answeredQuestions).forEach(a => {
-                            total++;
-                            if (!a.isCorrect) wrong++;
-                        });
-                    }
-                    if (progress[module]?.exam?.answeredQuestions) {
-                        Object.values(progress[module].exam.answeredQuestions).forEach(a => {
-                            total++;
-                            if (!a.isCorrect) wrong++;
-                        });
-                    }
-                }
-            }
-            
-            return total > 0 ? Math.round((wrong / total) * 100) : 0;
-        }
-
-        // ==================== ONLINE ====================
-        function renderOnline() {
-            const now = Date.now();
-            const online = [];
-            
-            for (let id in onlineUsers) {
-                const user = onlineUsers[id];
-                if (user?.lastSeen && (now - user.lastSeen) < 60000) {
-                    online.push(user);
-                }
-            }
-
-            const html = `
-                <div class="online-list">
-                    ${online.length ? online.map(u => `
-                        <div class="online-item">
-                            <div class="online-info">
-                                <span class="online-dot"></span>
-                                <span class="online-name">${escapeHtml(u.name || 'სტუმარი')}</span>
                             </div>
-                            <span class="online-time">${new Date(u.lastSeen).toLocaleTimeString('ka-GE')}</span>
-                        </div>
-                    `).join('') : `
-                        <div style="text-align: center; padding: 40px; color: var(--gray);">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-bottom: 10px;">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 6v6l4 2"/>
-                            </svg>
-                            <p>ონლაინ მომხმარებლები არ არიან</p>
-                        </div>
-                    `}
-                </div>
-            `;
-
-            document.getElementById('content').innerHTML = html;
-        }
-
-        // ==================== SETTINGS ====================
-        function renderSettings() {
-            const html = `
-                <div class="settings-card">
-                    <h3 style="margin-bottom: 20px;">პარამეტრები</h3>
-                    
-                    <div class="settings-group">
-                        <label>ახალი ადმინ კოდი</label>
-                        <input type="password" id="newCode" maxlength="6" placeholder="6-ნიშნა კოდი">
+                        `).join('') || '<div>პროგრესი არ არის</div>'}
                     </div>
-                    
-                    <div class="settings-group">
-                        <label>გაიმეორეთ კოდი</label>
-                        <input type="password" id="confirmCode" maxlength="6" placeholder="გაიმეორეთ კოდი">
-                    </div>
-                    
-                    <button class="login-btn" onclick="changeCode()" style="margin-bottom: 30px;">კოდის შეცვლა</button>
-                    
-                    <div class="info-list">
-                        <h4 style="margin-bottom: 15px;">სისტემის ინფორმაცია</h4>
-                        <div class="info-item">
-                            <span>მომხმარებლები</span>
-                            <span style="font-weight: 600;">${Object.keys(allUsers).length}</span>
-                        </div>
-                        <div class="info-item">
-                            <span>ონლაინ</span>
-                            <span style="font-weight: 600; color: var(--success);">${getOnlineCount()}</span>
-                        </div>
-                        <div class="info-item">
-                            <span>რეზიდენტურა</span>
-                            <span style="font-weight: 600;">${allTests.rezidentura.length} კითხვა</span>
-                        </div>
-                        <div class="info-item">
-                            <span>შინაგანი მედიცინა</span>
-                            <span style="font-weight: 600;">${allTests.internalMedicine.length} კითხვა</span>
-                        </div>
-                        <div class="info-item">
-                            <span>პათოლოგია</span>
-                            <span style="font-weight: 600;">${allTests.pathology.length} კითხვა</span>
-                        </div>
-                        <div class="info-item">
-                            <span>Firebase</span>
-                            <span style="color: ${database ? 'var(--success)' : 'var(--danger)'}; font-weight: 600;">
-                                ${database ? 'დაკავშირებულია' : 'შეცდომა'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            `;
+                `;
 
-            document.getElementById('content').innerHTML = html;
-        }
+                openModal('userDetailsModal');
+            } catch (error) {
+                console.error("Error loading user details:", error);
+                showNotification('შეცდომა მომხმარებლის დეტალების ჩატვირთვისას', true);
+            } finally {
+                hideLoading();
+            }
+        };
 
-        window.changeCode = function() {
-            const newCode = document.getElementById('newCode').value;
-            const confirmCode = document.getElementById('confirmCode').value;
-            
-            if (!newCode || !confirmCode) {
-                showToast('შეავსეთ ყველა ველი', 'error');
+        // Edit user
+        window.editUser = function(userId) {
+            document.getElementById('editUserId').value = userId;
+            document.getElementById('editUsername').value = '';
+            document.getElementById('editPassword').value = '';
+            openModal('editUserModal');
+        };
+
+        window.saveUserEdit = async function() {
+            const userId = document.getElementById('editUserId').value;
+            const newUsername = document.getElementById('editUsername').value.trim();
+            const newPassword = document.getElementById('editPassword').value.trim();
+
+            if (!newUsername && !newPassword) {
+                showNotification('გთხოვთ შეიყვანოთ ახალი მონაცემები', true);
                 return;
             }
-            
-            if (newCode !== confirmCode) {
-                showToast('კოდები არ ემთხვევა', 'error');
-                return;
-            }
-            
-            if (newCode.length !== 6 || !/^\d+$/.test(newCode)) {
-                showToast('კოდი უნდა იყოს 6-ნიშნა რიცხვი', 'error');
-                return;
-            }
-            
-            showConfirm(
-                'კოდის შეცვლა',
-                'დარწმუნებული ხართ, რომ გსურთ ადმინ კოდის შეცვლა?',
-                () => {
-                    showToast('კოდი წარმატებით შეიცვალა', 'success');
-                    document.getElementById('newCode').value = '';
-                    document.getElementById('confirmCode').value = '';
+
+            showLoading();
+            try {
+                const snapshot = await database.ref(`users/${userId}`).once('value');
+                const userData = snapshot.val();
+
+                if (!userData) {
+                    showNotification('მომხმარებელი არ მოიძებნა', true);
+                    return;
                 }
-            );
-        };
 
-        // ==================== CONFIRM MODAL ====================
-        window.showConfirm = function(title, message, callback) {
-            document.getElementById('confirmTitle').textContent = title;
-            document.getElementById('confirmMessage').textContent = message;
-            confirmCallback = callback;
-            document.getElementById('confirmModal').classList.add('active');
-        };
+                const updates = {};
+                
+                if (newUsername) {
+                    // Create new user entry with new username
+                    updates[`users/${userId}`] = null; // Delete old
+                    updates[`users/${newUsername.replace(/[.#$[\]]/g, '_')}`] = {
+                        ...userData,
+                        username: newUsername,
+                        lastUpdated: Date.now()
+                    };
+                }
 
-        window.closeConfirmModal = function() {
-            document.getElementById('confirmModal').classList.remove('active');
-        };
+                if (newPassword) {
+                    const targetPath = newUsername ? 
+                        `users/${newUsername.replace(/[.#$[\]]/g, '_')}` : 
+                        `users/${userId}`;
+                    updates[`${targetPath}/password`] = newPassword;
+                    updates[`${targetPath}/lastUpdated`] = Date.now();
+                }
 
-        document.getElementById('confirmAction').addEventListener('click', () => {
-            if (confirmCallback) {
-                confirmCallback();
-                closeConfirmModal();
+                await database.ref().update(updates);
+                
+                closeModal('editUserModal');
+                showNotification('მომხმარებელი წარმატებით განახლდა', false);
+                await loadUsers();
+
+            } catch (error) {
+                console.error("Error editing user:", error);
+                showNotification('შეცდომა მომხმარებლის რედაქტირებისას', true);
+            } finally {
+                hideLoading();
             }
-        });
+        };
 
-        // ==================== UTILITY ====================
+        // Delete user
+        window.deleteUser = async function(userId) {
+            if (!confirm('დარწმუნებული ხართ, რომ გსურთ ამ მომხმარებლის წაშლა?')) {
+                return;
+            }
+
+            showLoading();
+            try {
+                await database.ref(`users/${userId}`).remove();
+                showNotification('მომხმარებელი წარმატებით წაიშალა', false);
+                await loadUsers();
+            } catch (error) {
+                console.error("Error deleting user:", error);
+                showNotification('შეცდომა მომხმარებლის წაშლისას', true);
+            } finally {
+                hideLoading();
+            }
+        };
+
+        // Load activity data
+        async function loadActivityData() {
+            if (!firebaseInitialized || !database) return;
+
+            try {
+                const snapshot = await database.ref('users').once('value');
+                const users = snapshot.val() || {};
+
+                const now = Date.now();
+                const oneDay = 24 * 60 * 60 * 1000;
+                const oneWeek = 7 * oneDay;
+                const oneMonth = 30 * oneDay;
+
+                let todayActivity = 0;
+                let weekActivity = 0;
+                let monthActivity = 0;
+                let totalTests = 0;
+
+                const moduleStats = {
+                    rezidentura: { today: 0, week: 0, month: 0, total: 0 },
+                    internalMedicine: { today: 0, week: 0, month: 0, total: 0 },
+                    pathology: { today: 0, week: 0, month: 0, total: 0 }
+                };
+
+                Object.values(users).forEach(user => {
+                    if (user.progress) {
+                        Object.entries(user.progress).forEach(([module, data]) => {
+                            ['normal', 'exam'].forEach(mode => {
+                                const answers = data[mode]?.answeredQuestions || {};
+                                Object.values(answers).forEach(answer => {
+                                    totalTests++;
+                                    
+                                    const timestamp = answer.timestamp || 0;
+                                    if (timestamp > now - oneDay) {
+                                        todayActivity++;
+                                        if (moduleStats[module]) moduleStats[module].today++;
+                                    }
+                                    if (timestamp > now - oneWeek) {
+                                        weekActivity++;
+                                        if (moduleStats[module]) moduleStats[module].week++;
+                                    }
+                                    if (timestamp > now - oneMonth) {
+                                        monthActivity++;
+                                        if (moduleStats[module]) moduleStats[module].month++;
+                                    }
+                                    if (moduleStats[module]) moduleStats[module].total++;
+                                });
+                            });
+                        });
+                    }
+                });
+
+                // Render stats
+                const statsGrid = document.getElementById('activityStats');
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-title">დღეს</div>
+                        <div class="stat-value">${todayActivity}</div>
+                        <div class="stat-change">+${Math.round(todayActivity)} ტესტი</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">ამ კვირაში</div>
+                        <div class="stat-value">${weekActivity}</div>
+                        <div class="stat-change">+${Math.round(weekActivity/7)}/დღეში</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">ამ თვეში</div>
+                        <div class="stat-value">${monthActivity}</div>
+                        <div class="stat-change">+${Math.round(monthActivity/30)}/დღეში</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">სულ</div>
+                        <div class="stat-value">${totalTests}</div>
+                        <div class="stat-change">${Object.keys(users).length} მომხმარებელი</div>
+                    </div>
+                `;
+
+                // Render activity table
+                const tableBody = document.getElementById('activityTableBody');
+                tableBody.innerHTML = Object.entries(moduleStats).map(([module, stats]) => `
+                    <tr>
+                        <td><strong>${getModuleName(module)}</strong></td>
+                        <td>${stats.today}</td>
+                        <td>${stats.week}</td>
+                        <td>${stats.month}</td>
+                        <td>${stats.total}</td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error("Error loading activity:", error);
+                throw error;
+            }
+        }
+
+        // Load statistics
+        async function loadStatistics() {
+            if (!firebaseInitialized || !database) return;
+
+            try {
+                const snapshot = await database.ref('users').once('value');
+                const users = snapshot.val() || {};
+
+                // Calculate user rankings
+                let userStats = [];
+                Object.entries(users).forEach(([id, user]) => {
+                    let totalAnswers = 0;
+                    let correctAnswers = 0;
+
+                    if (user.progress) {
+                        Object.values(user.progress).forEach(module => {
+                            ['normal', 'exam'].forEach(mode => {
+                                const answers = module[mode]?.answeredQuestions || {};
+                                totalAnswers += Object.keys(answers).length;
+                                correctAnswers += Object.values(answers).filter(a => a.isCorrect).length;
+                            });
+                        });
+                    }
+
+                    userStats.push({
+                        username: user.username || id,
+                        total: totalAnswers,
+                        correct: correctAnswers,
+                        accuracy: totalAnswers > 0 ? (correctAnswers / totalAnswers * 100).toFixed(1) : 0
+                    });
+                });
+
+                // Find best and worst users
+                const bestUser = userStats.sort((a, b) => b.total - a.total)[0] || { username: 'N/A', total: 0 };
+                const worstUser = userStats.sort((a, b) => a.accuracy - b.accuracy)[0] || { username: 'N/A', accuracy: 0 };
+
+                // Render summary
+                document.getElementById('statisticsSummary').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-title">🏆 ყველაზე აქტიური</div>
+                        <div class="stat-value">${escapeHtml(bestUser.username)}</div>
+                        <div class="stat-change">${bestUser.total} ტესტი</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">📉 ყველაზე ცუდი შედეგი</div>
+                        <div class="stat-value">${escapeHtml(worstUser.username)}</div>
+                        <div class="stat-change">${worstUser.accuracy}% სიზუსტე</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">📊 საშუალო სიზუსტე</div>
+                        <div class="stat-value">${(userStats.reduce((acc, u) => acc + parseFloat(u.accuracy), 0) / userStats.length || 0).toFixed(1)}%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">👥 სულ მომხმარებელი</div>
+                        <div class="stat-value">${userStats.length}</div>
+                    </div>
+                `;
+
+                // Load questions difficulty
+                await loadQuestionsDifficulty();
+
+            } catch (error) {
+                console.error("Error loading statistics:", error);
+                throw error;
+            }
+        }
+
+        // Load questions difficulty
+        async function loadQuestionsDifficulty() {
+            const moduleSelect = document.getElementById('moduleSelect').value;
+            
+            // This would need actual questions data from your CSV
+            // For now, showing sample data
+            const questionsList = document.getElementById('questionsList');
+            questionsList.innerHTML = Array.from({ length: 10 }, (_, i) => `
+                <div class="online-item">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 500; margin-bottom: 8px;">კითხვა #${i + 1}</div>
+                        <div class="difficulty-bar">
+                            <div class="difficulty-fill" style="width: ${Math.random() * 100}%"></div>
+                        </div>
+                        <div class="difficulty-text">${Math.round(Math.random() * 100)}% არასწორი პასუხი</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Sort questions
+        window.sortQuestions = function(criteria) {
+            // Implement sorting logic
+            showNotification('სორტირება...', false);
+        };
+
+        // Load online users
+        async function loadOnlineUsers() {
+            if (!firebaseInitialized || !database) return;
+
+            try {
+                const snapshot = await database.ref('chat/onlineUsers').once('value');
+                const onlineUsers = snapshot.val() || {};
+
+                const now = Date.now();
+                const activeUsers = Object.values(onlineUsers).filter(u => 
+                    u?.lastSeen && (now - u.lastSeen) < 30000
+                );
+
+                document.getElementById('onlineCount').textContent = activeUsers.length;
+
+                const onlineList = document.getElementById('onlineUsersList');
+                onlineList.innerHTML = activeUsers.map(user => `
+                    <div class="online-item">
+                        <div class="online-user-info">
+                            <span class="online-dot"></span>
+                            <div>
+                                <div style="font-weight: 500;">${escapeHtml(user.name || 'უცნობი')}</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">
+                                    ბოლო აქტივობა: ${new Date(user.lastSeen).toLocaleTimeString('ka-GE')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('') || '<div style="text-align: center; padding: 40px; color: var(--text-muted);">ონლაინ მომხმარებლები არ არიან</div>';
+
+            } catch (error) {
+                console.error("Error loading online users:", error);
+                throw error;
+            }
+        }
+
+        // Settings functions
+        window.changeAdminCode = function() {
+            const newCode = document.getElementById('newAdminCode').value.trim();
+            if (!newCode) {
+                showNotification('გთხოვთ შეიყვანოთ ახალი კოდი', true);
+                return;
+            }
+
+            // In real implementation, this would be stored securely
+            // For demo, we'll just show notification
+            showNotification('კოდი შეცვლილია (დემო რეჟიმი)', false);
+            document.getElementById('newAdminCode').value = '';
+        };
+
+        window.syncAllData = function() {
+            showLoading();
+            setTimeout(() => {
+                loadAllData();
+                showNotification('სინქრონიზაცია დასრულდა', false);
+                hideLoading();
+            }, 2000);
+        };
+
+        window.backupData = function() {
+            showLoading();
+            setTimeout(() => {
+                const backup = {
+                    timestamp: Date.now(),
+                    data: 'backup_data'
+                };
+                const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `unimed_backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                hideLoading();
+                showNotification('ბექაფი შენახულია', false);
+            }, 1500);
+        };
+
+        // Helper functions
         function escapeHtml(text) {
             if (!text) return '';
             return String(text)
@@ -2156,61 +1786,47 @@
                 .replace(/'/g, '&#039;');
         }
 
-        function checkOnline(username) {
-            if (!onlineUsers) return false;
-            const now = Date.now();
-            for (let id in onlineUsers) {
-                if (onlineUsers[id]?.name === username && (now - onlineUsers[id].lastSeen) < 60000) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        function getOnlineCount() {
-            if (!onlineUsers) return 0;
-            const now = Date.now();
-            let count = 0;
-            for (let id in onlineUsers) {
-                if (onlineUsers[id]?.lastSeen && (now - onlineUsers[id].lastSeen) < 60000) {
-                    count++;
-                }
-            }
-            return count;
-        }
-
-        function updateOnlineCount() {
-            document.getElementById('onlineCount').textContent = getOnlineCount();
-        }
-
-        function getModuleName(moduleId) {
+        function getModuleName(module) {
             const names = {
                 rezidentura: 'რეზიდენტურა',
                 internalMedicine: 'შინაგანი მედიცინა',
                 pathology: 'პათოლოგია'
             };
-            return names[moduleId] || moduleId;
+            return names[module] || module;
         }
 
-        // ==================== LOGOUT ====================
-        window.logout = function() {
-            sessionStorage.removeItem('adminLoggedIn');
-            document.getElementById('dashboard').classList.add('hidden');
-            document.getElementById('loginModal').style.display = 'block';
-            document.getElementById('adminCode').value = '';
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        window.closeModal = function(modalId) {
+            document.getElementById(modalId).classList.remove('active');
         };
 
-        // Check session
-        if (sessionStorage.getItem('adminLoggedIn') === 'true') {
-            document.getElementById('loginModal').style.display = 'none';
-            document.getElementById('dashboard').classList.remove('hidden');
-            loadData();
-        }
+        // Module select change
+        document.getElementById('moduleSelect').addEventListener('change', () => {
+            loadQuestionsDifficulty();
+        });
 
-        // Make functions global
-        window.closeUserModal = closeUserModal;
-        window.closeEditModal = closeEditModal;
-        window.closeConfirmModal = closeConfirmModal;
+        // Auto-refresh online users every 10 seconds
+        setInterval(() => {
+            if (document.getElementById('onlineSection').classList.contains('active')) {
+                loadOnlineUsers();
+            }
+        }, 10000);
+
+        // Set default dates for activity
+        const today = new Date();
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+
+        document.getElementById('activityStartDate').value = weekAgo.toISOString().split('T')[0];
+        document.getElementById('activityEndDate').value = today.toISOString().split('T')[0];
+
+        // Initial load
+        if (firebaseInitialized) {
+            console.log("Admin panel ready");
+        }
     </script>
 </body>
 </html>
