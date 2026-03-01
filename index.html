@@ -129,6 +129,16 @@
             box-shadow: 0 0 0 4px rgba(14, 165, 164, 0.1);
         }
 
+        .auth-input.valid {
+            border-color: var(--success);
+            background: rgba(22, 163, 74, 0.05);
+        }
+
+        .auth-input.invalid {
+            border-color: var(--danger);
+            background: rgba(220, 38, 38, 0.05);
+        }
+
         .auth-btn {
             width: 100%;
             padding: 16px;
@@ -556,6 +566,32 @@
             color: white;
         }
 
+        /* Activity Tabs */
+        .activity-tabs {
+            display: flex;
+            gap: 8px;
+            background: var(--surface-light);
+            padding: 4px;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+        }
+
+        .activity-tab {
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+        }
+
+        .activity-tab.active {
+            background: var(--surface);
+            color: var(--accent);
+            box-shadow: var(--shadow);
+        }
+
         /* Modal */
         .modal-overlay {
             position: fixed;
@@ -826,6 +862,188 @@
             }
         }
 
+        /* Dashboard Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-card {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .dashboard-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pie-chart {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 16px 0;
+        }
+
+        .pie-segment {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: conic-gradient(var(--success) 0% 70%, var(--danger) 70% 100%);
+        }
+
+        .pie-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+        }
+
+        .legend-color.active {
+            background: var(--success);
+        }
+
+        .legend-color.deleted {
+            background: var(--danger);
+        }
+
+        .online-users-hover {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .online-users-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+
+        .online-users-hover:hover .online-users-tooltip {
+            display: block;
+        }
+
+        .online-user-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .online-user-item:last-child {
+            border-bottom: none;
+        }
+
+        .online-user-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .modules-list {
+            margin-top: 16px;
+        }
+
+        .module-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .module-item:last-child {
+            border-bottom: none;
+        }
+
+        .module-name {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .module-count {
+            background: var(--surface-light);
+            padding: 4px 8px;
+            border-radius: 40px;
+            font-size: 12px;
+            color: var(--accent);
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .activity-content {
+            flex: 1;
+            font-size: 13px;
+        }
+
+        .activity-time {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        .last-registered {
+            margin-top: 16px;
+        }
+
+        .registered-user {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
         /* Difficulty Bar */
         .difficulty-bar {
             width: 100%;
@@ -1035,6 +1253,74 @@
             color: var(--danger);
         }
 
+        /* User Details Stats */
+        .module-stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: var(--surface);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .module-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--surface-light);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 8px 0 12px 0;
+        }
+
+        .module-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .question-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .question-row:last-child {
+            border-bottom: none;
+        }
+
+        .question-id {
+            min-width: 60px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .question-text-small {
+            flex: 1;
+            font-size: 13px;
+        }
+
+        .answer-badge {
+            padding: 4px 8px;
+            border-radius: 40px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .answer-badge.correct {
+            background: rgba(22, 163, 74, 0.1);
+            color: var(--success);
+        }
+
+        .answer-badge.incorrect {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--danger);
+        }
+
         /* Vector icons - all SVG based */
         .icon {
             width: 20px;
@@ -1055,17 +1341,57 @@
                 <h1>UniMed</h1>
                 <p>ადმინისტრატორის პანელი</p>
             </div>
-            <div class="auth-input-group">
-                <input type="password" id="adminCode" class="auth-input" placeholder="შეიყვანეთ კოდი" autofocus>
+            
+            <!-- კოდის შეყვანის ველი (საწყისი ეტაპი) -->
+            <div id="initialCodeStep">
+                <div class="auth-input-group">
+                    <input type="password" id="adminCode" class="auth-input" placeholder="შეიტანეთ კოდი" autofocus>
+                </div>
+                <button id="adminCodeBtn" class="auth-btn">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                        <polyline points="10 17 15 12 10 7"/>
+                        <line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                    გაგრძელება
+                </button>
             </div>
-            <button id="adminLoginBtn" class="auth-btn">
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                    <polyline points="10 17 15 12 10 7"/>
-                    <line x1="15" y1="12" x2="3" y2="12"/>
-                </svg>
-                შესვლა
-            </button>
+            
+            <!-- იმეილის კოდის შეყვანის ველი (მეორე ეტაპი) - თავიდან დამალული -->
+            <div id="emailCodeStep" style="display: none;">
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <svg class="icon" style="width: 48px; height: 48px; color: var(--accent);" viewBox="0 0 24 24">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    <p style="margin: 12px 0; color: var(--text-muted);">დადასტყურების კოდი გაიგზავნა ელ.ფოსტაზე</p>
+                </div>
+                <div class="auth-input-group">
+<input type="text" id="emailCode" class="auth-input" placeholder="კოდი" maxlength="6" style="text-align: center; font-size: 24px; letter-spacing: 8px; font-family: monospace; font-weight: 700;">                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="verifyEmailCodeBtn" class="auth-btn" style="flex: 2;">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        დადასტურება
+                    </button>
+                    <button id="resendEmailCodeBtn" class="auth-btn" style="flex: 1; background: var(--surface-light); color: var(--text);">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        ახალი
+                    </button>
+                </div>
+<button id="backToInitialBtn" style="background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 20px; width: auto; padding: 8px 16px; cursor: pointer; font-size: 13px; border-radius: 30px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; opacity: 0.7;">
+    <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
+        <line x1="19" y1="12" x2="5" y2="12"/>
+        <polyline points="12 19 5 12 12 5"/>
+    </svg>
+    უკან
+</button>
+            </div>
+            
             <div id="authError" class="auth-error"></div>
         </div>
     </div>
@@ -1083,7 +1409,16 @@
                 </div>
                 
                 <div class="sidebar-nav">
-                    <div class="nav-item active" data-section="users">
+                    <div class="nav-item active" data-section="dashboard">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="7" height="9"/>
+                            <rect x="14" y="3" width="7" height="5"/>
+                            <rect x="14" y="12" width="7" height="9"/>
+                            <rect x="3" y="16" width="7" height="5"/>
+                        </svg>
+                        დაშბორდი
+                    </div>
+                    <div class="nav-item" data-section="users">
                         <svg class="icon" viewBox="0 0 24 24">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                             <circle cx="9" cy="7" r="4"/>
@@ -1113,13 +1448,11 @@
                         </svg>
                         ონლაინ
                     </div>
-                    <div class="nav-item" data-section="settings">
+                    <div class="nav-item" data-section="chat">
                         <svg class="icon" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="3"/>
-                            <path d="M19.4 15a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H5.78a1.65 1.65 0 0 0-1.51 1 1.65 1.65 0 0 0 .33 1.82l.07.09A10 10 0 0 0 12 18a10 10 0 0 0 7.28-3z"/>
-                            <path d="M4 10l.67-2.02A2 2 0 0 1 6.56 6h10.88a2 2 0 0 1 1.9 1.37L20 10"/>
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                         </svg>
-                        პარამეტრები
+                        ჩატი
                     </div>
                 </div>
                 
@@ -1144,8 +1477,100 @@
             
             <!-- Main Content -->
             <div class="main-content">
+                <!-- Dashboard Section -->
+                <div id="dashboardSection" class="content-section active">
+                    <div class="content-header">
+                        <h2 class="content-title">დაშბორდი</h2>
+                    </div>
+                    
+                    <div class="dashboard-grid">
+                        <!-- მომხმარებლების სტატისტიკა -->
+                        <div class="dashboard-card">
+                            <h3>
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                </svg>
+                                მომხმარებლები
+                            </h3>
+                            <div class="pie-chart">
+                                <div class="pie-segment" id="userPieChart"></div>
+                                <div class="pie-legend">
+                                    <div class="legend-item">
+                                        <span class="legend-color active"></span>
+                                        <span>აქტიური: <span id="activeUsersCount">0</span></span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color deleted"></span>
+                                        <span>წაშლილი: <span id="deletedUsersCount">0</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 16px; text-align: center; font-size: 14px; color: var(--text-muted);" class="online-users-hover">
+                                სულ: <span id="totalUsersCount">0</span>
+                                <div class="online-users-tooltip" id="onlineUsersTooltip"></div>
+                            </div>
+                        </div>
+
+                        <!-- მოდულები -->
+                        <div class="dashboard-card">
+                            <h3>
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                                    <polyline points="2 17 12 22 22 17"/>
+                                    <polyline points="2 12 12 17 22 12"/>
+                                </svg>
+                                მოდულები
+                            </h3>
+                            <div class="modules-list" id="modulesStatsList"></div>
+                        </div>
+
+                        <!-- ბოლოს რეგისტრირებული -->
+                        <div class="dashboard-card">
+                            <h3>
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                ბოლოს რეგისტრირებული
+                            </h3>
+                            <div class="last-registered" id="lastRegisteredList"></div>
+                        </div>
+                    </div>
+
+                    <!-- ბოლო აქტივობები -->
+                    <div class="table-container" style="margin-bottom: 30px;">
+                        <div class="table-header">
+                            <h3>
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                ბოლო აქტივობები
+                            </h3>
+                        </div>
+                        <div style="padding: 20px;" id="recentActivitiesList"></div>
+                    </div>
+
+                    <!-- შეტყობინებები -->
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3>
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                                </svg>
+                                შეტყობინებები
+                            </h3>
+                        </div>
+                        <div style="padding: 20px;" id="notificationsList"></div>
+                    </div>
+                </div>
+                
                 <!-- Users Section -->
-                <div id="usersSection" class="content-section active">
+                <div id="usersSection" class="content-section">
                     <div class="content-header">
                         <h2 class="content-title">მომხმარებლები</h2>
                         <div style="display: flex; gap: 12px;">
@@ -1177,7 +1602,6 @@
                                     <th>სტატუსი</th>
                                     <th>რეგისტრაცია</th>
                                     <th>ბოლო შესვლა</th>
-                                    <th>პროგრესი</th>
                                     <th>მოქმედება</th>
                                 </tr>
                             </thead>
@@ -1203,11 +1627,11 @@
                                 <input type="date" id="activityEndDate">
                             </div>
                             <div class="activity-tabs">
-                                <div class="activity-tab active" onclick="switchActivityTab('custom')">პერიოდი</div>
-                                <div class="activity-tab" onclick="switchActivityTab('day')">დღე</div>
-                                <div class="activity-tab" onclick="switchActivityTab('week')">კვირა</div>
-                                <div class="activity-tab" onclick="switchActivityTab('month')">თვე</div>
-                                <div class="activity-tab" onclick="switchActivityTab('year')">წელი</div>
+                                <div class="activity-tab active" onclick="switchActivityTab('custom', event)">პერიოდი</div>
+                                <div class="activity-tab" onclick="switchActivityTab('day', event)">დღე</div>
+                                <div class="activity-tab" onclick="switchActivityTab('week', event)">კვირა</div>
+                                <div class="activity-tab" onclick="switchActivityTab('month', event)">თვე</div>
+                                <div class="activity-tab" onclick="switchActivityTab('year', event)">წელი</div>
                             </div>
                         </div>
                     </div>
@@ -1226,6 +1650,7 @@
                                     <th>შესრულებული ტესტი</th>
                                     <th>სწორი პასუხი</th>
                                     <th>სიზუსტე</th>
+                                    <th>საშ. ტესტი/მომხ</th>
                                 </tr>
                             </thead>
                             <tbody id="activityTableBody"></tbody>
@@ -1236,25 +1661,10 @@
                 <!-- Statistics Section -->
                 <div id="statisticsSection" class="content-section">
                     <div class="content-header">
-                        <h2 class="content-title">კითხვების სტატისტიკა</h2>
-                        <div>
-                            <select id="moduleSelect" class="search-box" style="border-radius: 40px; background: var(--surface-light);">
-                                <option value="all">ყველა მოდული</option>
-                                <option value="rezidentura">რეზიდენტურა</option>
-                                <option value="internalMedicine">შინაგანი მედიცინა</option>
-                                <option value="pathology">პათოლოგია</option>
-                            </select>
-                        </div>
+                        <h2 class="content-title">ტესტების სტატისტიკა</h2>
                     </div>
                     
-                    <div class="stats-grid" id="statisticsSummary"></div>
-                    
-                    <div class="table-container" style="margin-top: 24px;">
-                        <div class="table-header">
-                            <h3>მოდულები</h3>
-                        </div>
-                        <div class="module-grid" id="modulesList"></div>
-                    </div>
+                    <div id="moduleStatisticsList"></div>
                 </div>
                 
                 <!-- Online Section -->
@@ -1266,31 +1676,22 @@
                     <div class="online-list" id="onlineUsersList"></div>
                 </div>
                 
-                <!-- Settings Section -->
-                <div id="settingsSection" class="content-section">
+                <!-- Chat Section -->
+                <div id="chatSection" class="content-section">
                     <div class="content-header">
-                        <h2 class="content-title">პარამეტრები</h2>
+                        <h2 class="content-title">ჩატი</h2>
                     </div>
                     
-                    <div class="table-container">
-                        <div style="padding: 24px;">
-                            <h3 style="margin-bottom: 20px;">ადმინისტრატორის პარამეტრები</h3>
-                            
-                            <div style="margin-bottom: 24px;">
-                                <label style="display: block; margin-bottom: 8px; color: var(--text-muted;">კოდის შეცვლა</label>
-                                <div style="display: flex; gap: 10px;">
-                                    <input type="password" id="newAdminCode" class="search-box" style="flex: 1;" placeholder="ახალი კოდი">
-                                    <button class="action-btn" onclick="changeAdminCode()">შენახვა</button>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: var(--text-muted;">Firebase სინქრონიზაცია</label>
-                                <div style="display: flex; gap: 10px;">
-                                    <button class="action-btn" onclick="syncAllData()">სრული სინქრონიზაცია</button>
-                                    <button class="action-btn" onclick="backupData()">მონაცემების ბექაფი</button>
-                                </div>
-                            </div>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="adminChatMessages" style="height: 500px;"></div>
+                        <div class="chat-input">
+                            <input type="text" id="adminChatInput" placeholder="დაწერეთ შეტყობინება..." onkeypress="handleAdminChatKeyPress(event)">
+                            <button class="chat-send-btn" onclick="sendAdminMessage()">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <line x1="22" y1="2" x2="11" y2="13"/>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1395,41 +1796,10 @@
                         </svg>
                         <input type="text" id="questionSearch" placeholder="ძებნა კითხვებში...">
                     </div>
-                    <button class="filter-btn active" onclick="filterQuestions('all')">
-                        <svg class="icon" viewBox="0 0 24 24">
-                            <line x1="3" y1="6" x2="21" y2="6"/>
-                            <line x1="3" y1="12" x2="21" y2="12"/>
-                            <line x1="3" y1="18" x2="21" y2="18"/>
-                        </svg>
-                        ყველა
-                    </button>
-                    <button class="filter-btn" onclick="filterQuestions('easiest')">
-                        <svg class="icon" viewBox="0 0 24 24">
-                            <path d="M18 4l2 2-2 2"/>
-                            <path d="M18 10l2 2-2 2"/>
-                            <path d="M6 4L4 6l2 2"/>
-                            <path d="M6 10L4 12l2 2"/>
-                            <line x1="12" y1="4" x2="12" y2="20"/>
-                        </svg>
-                        მარტივი
-                    </button>
-                    <button class="filter-btn" onclick="filterQuestions('hardest')">
-                        <svg class="icon" viewBox="0 0 24 24">
-                            <path d="M6 20l-2-2 2-2"/>
-                            <path d="M6 14l-2-2 2-2"/>
-                            <path d="M18 20l2-2-2-2"/>
-                            <path d="M18 14l2-2-2-2"/>
-                            <line x1="12" y1="4" x2="12" y2="20"/>
-                        </svg>
-                        რთული
-                    </button>
-                    <button class="filter-btn" onclick="filterQuestions('frequent')">
-                        <svg class="icon" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
-                        </svg>
-                        ხშირი
-                    </button>
+                    <button class="filter-btn active" onclick="filterQuestions('all', event)">ყველა</button>
+                    <button class="filter-btn" onclick="filterQuestions('easiest', event)">მარტივი</button>
+                    <button class="filter-btn" onclick="filterQuestions('hardest', event)">რთული</button>
+                    <button class="filter-btn" onclick="filterQuestions('frequent', event)">ხშირი</button>
                 </div>
                 <div id="questionsList"></div>
             </div>
@@ -1466,20 +1836,28 @@
             console.error("Firebase initialization failed:", error);
         }
 
+        // Google Apps Script Web App URL (თქვენი Santa-ს კოდიდან)
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzplhhEvFAm3JmglGQvtJrC5ZEb7as5IMRm_GvWYbkJyQbMt8OYfb5RlCG9sHXSodw/exec';
+        const ADMIN_EMAIL = "shogiradze.ale@gmail.com";
+
         // Admin Authentication
         const ADMIN_CODE = "200011";
         let isAdminAuthenticated = false;
         let currentActivityTab = 'custom';
         let onlineUsers = {};
         let currentQuestionFilter = 'all';
-        let currentQuestions = [];
         let currentModuleQuestions = [];
+        let currentQuestions = [];
+
+let generatedEmailCode = null;
+let isAdminCodeValid = false;
+let codeExpirationTime = null; // ახალი ცვლადი
+let countdownInterval = null;   // ახალი ცვლადი
 
         // DOM Elements
         const authOverlay = document.getElementById('authOverlay');
         const adminPanel = document.getElementById('adminPanel');
         const adminCode = document.getElementById('adminCode');
-        const adminLoginBtn = document.getElementById('adminLoginBtn');
         const authError = document.getElementById('authError');
         const loadingOverlay = document.getElementById('loadingOverlay');
 
@@ -1488,20 +1866,178 @@
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         
-        document.getElementById('activityStartDate').value = thirtyDaysAgo.toISOString().split('T')[0];
-        document.getElementById('activityEndDate').value = today.toISOString().split('T')[0];
-
-        // Show notification
-        function showNotification(message, isError = false) {
-            const notification = document.createElement('div');
-            notification.className = `notification ${isError ? 'error' : ''}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 4000);
+        if (document.getElementById('activityStartDate')) {
+            document.getElementById('activityStartDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+            document.getElementById('activityEndDate').value = today.toISOString().split('T')[0];
         }
+
+        // იმეილის გაგზავნის ფუნქცია Santa-ს კოდიდან
+        async function sendEmailViaScript(toEmail, subject, message) {
+            try {
+                if (!toEmail || !toEmail.includes('@')) {
+                    console.log('Invalid email address:', toEmail);
+                    return false;
+                }
+
+                const params = new URLSearchParams({
+                    to: toEmail,
+                    subject: subject,
+                    message: message,
+                    timestamp: Date.now()
+                });
+                
+                const url = `${WEB_APP_URL}?${params.toString()}`;
+                console.log('Sending email to:', toEmail, 'Subject:', subject);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                
+                return true;
+                
+            } catch (error) {
+                console.error('Email sending failed:', error);
+                return false;
+            }
+        }
+
+// ტაიმერის დაწყება
+function startCodeTimer() {
+    // ძველი ტაიმერის გასუფთავება
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+    }
+    
+    // წამზომის ელემენტის დამატება (თუ არ არსებობს)
+    let timerElement = document.getElementById('codeTimer');
+    if (!timerElement) {
+        const emailCodeStep = document.getElementById('emailCodeStep');
+        timerElement = document.createElement('div');
+        timerElement.id = 'codeTimer';
+        timerElement.style.margin = '10px 0';
+        timerElement.style.textAlign = 'center';
+        timerElement.style.fontSize = '14px';
+        timerElement.style.color = 'var(--accent)';
+        timerElement.style.fontWeight = '600';
+        emailCodeStep.insertBefore(timerElement, emailCodeStep.firstChild);
+    }
+    
+    // ტაიმერის განახლება ყოველ წამში
+    countdownInterval = setInterval(() => {
+        const now = Date.now();
+        const timeLeft = codeExpirationTime - now;
+        
+        if (timeLeft <= 0) {
+            // კოდის ვადა გავიდა
+            clearInterval(countdownInterval);
+            timerElement.innerHTML = 'გაგზავნეთ კოდი ხელახლა';
+            timerElement.style.color = 'var(--danger)';
+            
+            // გავაუქმოთ კოდი
+            generatedEmailCode = null;
+            isAdminCodeValid = false;
+            
+            // დავამატოთ ღილაკი ხელახლა გაგზავნისთვის
+            const resendBtn = document.getElementById('resendEmailCodeBtn');
+            if (resendBtn) {
+                resendBtn.style.background = 'var(--gradient)';
+                resendBtn.style.color = 'white';
+                resendBtn.innerHTML = 'გაგზავნა';
+            }
+            
+        } else {
+            // დარჩენილი დროის ფორმატირება
+            const seconds = Math.floor(timeLeft / 1000);
+            const displaySeconds = seconds < 10 ? `0${seconds}` : seconds;
+            timerElement.innerHTML = `კოდი აქტიურია 00:${displaySeconds}`;
+            timerElement.style.color = seconds < 10 ? 'var(--warning)' : 'var(--accent)';
+        }
+    }, 1000);
+}
+
+document.getElementById('verifyEmailCodeBtn').addEventListener('click', () => {
+    const emailCode = document.getElementById('emailCode').value.trim();
+    
+    if (!emailCode || emailCode.length !== 6) {
+        showNotification('შეიყვანეთ 6-ნიშნა კოდი', true);
+        return;
+    }
+    
+    // 🟢 შევამოწმოთ ვადა (ახალი)
+    if (codeExpirationTime && Date.now() > codeExpirationTime) {
+        showNotification('⏰ კოდის ვადა გავიდა', true);
+        return;
+    }
+    
+    if (emailCode === generatedEmailCode) {
+        // ❌ წავშალოთ ძველი შეტყობინებები (თუ არსებობს)
+        const oldNotifications = document.querySelectorAll('.notification');
+        oldNotifications.forEach(n => n.remove());
+        
+        // ✅ წარმატებული ავტორიზაცია
+        isAdminAuthenticated = true;
+        authOverlay.style.display = 'none';
+        adminPanel.style.display = 'block';
+        
+        // 🟢 მხოლოდ ერთი შეტყობინება
+        showNotification('✅ წარმატებით შესვლა', false);
+        
+        // დანარჩენი ფუნქციები
+        loadAllData();
+        startOnlineTracking();
+        initChat();
+        
+        // ტაიმერის გასუფთავება
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+        
+        // გასუფთავება
+        generatedEmailCode = null;
+        isAdminCodeValid = false;
+        codeExpirationTime = null;
+        
+        // წამზომის ელემენტის წაშლა
+        const timerElement = document.getElementById('codeTimer');
+        if (timerElement) {
+            timerElement.remove();
+        }
+        
+    } else {
+        // ❌ არასწორი კოდი
+        document.getElementById('emailCode').classList.add('invalid');
+        
+        // 🟢 მხოლოდ ერთი შეტყობინება
+        showNotification('❌ არასწორი კოდი', true);
+        
+        // წავშალოთ invalid კლასი 2 წამში
+        setTimeout(() => {
+            document.getElementById('emailCode').classList.remove('invalid');
+        }, 2000);
+    }
+});
+
+        // კოდის გენერაცია
+        function generateVerificationCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+// Show notification
+function showNotification(message, isError = false) {
+    // წავშალოთ წინა შეტყობინებები (თუ გვინდა მხოლოდ ერთი)
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(n => n.remove());
+    
+    const notification = document.createElement('div');
+    notification.className = `notification ${isError ? 'error' : ''}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
 
         // Show/hide loading
         function showLoading() {
@@ -1534,36 +2070,169 @@
             closeConfirm();
         });
 
-        // Admin Login
-        adminLoginBtn.addEventListener('click', () => {
-            const code = adminCode.value.trim();
+document.getElementById('adminCodeBtn').addEventListener('click', async () => {
+    const code = document.getElementById('adminCode').value.trim();
+    
+    if (code === ADMIN_CODE) {
+        showLoading();
+        isAdminCodeValid = true;
+        
+        // გენერაცია და გაგზავნა
+        generatedEmailCode = generateVerificationCode();
+        codeExpirationTime = Date.now() + 60000; // 1 წუთი (60000 ms)
+        
+        // დავიწყოთ ტაიმერი
+        startCodeTimer();
+        
+        const subject = "UniMed · ადმინისტრატორის კოდი";
+        const message = `თქვენ მოითხოვეთ ავტორიზაცია ადმინისტრატორის პანელზე. 
+იმისათვის, რომ დადასტურდეს თქვენი ავთენტურობა, შეიტანეთ კოდი:
+
+${generatedEmailCode}
+
+კოდი აქტიურია 1 წუთის განმავლობაში.
+
+UniMed`;
+        
+        const emailSent = await sendEmailViaScript(ADMIN_EMAIL, subject, message);
+        
+        hideLoading();
+        
+        if (emailSent) {
+            // დამალე პირველი ნაბიჯი და აჩვენე მეორე
+            document.getElementById('initialCodeStep').style.display = 'none';
+            document.getElementById('emailCodeStep').style.display = 'block';
+            document.getElementById('emailCode').focus();
+            showNotification('კოდი გაიგზავნა ელ.ფოსტაზე (მოქმედებს 1 წუთი)', false);
+        } else {
+            showNotification('ელ.ფოსტის გაგზავნა ვერ მოხერხდა', true);
+        }
+    } else {
+        showNotification('არასწორი ადმინ კოდი', true);
+    }
+});
+
+        // იმეილის კოდის დადასტურება
+        document.getElementById('verifyEmailCodeBtn').addEventListener('click', () => {
+            const emailCode = document.getElementById('emailCode').value.trim();
             
-            if (code === ADMIN_CODE) {
+            if (!emailCode || emailCode.length !== 6) {
+                showNotification('შეიყვანეთ 6-ნიშნა კოდი', true);
+                return;
+            }
+            
+            if (emailCode === generatedEmailCode) {
+                // წარმატებული ავტორიზაცია
                 isAdminAuthenticated = true;
                 authOverlay.style.display = 'none';
                 adminPanel.style.display = 'block';
                 showNotification('წარმატებით შესვლა', false);
                 loadAllData();
                 startOnlineTracking();
+                initChat();
+                
+                // გასუფთავება
+                generatedEmailCode = null;
+                isAdminCodeValid = false;
             } else {
-                authError.textContent = 'არასწორი კოდი';
-                authError.style.display = 'block';
+                document.getElementById('emailCode').classList.add('invalid');
                 showNotification('არასწორი კოდი', true);
+            }
+        });
+
+document.getElementById('resendEmailCodeBtn').addEventListener('click', async () => {
+    if (!isAdminCodeValid) {
+        showNotification('გთხოვთ თავიდან დაიწყოთ', true);
+        document.getElementById('backToInitialBtn').click();
+        return;
+    }
+    
+    showLoading();
+    generatedEmailCode = generateVerificationCode();
+    codeExpirationTime = Date.now() + 60000; // ახალი ვადა 1 წუთი
+    
+    // ტაიმერის განახლება
+    startCodeTimer();
+    
+    const subject = "UniMed · ადმინისტრატორის ახალი კოდი";
+    const message = `თქვენ მოითხოვეთ ახალი კოდი ადმინისტრატორის პანელზე შესასვლელად:
+
+${generatedEmailCode}
+
+კოდი მოქმედებს 1 წუთის განმავლობაში.
+
+UniMed`;
+    
+    const emailSent = await sendEmailViaScript(ADMIN_EMAIL, subject, message);
+    hideLoading();
+    
+    if (emailSent) {
+        showNotification('ახალი კოდი გაიგზავნა (მოქმედებს 1 წუთი)', false);
+        document.getElementById('emailCode').value = '';
+        document.getElementById('emailCode').focus();
+    } else {
+        showNotification('კოდის გაგზავნა ვერ მოხერხდა', true);
+    }
+});
+
+document.getElementById('backToInitialBtn').addEventListener('click', () => {
+    document.getElementById('emailCodeStep').style.display = 'none';
+    document.getElementById('initialCodeStep').style.display = 'block';
+    document.getElementById('adminCode').value = '';
+    document.getElementById('adminCode').focus();
+    
+    // ტაიმერის გასუფთავება
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+    }
+    
+    // წამზომის ელემენტის წაშლა
+    const timerElement = document.getElementById('codeTimer');
+    if (timerElement) {
+        timerElement.remove();
+    }
+    
+    generatedEmailCode = null;
+    isAdminCodeValid = false;
+    codeExpirationTime = null;
+});
+
+        // Enter ღილაკის დამუშავება
+        document.getElementById('emailCode').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('verifyEmailCodeBtn').click();
+            }
+        });
+
+        // ავტომატური გადასვლა 6 ციფრის შეყვანის შემდეგ
+        document.getElementById('emailCode').addEventListener('input', (e) => {
+            const value = e.target.value.replace(/\D/g, '');
+            e.target.value = value;
+            
+            if (value.length === 6) {
+                document.getElementById('verifyEmailCodeBtn').click();
             }
         });
 
         adminCode.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                adminLoginBtn.click();
+                document.getElementById('adminCodeBtn').click();
             }
         });
 
         // Logout
         document.getElementById('adminLogoutBtn').addEventListener('click', () => {
             isAdminAuthenticated = false;
+            isAdminCodeValid = false;
+            generatedEmailCode = null;
             adminPanel.style.display = 'none';
             authOverlay.style.display = 'flex';
-            adminCode.value = '';
+            
+            // აჩვენე საწყისი ნაბიჯი
+            document.getElementById('emailCodeStep').style.display = 'none';
+            document.getElementById('initialCodeStep').style.display = 'block';
+            document.getElementById('adminCode').value = '';
+            document.getElementById('emailCode').value = '';
             authError.style.display = 'none';
         });
 
@@ -1579,10 +2248,14 @@
                 });
                 document.getElementById(`${section}Section`).classList.add('active');
                 
-                if (section === 'online') {
+                if (section === 'dashboard') {
+                    loadDashboard();
+                } else if (section === 'online') {
                     loadOnlineUsers();
                 } else if (section === 'statistics') {
                     loadStatistics();
+                } else if (section === 'chat') {
+                    loadChat();
                 }
             });
         });
@@ -1600,6 +2273,9 @@
                 
                 document.getElementById('onlineUsersCount').textContent = activeUsers.length;
                 
+                if (document.getElementById('dashboardSection').classList.contains('active')) {
+                    loadDashboard();
+                }
                 if (document.getElementById('usersSection').classList.contains('active')) {
                     loadUsers();
                 }
@@ -1611,6 +2287,7 @@
             showLoading();
             try {
                 await Promise.all([
+                    loadDashboard(),
                     loadUsers(),
                     loadActivityData(),
                     loadStatistics(),
@@ -1621,6 +2298,221 @@
                 showNotification('შეცდომა მონაცემების ჩატვირთვისას', true);
             } finally {
                 hideLoading();
+            }
+        }
+
+        // Load Dashboard
+        async function loadDashboard() {
+            if (!firebaseInitialized || !database) return;
+
+            try {
+                const [usersSnapshot, answersSnapshot, questionsSnapshot] = await Promise.all([
+                    database.ref('users').once('value'),
+                    database.ref('answers').once('value'),
+                    database.ref('questions').once('value')
+                ]);
+
+                const users = usersSnapshot.val() || {};
+                const answers = answersSnapshot.val() || {};
+                const questions = questionsSnapshot.val() || {};
+
+                const usersList = Object.entries(users).map(([id, data]) => ({
+                    id,
+                    username: data.username || id,
+                    registeredAt: data.registeredAt || data.lastUpdated || 0,
+                    lastUpdated: data.lastUpdated || 0,
+                    progress: data.progress || {}
+                }));
+
+                const now = Date.now();
+                const activeUsersList = Object.values(onlineUsers).filter(u => 
+                    u?.lastSeen && (now - u.lastSeen) < 30000
+                );
+
+                const activeUsers = activeUsersList.length;
+                const deletedUsers = 0;
+
+                document.getElementById('totalUsersCount').textContent = usersList.length;
+                document.getElementById('activeUsersCount').textContent = activeUsers;
+                document.getElementById('deletedUsersCount').textContent = deletedUsers;
+
+                // წრიული დიაგრამა
+                const activePercent = (activeUsers / usersList.length) * 100 || 0;
+                document.getElementById('userPieChart').style.background = `conic-gradient(var(--success) 0% ${activePercent}%, var(--danger) ${activePercent}% 100%)`;
+
+                // ონლაინ მომხმარებლები ტულტიპში
+                const tooltip = document.getElementById('onlineUsersTooltip');
+                tooltip.innerHTML = activeUsersList.map(u => `
+                    <div class="online-user-item">
+                        <span class="online-user-dot"></span>
+                        <span>${escapeHtml(u.name || 'უცნობი')}</span>
+                    </div>
+                `).join('') || '<div style="color: var(--text-muted);">ონლაინ მომხმარებლები არ არიან</div>';
+
+                // მოდულები
+                const modulesList = document.getElementById('modulesStatsList');
+                modulesList.innerHTML = '';
+                
+                const mainModuleNames = {
+                    'samkurnaloo': 'სამკურნალო',
+                    'stomatologia': 'სტომატოლოგია',
+                    'alergologia': 'ალერგოლოგია',
+                    'angiokirurgia': 'ანგიოქირურგია',
+                    'anesteziologia': 'ანესთეზიოლოგია, რეანიმატოლოგია',
+                    'bavshvta_gadaudebeli': 'ბავშვთა გადაუდებელი',
+                    'bavshvta_kardiorevmatologia': 'ბავშვთა კარდიორევმატოლოგია',
+                    'bavshvta_nevrologia': 'ბავშვთა ნევროლოგია',
+                    'bavshvta_nevrologia2': 'ბავშვთა ნეფროლოგია',
+                    'gadaudebeli_medicina': 'გადაუდებელი მედიცინა',
+                    'gastroenterologia': 'გასტროენტეროლოგია',
+                    'ginekologia': 'გინეკოლოგია',
+                    'dermatologia': 'დერმატოლოგია',
+                    'endokrinologia': 'ენდოკრინოლოგია',
+                    'zogadi_kirurgia': 'ზოგადი ქირურგია',
+                    'terapiuli_stomatologia': 'თერაპიული სტომატოლოგია',
+                    'infekciuri': 'ინფექციური',
+                    'kardiologia': 'კარდიოლოგია',
+                    'kardiokirurgia': 'კარდიოქირურგია',
+                    'laboratoriuli_medicina': 'ლაბორატორიული მედიცინა',
+                    'narkologia': 'ნარკოლოგია',
+                    'nevrologia': 'ნევროლოგია',
+                    'neonatologia': 'ნეონატოლოგია',
+                    'nefrologia': 'ნეფროლოგია',
+                    'onkologia': 'ონკოლოგია',
+                    'ortodontia': 'ორთოდონტია',
+                    'ortopedia_travmatologia': 'ორთოპედია ტრავმატოლოგია',
+                    'ortopediuli_stomatologia': 'ორთოპედიული სტომატოლოგია',
+                    'otorinolaringologia': 'ოტორინოლარინგოლოგია',
+                    'oftalmologia': 'ოფთალმოლოგია',
+                    'patologia': 'პათოლოგია',
+                    'pediatria': 'პედიატრია',
+                    'plastikuri_kirurgia': 'პლასტიკური და რეკონსტრუქციული ქირურგია',
+                    'radiologia': 'რადიოლოგია',
+                    'radiacioni_onkologia': 'რადიაციული ონკოლოგია',
+                    'reproduqtologia': 'რეპროდუქტოლოგია',
+                    'revmatologia': 'რევმატოლოგია',
+                    'saokjao_medicina': 'საოჯახო მედიცინა',
+                    'sportuli_medicina': 'სპორტული მედიცინა',
+                    'toksikologia': 'ტოქსიკოლოგია',
+                    'urologia': 'უროლოგია',
+                    'ftiziatria_pulmonologia': 'ფთიზიატრია, პულმონოლოგია',
+                    'psikiatria': 'ფსიქიატრია',
+                    'qba_saxis_kirurgia': 'ყბა-სახის ქირურგია',
+                    'shinagani_medicina': 'შინაგანი მედიცინა',
+                    'hematologia': 'ჰემატოლოგია'
+                };
+
+                Object.entries(questions).slice(0, 10).forEach(([id, data]) => {
+                    const questionCount = data ? Object.keys(data).length : 0;
+                    if (questionCount > 0) {
+                        const moduleItem = document.createElement('div');
+                        moduleItem.className = 'module-item';
+                        moduleItem.innerHTML = `
+                            <span class="module-name">${mainModuleNames[id] || id}</span>
+                            <span class="module-count">${questionCount} კითხვა</span>
+                        `;
+                        modulesList.appendChild(moduleItem);
+                    }
+                });
+
+                // ბოლოს რეგისტრირებული
+                const lastRegistered = usersList
+                    .filter(u => u.registeredAt)
+                    .sort((a, b) => b.registeredAt - a.registeredAt)
+                    .slice(0, 5);
+
+                const lastRegisteredList = document.getElementById('lastRegisteredList');
+                lastRegisteredList.innerHTML = lastRegistered.map(user => `
+                    <div class="registered-user">
+                        <span>${escapeHtml(user.username)}</span>
+                        <span style="color: var(--text-muted); font-size: 12px;">${new Date(user.registeredAt).toLocaleString('ka-GE')}</span>
+                    </div>
+                `).join('') || '<div style="color: var(--text-muted);">რეგისტრაციები არ არის</div>';
+
+                // ბოლო აქტივობები
+                const recentAnswers = Object.values(answers)
+                    .filter(a => a.timestamp)
+                    .sort((a, b) => b.timestamp - a.timestamp)
+                    .slice(0, 10);
+
+                const recentActivities = document.getElementById('recentActivitiesList');
+                recentActivities.innerHTML = recentAnswers.map(answer => {
+                    const user = usersList.find(u => u.id === answer.userId);
+                    const moduleName = mainModuleNames[answer.module] || answer.module;
+                    return `
+                        <div class="activity-item">
+                            <span class="activity-dot"></span>
+                            <div class="activity-content">
+                                <strong>${escapeHtml(user?.username || answer.userId)}</strong> - ${answer.isCorrect ? '✅' : '❌'} <strong>${escapeHtml(moduleName)}</strong>
+                                <div class="activity-time">${new Date(answer.timestamp).toLocaleString('ka-GE')}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('') || '<div style="color: var(--text-muted);">აქტივობა არ არის</div>';
+
+                // შეტყობინებები
+                const notificationsSnapshot = await database.ref('notifications').once('value');
+                const notifications = notificationsSnapshot.val() || {};
+                
+                const allNotifications = Object.values(notifications)
+                    .sort((a, b) => b.timestamp - a.timestamp)
+                    .slice(0, 10);
+
+                const notificationsList = document.getElementById('notificationsList');
+                notificationsList.innerHTML = allNotifications.map(n => {
+                    let icon = '📢';
+                    if (n.type === 'new_user') icon = '➕';
+                    if (n.type === 'login') icon = '🔓';
+                    if (n.type === 'logout') icon = '🔒';
+                    
+                    return `
+                        <div class="activity-item">
+                            <span class="activity-dot" style="background: var(--accent);"></span>
+                            <div class="activity-content">
+                                ${icon} ${escapeHtml(n.message)}
+                                <div class="activity-time">${new Date(n.timestamp).toLocaleString('ka-GE')}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('') || '<div style="color: var(--text-muted);">შეტყობინებები არ არის</div>';
+
+                // Add notification listeners
+                database.ref('users').on('child_added', (snapshot) => {
+                    const user = snapshot.val();
+                    const notification = {
+                        message: `➕ ახალი მომხმარებელი დაემატა: ${user.username || snapshot.key}`,
+                        timestamp: Date.now(),
+                        type: 'new_user'
+                    };
+                    database.ref('notifications').push(notification);
+                });
+
+                database.ref('chat/onlineUsers').on('child_added', (snapshot) => {
+                    const user = snapshot.val();
+                    if (user && user.name) {
+                        const notification = {
+                            message: `🔓 ${user.name} შემოვიდა სისტემაში`,
+                            timestamp: Date.now(),
+                            type: 'login'
+                        };
+                        database.ref('notifications').push(notification);
+                    }
+                });
+
+                database.ref('chat/onlineUsers').on('child_removed', (snapshot) => {
+                    const user = snapshot.val();
+                    if (user && user.name) {
+                        const notification = {
+                            message: `🔒 ${user.name} გავიდა სისტემიდან`,
+                            timestamp: Date.now(),
+                            type: 'logout'
+                        };
+                        database.ref('notifications').push(notification);
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error loading dashboard:", error);
             }
         }
 
@@ -1637,6 +2529,7 @@
                     id: key,
                     username: data.username || key,
                     password: data.password || '',
+                    registeredAt: data.registeredAt || data.lastUpdated || 0,
                     lastUpdated: data.lastUpdated || 0,
                     progress: data.progress || {},
                     isOnline: Object.values(onlineUsers).some(u => 
@@ -1645,18 +2538,12 @@
                     )
                 }));
 
-                // Update total users count
                 document.getElementById('totalUsers').textContent = usersList.length;
-
-                // Render users table
                 renderUsersTable(usersList);
-
-                // Setup search
                 setupUserSearch(usersList);
 
             } catch (error) {
                 console.error("Error loading users:", error);
-                throw error;
             }
         }
 
@@ -1665,30 +2552,9 @@
             tbody.innerHTML = '';
 
             users.sort((a, b) => b.isOnline - a.isOnline).forEach(user => {
-                const registrationDate = user.lastUpdated ? new Date(user.lastUpdated).toLocaleDateString('ka-GE') : 'უცნობია';
+                const registrationDate = user.registeredAt ? new Date(user.registeredAt).toLocaleString('ka-GE') : 'უცნობია';
                 const lastLogin = user.lastUpdated ? new Date(user.lastUpdated).toLocaleString('ka-GE') : 'უცნობია';
                 
-                // Calculate progress
-                let totalAnswered = 0;
-                let wrongAnswers = 0;
-                
-                if (user.progress) {
-                    Object.values(user.progress).forEach(module => {
-                        if (module.normal?.answeredQuestions) {
-                            totalAnswered += Object.keys(module.normal.answeredQuestions).length;
-                            Object.values(module.normal.answeredQuestions).forEach(a => {
-                                if (!a.isCorrect) wrongAnswers++;
-                            });
-                        }
-                        if (module.exam?.answeredQuestions) {
-                            totalAnswered += Object.keys(module.exam.answeredQuestions).length;
-                            Object.values(module.exam.answeredQuestions).forEach(a => {
-                                if (!a.isCorrect) wrongAnswers++;
-                            });
-                        }
-                    });
-                }
-
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>
@@ -1702,10 +2568,6 @@
                     </td>
                     <td>${registrationDate}</td>
                     <td>${lastLogin}</td>
-                    <td>
-                        <div>სულ: ${totalAnswered}</div>
-                        <div style="color: var(--danger);">შეცდომა: ${wrongAnswers}</div>
-                    </td>
                     <td>
                         <div class="action-buttons">
                             <button class="action-btn view" onclick="viewUserDetails('${user.id}')">
@@ -1737,13 +2599,15 @@
 
         function setupUserSearch(users) {
             const searchInput = document.getElementById('userSearch');
-            searchInput.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                const filtered = users.filter(user => 
-                    user.username.toLowerCase().includes(term)
-                );
-                renderUsersTable(filtered);
-            });
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const filtered = users.filter(user => 
+                        user.username.toLowerCase().includes(term)
+                    );
+                    renderUsersTable(filtered);
+                });
+            }
         }
 
         // Confirm delete user
@@ -1776,8 +2640,16 @@
                     await database.ref('chat/onlineUsers').update(updates);
                 }
                 
+                const notification = {
+                    message: `❌ მომხმარებელი ${userId} წაიშალა`,
+                    timestamp: Date.now(),
+                    type: 'delete'
+                };
+                await database.ref('notifications').push(notification);
+                
                 showNotification('მომხმარებელი წაიშალა', false);
                 await loadUsers();
+                await loadDashboard();
                 
                 setTimeout(async () => {
                     await database.ref('system/forceLogout').remove();
@@ -1791,212 +2663,109 @@
             }
         };
 
-        // View user details with questions instead of modules
+        // View user details
         window.viewUserDetails = async function(userId) {
             showLoading();
             try {
-                const snapshot = await database.ref(`users/${userId}`).once('value');
-                const user = snapshot.val();
+                const [userSnapshot, questionsSnapshot] = await Promise.all([
+                    database.ref(`users/${userId}`).once('value'),
+                    database.ref('questions').once('value')
+                ]);
+
+                const user = userSnapshot.val();
+                const allQuestions = questionsSnapshot.val() || {};
                 
                 if (!user) {
                     showNotification('მომხმარებელი არ მოიძებნა', true);
                     return;
                 }
 
-                // Collect all questions the user has answered
-                const answeredQuestions = [];
-                const moduleWork = {};
+                const modalContent = document.getElementById('userDetailsContent');
+                
+                // Collect questions by module
+                const modulesWithQuestions = {};
 
                 if (user.progress) {
-                    Object.entries(user.progress).forEach(([moduleName, moduleData]) => {
+                    for (const [moduleName, moduleData] of Object.entries(user.progress)) {
+                        const moduleQuestions = allQuestions[moduleName] || {};
+                        const totalQuestionsInModule = Object.keys(moduleQuestions).length;
+                        
+                        const answeredQuestions = [];
+                        
                         ['normal', 'exam'].forEach(mode => {
                             const answers = moduleData[mode]?.answeredQuestions || {};
-                            Object.entries(answers).forEach(([qId, answer]) => {
+                            for (const [qId, answer] of Object.entries(answers)) {
+                                const questionData = moduleQuestions[qId] || { text: qId };
                                 answeredQuestions.push({
-                                    module: moduleName,
-                                    mode: mode,
-                                    questionId: qId,
+                                    id: qId,
+                                    text: questionData.text || questionData.question || qId,
                                     isCorrect: answer.isCorrect,
-                                    timestamp: answer.timestamp || 0
+                                    timestamp: answer.timestamp || 0,
+                                    mode: mode
                                 });
-                            });
+                            }
                         });
 
-                        // Track which modules user works on
-                        if (moduleData.lastAccessed) {
-                            moduleWork[moduleName] = moduleData.lastAccessed;
-                        }
-                    });
+                        answeredQuestions.sort((a, b) => b.timestamp - a.timestamp);
+
+                        modulesWithQuestions[moduleName] = {
+                            total: totalQuestionsInModule,
+                            answered: answeredQuestions.length,
+                            questions: answeredQuestions
+                        };
+                    }
                 }
 
-                // Find easiest and hardest questions
-                const questionStats = {};
-                answeredQuestions.forEach(q => {
-                    if (!questionStats[q.questionId]) {
-                        questionStats[q.questionId] = { correct: 0, total: 0 };
-                    }
-                    questionStats[q.questionId].total++;
-                    if (q.isCorrect) {
-                        questionStats[q.questionId].correct++;
-                    }
-                });
-
-                const questionDifficulty = Object.entries(questionStats).map(([qId, stats]) => ({
-                    id: qId,
-                    accuracy: (stats.correct / stats.total) * 100,
-                    total: stats.total
-                }));
-
-                const easiest = questionDifficulty.sort((a, b) => b.accuracy - a.accuracy)[0];
-                const hardest = questionDifficulty.sort((a, b) => a.accuracy - b.accuracy)[0];
-
-                const modalContent = document.getElementById('userDetailsContent');
                 modalContent.innerHTML = `
                     <div style="margin-bottom: 20px;">
                         <div style="background: var(--surface-light); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                                 <div>
-                                    <div style="color: var(--text-muted); font-size: 12px; display: flex; align-items: center; gap: 4px;">
-                                        <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
-                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                            <circle cx="12" cy="7" r="4"/>
-                                        </svg>
-                                        მომხმარებელი
-                                    </div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">მომხმარებელი</div>
                                     <div style="font-weight: 600;">${escapeHtml(user.username)}</div>
                                 </div>
                                 <div>
-                                    <div style="color: var(--text-muted); font-size: 12px; display: flex; align-items: center; gap: 4px;">
-                                        <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
-                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                        </svg>
-                                        პაროლი
-                                    </div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">პაროლი</div>
                                     <div style="font-family: monospace;">${escapeHtml(user.password)}</div>
                                 </div>
                                 <div>
-                                    <div style="color: var(--text-muted); font-size: 12px; display: flex; align-items: center; gap: 4px;">
-                                        <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
-                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                            <line x1="16" y1="2" x2="16" y2="6"/>
-                                            <line x1="8" y1="2" x2="8" y2="6"/>
-                                            <line x1="3" y1="10" x2="21" y2="10"/>
-                                        </svg>
-                                        რეგისტრაცია
-                                    </div>
-                                    <div>${user.lastUpdated ? new Date(user.lastUpdated).toLocaleString('ka-GE') : 'უცნობია'}</div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">რეგისტრაცია</div>
+                                    <div>${user.registeredAt ? new Date(user.registeredAt).toLocaleString('ka-GE') : 'უცნობია'}</div>
                                 </div>
                                 <div>
-                                    <div style="color: var(--text-muted); font-size: 12px; display: flex; align-items: center; gap: 4px;">
-                                        <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <polyline points="12 6 12 12 16 14"/>
-                                        </svg>
-                                        ბოლო შესვლა
-                                    </div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">ბოლო შესვლა</div>
                                     <div>${user.lastUpdated ? new Date(user.lastUpdated).toLocaleString('ka-GE') : 'უცნობია'}</div>
                                 </div>
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                            <div style="background: var(--surface-light); padding: 16px; border-radius: 12px;">
-                                <h4 style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: var(--success);">
-                                    <svg class="icon" viewBox="0 0 24 24">
-                                        <path d="M18 4l2 2-2 2"/>
-                                        <path d="M18 10l2 2-2 2"/>
-                                        <path d="M6 4L4 6l2 2"/>
-                                        <path d="M6 10L4 12l2 2"/>
-                                        <line x1="12" y1="4" x2="12" y2="20"/>
-                                    </svg>
-                                    ყველაზე მარტივი კითხვა
-                                </h4>
-                                ${easiest ? `
-                                    <div>კითხვის ID: ${easiest.id}</div>
-                                    <div class="difficulty-bar">
-                                        <div class="difficulty-fill green" style="width: ${easiest.accuracy}%;"></div>
-                                    </div>
-                                    <div class="difficulty-text">
-                                        <span>✅ ${easiest.accuracy.toFixed(1)}% სწორი</span>
-                                        <span>📊 ${easiest.total} პასუხი</span>
-                                    </div>
-                                ` : '<div style="color: var(--text-muted);">მონაცემები არ არის</div>'}
-                            </div>
-                            
-                            <div style="background: var(--surface-light); padding: 16px; border-radius: 12px;">
-                                <h4 style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: var(--danger);">
-                                    <svg class="icon" viewBox="0 0 24 24">
-                                        <path d="M6 20l-2-2 2-2"/>
-                                        <path d="M6 14l-2-2 2-2"/>
-                                        <path d="M18 20l2-2-2-2"/>
-                                        <path d="M18 14l2-2-2-2"/>
-                                        <line x1="12" y1="4" x2="12" y2="20"/>
-                                    </svg>
-                                    ყველაზე რთული კითხვა
-                                </h4>
-                                ${hardest ? `
-                                    <div>კითხვის ID: ${hardest.id}</div>
-                                    <div class="difficulty-bar">
-                                        <div class="difficulty-fill red" style="width: ${hardest.accuracy}%;"></div>
-                                    </div>
-                                    <div class="difficulty-text">
-                                        <span>⚠️ ${hardest.accuracy.toFixed(1)}% სწორი</span>
-                                        <span>📊 ${hardest.total} პასუხი</span>
-                                    </div>
-                                ` : '<div style="color: var(--text-muted);">მონაცემები არ არის</div>'}
-                            </div>
-                        </div>
-
-                        <h4 style="margin: 20px 0 12px; display: flex; align-items: center; gap: 8px;">
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 6v6l4 2"/>
-                            </svg>
-                            მოდული რომელზეც მუშაობს
-                        </h4>
+                        <h4 style="margin: 20px 0 12px;">კითხვები</h4>
                         
-                        <div style="background: var(--surface-light); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
-                            ${Object.keys(moduleWork).length > 0 ? 
-                                Object.entries(moduleWork).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([module, time]) => `
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                        <span>${getModuleName(module)}</span>
-                                        <span style="color: var(--text-muted); font-size: 12px;">${new Date(time).toLocaleString('ka-GE')}</span>
-                                    </div>
-                                `).join('') : 
-                                '<div style="color: var(--text-muted);">აქტივობა არ არის</div>'
-                            }
-                        </div>
-
-                        <h4 style="margin: 20px 0 12px; display: flex; align-items: center; gap: 8px;">
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                            </svg>
-                            კითხვები
-                        </h4>
-                        
-                        ${answeredQuestions.length > 0 ? 
-                            answeredQuestions.sort((a, b) => b.timestamp - a.timestamp).map(q => `
-                                <div class="progress-question">
-                                    <div class="progress-question-header">
-                                        <span class="question-topic">${getModuleName(q.module)} - ${q.mode === 'exam' ? 'გამოცდა' : 'ვარჯიში'}</span>
-                                        <div class="answer-indicator ${q.isCorrect ? 'correct' : 'incorrect'}">
-                                            <svg class="icon" style="width: 14px; height: 14px;" viewBox="0 0 24 24">
-                                                ${q.isCorrect ? 
-                                                    '<polyline points="20 6 9 17 4 12"/>' : 
-                                                    '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
-                                                }
-                                            </svg>
-                                            ${q.isCorrect ? 'სწორი' : 'არასწორი'}
+                        ${Object.entries(modulesWithQuestions).length > 0 ? 
+                            Object.entries(modulesWithQuestions).map(([moduleName, data]) => {
+                                const percentage = data.total > 0 ? Math.round((data.answered / data.total) * 100) : 0;
+                                return `
+                                    <div style="margin-bottom: 30px;">
+                                        <div class="module-stats-header">
+                                            <strong>${getModuleName(moduleName)}</strong>
+                                            <span>${data.answered}/${data.total} (${percentage}%)</span>
                                         </div>
+                                        <div class="module-progress-bar">
+                                            <div class="module-progress-fill" style="width: ${percentage}%;"></div>
+                                        </div>
+                                        ${data.questions.map(q => `
+                                            <div class="question-row">
+                                                <div class="question-id">#${q.id}</div>
+                                                <div class="question-text-small">${escapeHtml(q.text.substring(0, 100))}${q.text.length > 100 ? '...' : ''}</div>
+                                                <div class="answer-badge ${q.isCorrect ? 'correct' : 'incorrect'}">
+                                                    ${q.isCorrect ? '✅ სწორი' : '❌ არასწორი'}
+                                                </div>
+                                            </div>
+                                        `).join('')}
                                     </div>
-                                    <div class="progress-question-text">კითხვა #${q.questionId}</div>
-                                    <div style="color: var(--text-muted); font-size: 12px;">
-                                        ${new Date(q.timestamp).toLocaleString('ka-GE')}
-                                    </div>
-                                </div>
-                            `).join('') : 
-                            '<div style="color: var(--text-muted); text-align: center; padding: 40px;">პასუხები არ არის</div>'
+                                `;
+                            }).join('') 
+                            : '<div style="text-align: center; padding: 40px;">პასუხები არ არის</div>'
                         }
                     </div>
                 `;
@@ -2039,7 +2808,6 @@
                 }
 
                 if (newUsername) {
-                    // Create new user with new username
                     const newUserId = newUsername.replace(/[.#$[\]]/g, '_');
                     await database.ref(`users/${newUserId}`).set({
                         ...userData,
@@ -2047,7 +2815,6 @@
                         lastUpdated: Date.now()
                     });
                     
-                    // Delete old user
                     await database.ref(`users/${userId}`).remove();
                     
                     if (newPassword) {
@@ -2071,15 +2838,17 @@
         };
 
         // Switch activity tab
-        window.switchActivityTab = function(tab) {
+        window.switchActivityTab = function(tab, event) {
             currentActivityTab = tab;
             document.querySelectorAll('.activity-tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
             
-            if (tab === 'custom') {
-                document.querySelector('.date-range').style.display = 'flex';
-            } else {
-                document.querySelector('.date-range').style.display = 'none';
+            if (document.querySelector('.date-range')) {
+                if (tab === 'custom') {
+                    document.querySelector('.date-range').style.display = 'flex';
+                } else {
+                    document.querySelector('.date-range').style.display = 'none';
+                }
             }
             
             loadActivityData();
@@ -2111,7 +2880,7 @@
                     } else {
                         const now = Date.now();
                         endTime = now;
-                        startTime = now - 30 * 24 * 60 * 60 * 1000; // 30 days ago
+                        startTime = now - 30 * 24 * 60 * 60 * 1000;
                     }
                 } else {
                     const now = Date.now();
@@ -2125,7 +2894,6 @@
                     startTime = now - timeRanges[currentActivityTab];
                 }
 
-                // Count active users
                 let activeUsers = 0;
                 Object.values(users).forEach(user => {
                     if (user.lastUpdated && user.lastUpdated >= startTime && user.lastUpdated <= endTime) {
@@ -2133,7 +2901,6 @@
                     }
                 });
 
-                // Count new registrations
                 let newRegistrations = 0;
                 Object.values(users).forEach(user => {
                     if (user.registeredAt && user.registeredAt >= startTime && user.registeredAt <= endTime) {
@@ -2141,10 +2908,10 @@
                     }
                 });
 
-                // Count tests and correct answers
                 let totalTests = 0;
                 let correctTests = 0;
                 const moduleStats = {};
+                const userTestCounts = {};
 
                 Object.values(answers).forEach(answer => {
                     if (answer.timestamp && answer.timestamp >= startTime && answer.timestamp <= endTime) {
@@ -2159,76 +2926,51 @@
                         moduleStats[module].correct += answer.isCorrect ? 1 : 0;
                         if (answer.userId) {
                             moduleStats[module].users.add(answer.userId);
+                            userTestCounts[answer.userId] = (userTestCounts[answer.userId] || 0) + 1;
                         }
                     }
                 });
 
-                // Render stats
+                const avgTestsPerUser = totalTests / (Object.keys(userTestCounts).length || 1);
+
                 document.getElementById('activityStats').innerHTML = `
                     <div class="stat-card">
-                        <div class="stat-title">
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 6v6l4 2"/>
-                            </svg>
-                            აქტიური მომხმარებელი
-                        </div>
+                        <div class="stat-title">აქტიური მომხმარებელი</div>
                         <div class="stat-value">${activeUsers}</div>
                         <div class="stat-change">${((activeUsers / Object.keys(users).length) * 100 || 0).toFixed(1)}%</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-title">
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                <circle cx="8.5" cy="7" r="4"/>
-                                <line x1="20" y1="8" x2="20" y2="14"/>
-                                <line x1="23" y1="11" x2="17" y2="11"/>
-                            </svg>
-                            ახალი რეგისტრაცია
-                        </div>
+                        <div class="stat-title">ახალი რეგისტრაცია</div>
                         <div class="stat-value">${newRegistrations}</div>
-                        <div class="stat-change">${newRegistrations} მომხმარებელი</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-title">
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                                <polyline points="2 17 12 22 22 17"/>
-                                <polyline points="2 12 12 17 22 12"/>
-                            </svg>
-                            შესრულებული ტესტი
-                        </div>
+                        <div class="stat-title">შესრულებული ტესტი</div>
                         <div class="stat-value">${totalTests}</div>
-                        <div class="stat-change">${(totalTests / ((endTime - startTime) / (24*60*60*1000)) || 0).toFixed(1)}/დღეში</div>
+                        <div class="stat-change">საშ. ${avgTestsPerUser.toFixed(1)}/მომხ</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-title">
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 6v6l4 2"/>
-                            </svg>
-                            სწორი პასუხი
-                        </div>
+                        <div class="stat-title">სწორი პასუხი</div>
                         <div class="stat-value">${((correctTests / totalTests) * 100 || 0).toFixed(1)}%</div>
                         <div class="stat-change">${correctTests}/${totalTests}</div>
                     </div>
                 `;
 
-                // Render module stats
                 const tableBody = document.getElementById('activityTableBody');
-                tableBody.innerHTML = Object.entries(moduleStats).map(([module, stats]) => `
+                tableBody.innerHTML = Object.entries(moduleStats)
+                    .sort((a, b) => b[1].tests - a[1].tests)
+                    .map(([module, stats]) => `
                     <tr>
                         <td><strong>${getModuleName(module)}</strong></td>
                         <td>${stats.users.size}</td>
                         <td>${stats.tests}</td>
                         <td>${stats.correct}</td>
                         <td>${((stats.correct / stats.tests) * 100 || 0).toFixed(1)}%</td>
+                        <td>${(stats.tests / stats.users.size || 0).toFixed(1)}</td>
                     </tr>
                 `).join('');
 
             } catch (error) {
                 console.error("Error loading activity:", error);
-                throw error;
             }
         }
 
@@ -2237,266 +2979,78 @@
             if (!firebaseInitialized || !database) return;
 
             try {
-                const [usersSnapshot, answersSnapshot] = await Promise.all([
-                    database.ref('users').once('value'),
-                    database.ref('answers').once('value')
+                const [answersSnapshot, questionsSnapshot] = await Promise.all([
+                    database.ref('answers').once('value'),
+                    database.ref('questions').once('value')
                 ]);
 
-                const users = usersSnapshot.val() || {};
                 const answers = answersSnapshot.val() || {};
+                const questions = questionsSnapshot.val() || {};
 
-                // Calculate user rankings
-                let userStats = [];
-                Object.entries(users).forEach(([id, user]) => {
-                    let totalAnswers = 0;
-                    let correctAnswers = 0;
+                const moduleStats = {};
 
-                    if (user.progress) {
-                        Object.values(user.progress).forEach(module => {
-                            ['normal', 'exam'].forEach(mode => {
-                                const answers = module[mode]?.answeredQuestions || {};
-                                totalAnswers += Object.keys(answers).length;
-                                correctAnswers += Object.values(answers).filter(a => a.isCorrect).length;
-                            });
-                        });
+                // Group answers by module and question
+                Object.values(answers).forEach(answer => {
+                    const module = answer.module;
+                    if (!module) return;
+
+                    if (!moduleStats[module]) {
+                        moduleStats[module] = {
+                            totalTests: 0,
+                            questions: {}
+                        };
                     }
 
-                    userStats.push({
-                        username: user.username || id,
-                        total: totalAnswers,
-                        correct: correctAnswers,
-                        accuracy: totalAnswers > 0 ? (correctAnswers / totalAnswers * 100).toFixed(1) : 0
-                    });
+                    moduleStats[module].totalTests++;
+                    
+                    if (answer.questionId) {
+                        if (!moduleStats[module].questions[answer.questionId]) {
+                            moduleStats[module].questions[answer.questionId] = {
+                                total: 0,
+                                correct: 0
+                            };
+                        }
+                        moduleStats[module].questions[answer.questionId].total++;
+                        if (answer.isCorrect) {
+                            moduleStats[module].questions[answer.questionId].correct++;
+                        }
+                    }
                 });
 
-                const bestUser = userStats.sort((a, b) => b.total - a.total)[0] || { username: 'N/A', total: 0 };
-                const worstUser = userStats.sort((a, b) => a.accuracy - b.accuracy)[0] || { username: 'N/A', accuracy: 0 };
-
-                document.getElementById('statisticsSummary').innerHTML = `
-                    <div class="stat-card">
-                        <div class="stat-title">
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <path d="M18 20V10"/>
-                                <path d="M12 20V4"/>
-                                <path d="M6 20v-6"/>
-                            </svg>
-                            🏆 ყველაზე აქტიური
-                        </div>
-                        <div class="stat-value">${escapeHtml(bestUser.username)}</div>
-                        <div class="stat-change">${bestUser.total} ტესტი</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-title">
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10"/>
-                                <line x1="12" y1="8" x2="12" y2="12"/>
-                                <line x1="12" y1="16" x2="12.01" y2="16"/>
-                            </svg>
-                            📉 ყველაზე ცუდი შედეგი
-                        </div>
-                        <div class="stat-value">${escapeHtml(worstUser.username)}</div>
-                        <div class="stat-change">${worstUser.accuracy}% სიზუსტე</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-title">
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <path d="M2 12 L7 12 L9 8 L12 15 L15 6 L18 12 L22 12"/>
-                            </svg>
-                            📊 საშუალო სიზუსტე
-                        </div>
-                        <div class="stat-value">${(userStats.reduce((acc, u) => acc + parseFloat(u.accuracy), 0) / userStats.length || 0).toFixed(1)}%</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-title">
-                            <svg class="icon" viewBox="0 0 24 24">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                <circle cx="9" cy="7" r="4"/>
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                            </svg>
-                            👥 სულ მომხმარებელი
-                        </div>
-                        <div class="stat-value">${userStats.length}</div>
-                    </div>
-                `;
-
-                // Load modules list - all modules from Firebase
-                const modulesSnapshot = await database.ref('questions').once('value');
-                const modulesData = modulesSnapshot.val() || {};
-                
-                const modules = Object.entries(modulesData).map(([id, data]) => ({
-                    id: id,
-                    name: getModuleName(id),
-                    questions: data ? Object.keys(data).length : 0,
-                    topics: id === 'rezidentura' ? 
-                        ['კარდიოლოგია', 'გასტროენტეროლოგია', 'პედიატრია', 'ნევროლოგია', 'ენდოკრინოლოგია', 'ნეფროლოგია'] : 
-                        []
-                }));
-
-                document.getElementById('modulesList').innerHTML = modules.map(module => `
-                    <div class="module-card" onclick="showQuestions('${module.id}')">
-                        <div class="module-title">${module.name}</div>
-                        <div class="module-stats">
-                            <span>📊 ${module.questions} კითხვა</span>
-                            ${module.topics.length > 0 ? `<span>🏷️ ${module.topics.length} თემა</span>` : ''}
-                        </div>
-                        ${module.topics.length > 0 ? `
-                            <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
-                                ${module.topics.slice(0, 3).map(t => `<span class="question-topic">${t}</span>`).join('')}
-                                ${module.topics.length > 3 ? `<span class="question-topic">+${module.topics.length - 3}</span>` : ''}
+                const modulesList = document.getElementById('moduleStatisticsList');
+                modulesList.innerHTML = Object.entries(moduleStats).map(([moduleName, stats]) => {
+                    const moduleQuestions = questions[moduleName] || {};
+                    
+                    return `
+                        <div class="table-container" style="margin-bottom: 20px;">
+                            <div class="table-header">
+                                <h3 style="color: var(--accent);">${getModuleName(moduleName)}</h3>
+                                <span>ჯამური ტესტები: ${stats.totalTests}</span>
                             </div>
-                        ` : ''}
-                    </div>
-                `).join('');
+                            <div style="padding: 20px;">
+                                ${Object.entries(stats.questions).map(([qId, qStats]) => {
+                                    const questionText = moduleQuestions[qId]?.text || moduleQuestions[qId]?.question || qId;
+                                    const accuracy = (qStats.correct / qStats.total) * 100 || 0;
+                                    return `
+                                        <div class="test-stat-item">
+                                            <div class="test-name">${escapeHtml(questionText.substring(0, 30))}...</div>
+                                            <div class="test-progress">
+                                                <div class="difficulty-bar">
+                                                    <div class="difficulty-fill ${accuracy > 70 ? 'green' : accuracy < 30 ? 'red' : 'gradient'}" style="width: ${accuracy}%;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="test-percent">${accuracy.toFixed(1)}%</div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('') || '<div style="text-align: center; padding: 40px;">მონაცემები არ არის</div>';
 
             } catch (error) {
                 console.error("Error loading statistics:", error);
-                throw error;
             }
-        }
-
-        // Filter questions
-        window.filterQuestions = function(filter) {
-            currentQuestionFilter = filter;
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            renderQuestions(currentModuleQuestions);
-        };
-
-        // Show questions modal with all questions from module
-        window.showQuestions = async function(moduleId) {
-            showLoading();
-            try {
-                const moduleName = getModuleName(moduleId);
-                document.getElementById('questionsModalTitle').textContent = `${moduleName} - კითხვები`;
-
-                // Load all questions from this module
-                const questionsSnapshot = await database.ref(`questions/${moduleId}`).once('value');
-                const questions = questionsSnapshot.val() || {};
-
-                // Load answers statistics
-                const answersSnapshot = await database.ref('answers').once('value');
-                const answers = answersSnapshot.val() || {};
-
-                // Calculate statistics per question
-                const questionStats = {};
-                Object.values(answers).forEach(answer => {
-                    if (answer.module === moduleId && answer.questionId) {
-                        if (!questionStats[answer.questionId]) {
-                            questionStats[answer.questionId] = { total: 0, correct: 0 };
-                        }
-                        questionStats[answer.questionId].total++;
-                        if (answer.isCorrect) {
-                            questionStats[answer.questionId].correct++;
-                        }
-                    }
-                });
-
-                // Build questions list with topics for rezidentura
-                const questionsList = [];
-                Object.entries(questions).forEach(([qId, qData]) => {
-                    let questionText = qData.text || qData.question || '';
-                    let topic = 'ზოგადი';
-                    
-                    // For rezidentura, get topic from column B
-                    if (moduleId === 'rezidentura' && qData.topic) {
-                        topic = qData.topic;
-                    }
-
-                    const stats = questionStats[qId] || { total: 0, correct: 0 };
-                    const accuracy = stats.total > 0 ? (stats.correct / stats.total * 100) : 0;
-
-                    questionsList.push({
-                        id: qId,
-                        text: questionText,
-                        topic: topic,
-                        stats: stats,
-                        accuracy: accuracy
-                    });
-                });
-
-                // Sort by ID or text if no text
-                currentModuleQuestions = questionsList.sort((a, b) => {
-                    if (a.text && b.text) {
-                        return a.text.localeCompare(b.text);
-                    }
-                    return a.id.localeCompare(b.id);
-                });
-
-                renderQuestions(currentModuleQuestions);
-
-                // Setup search
-                const searchInput = document.getElementById('questionSearch');
-                searchInput.oninput = (e) => {
-                    const term = e.target.value.toLowerCase();
-                    const filtered = currentModuleQuestions.filter(q => 
-                        q.text.toLowerCase().includes(term) || 
-                        q.topic.toLowerCase().includes(term)
-                    );
-                    renderQuestions(filtered);
-                };
-
-                openModal('questionsModal');
-
-            } catch (error) {
-                console.error("Error loading questions:", error);
-                showNotification('შეცდომა კითხვების ჩატვირთვისას', true);
-            } finally {
-                hideLoading();
-            }
-        };
-
-        // Render questions with filters
-        function renderQuestions(questions) {
-            let filteredQuestions = [...questions];
-            
-            // Apply filter
-            if (currentQuestionFilter === 'easiest') {
-                filteredQuestions = filteredQuestions.sort((a, b) => b.accuracy - a.accuracy);
-            } else if (currentQuestionFilter === 'hardest') {
-                filteredQuestions = filteredQuestions.sort((a, b) => a.accuracy - b.accuracy);
-            } else if (currentQuestionFilter === 'frequent') {
-                filteredQuestions = filteredQuestions.sort((a, b) => b.stats.total - a.stats.total);
-            }
-
-            const questionsList = document.getElementById('questionsList');
-            questionsList.innerHTML = filteredQuestions.map(q => {
-                const correct = q.stats.correct;
-                const total = q.stats.total;
-                const accuracy = q.accuracy;
-                
-                let barClass = 'green';
-                if (total > 0) {
-                    if (correct === 0) barClass = 'red';
-                    else if (correct < total) barClass = 'gradient';
-                }
-
-                return `
-                    <div class="online-item">
-                        <div style="flex: 1;">
-                            <div class="question-header">
-                                <span class="question-topic">${escapeHtml(q.topic)}</span>
-                                <span style="color: var(--text-muted); font-size: 12px;">ID: ${q.id}</span>
-                            </div>
-                            <div class="question-text">${escapeHtml(q.text || 'კითხვა არ არის')}</div>
-                            
-                            <div class="difficulty-bar">
-                                <div class="difficulty-fill ${barClass}" style="width: ${accuracy}%;"></div>
-                            </div>
-                            <div class="difficulty-text">
-                                <span>
-                                    ${correct > 0 ? `<span style="color: var(--success);">✅ ${correct} სწორი</span>` : ''}
-                                    ${total - correct > 0 ? `<span style="color: var(--danger); margin-left: 8px;">⚠️ ${total - correct} არასწორი</span>` : ''}
-                                </span>
-                                <span>${accuracy.toFixed(1)}%</span>
-                            </div>
-                            
-                            ${total === 0 ? '<div style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">ჯერ არავის უპასუხია</div>' : ''}
-                        </div>
-                    </div>
-                `;
-            }).join('') || '<div style="text-align: center; padding: 40px; color: var(--text-muted);">კითხვები არ მოიძებნა</div>';
         }
 
         // Load online users
@@ -2533,48 +3087,66 @@
 
             } catch (error) {
                 console.error("Error loading online users:", error);
-                throw error;
             }
         }
 
-        // Settings functions
-        window.changeAdminCode = function() {
-            const newCode = document.getElementById('newAdminCode').value.trim();
-            if (!newCode) {
-                showNotification('გთხოვთ შეიყვანოთ ახალი კოდი', true);
-                return;
+        // Load chat
+        function loadChat() {
+            if (!firebaseInitialized || !database) return;
+
+            database.ref('chat/messages').limitToLast(50).on('value', (snapshot) => {
+                const messages = snapshot.val() || {};
+                const messagesList = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
+                renderAdminChatMessages(messagesList);
+            });
+        }
+
+        function renderAdminChatMessages(messages) {
+            const chatMessages = document.getElementById('adminChatMessages');
+            if (!chatMessages) return;
+            
+            chatMessages.innerHTML = messages.map(msg => `
+                <div class="chat-message ${msg.sender === 'admin' ? 'admin' : ''}">
+                    <div class="chat-avatar">${msg.sender === 'admin' ? 'A' : (msg.senderName ? msg.senderName[0].toUpperCase() : 'U')}</div>
+                    <div class="chat-bubble">
+                        <div class="chat-sender">${escapeHtml(msg.senderName || msg.sender)}</div>
+                        <div>${escapeHtml(msg.text)}</div>
+                        <div class="chat-time">${new Date(msg.timestamp).toLocaleString('ka-GE')}</div>
+                    </div>
+                </div>
+            `).join('');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendAdminMessage() {
+            const input = document.getElementById('adminChatInput');
+            if (!input) return;
+            
+            const text = input.value.trim();
+            if (!text) return;
+
+            const message = {
+                sender: 'admin',
+                senderName: 'ადმინისტრატორი',
+                text: text,
+                timestamp: Date.now()
+            };
+
+            database.ref('chat/messages').push(message);
+            input.value = '';
+        }
+
+        window.handleAdminChatKeyPress = function(event) {
+            if (event.key === 'Enter') {
+                sendAdminMessage();
             }
-            showNotification('კოდი შეცვლილია (დემო რეჟიმი)', false);
-            document.getElementById('newAdminCode').value = '';
         };
 
-        window.syncAllData = function() {
-            showLoading();
-            setTimeout(() => {
-                loadAllData();
-                showNotification('სინქრონიზაცია დასრულდა', false);
-                hideLoading();
-            }, 2000);
-        };
-
-        window.backupData = function() {
-            showLoading();
-            setTimeout(() => {
-                const backup = {
-                    timestamp: Date.now(),
-                    data: 'backup_data'
-                };
-                const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `unimed_backup_${new Date().toISOString().split('T')[0]}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-                hideLoading();
-                showNotification('ბექაფი შენახულია', false);
-            }, 1500);
-        };
+        // Init chat
+        function initChat() {
+            if (!firebaseInitialized || !database) return;
+            loadChat();
+        }
 
         // Helper functions
         function escapeHtml(text) {
@@ -2589,10 +3161,53 @@
 
         function getModuleName(module) {
             const names = {
-                rezidentura: 'რეზიდენტურა',
-                internalMedicine: 'შინაგანი მედიცინა',
-                pathology: 'პათოლოგია',
-                unknown: 'უცნობი'
+                'samkurnaloo': 'სამკურნალო',
+                'stomatologia': 'სტომატოლოგია',
+                'alergologia': 'ალერგოლოგია',
+                'angiokirurgia': 'ანგიოქირურგია',
+                'anesteziologia': 'ანესთეზიოლოგია, რეანიმატოლოგია',
+                'bavshvta_gadaudebeli': 'ბავშვთა გადაუდებელი',
+                'bavshvta_kardiorevmatologia': 'ბავშვთა კარდიორევმატოლოგია',
+                'bavshvta_nevrologia': 'ბავშვთა ნევროლოგია',
+                'bavshvta_nevrologia2': 'ბავშვთა ნეფროლოგია',
+                'gadaudebeli_medicina': 'გადაუდებელი მედიცინა',
+                'gastroenterologia': 'გასტროენტეროლოგია',
+                'ginekologia': 'გინეკოლოგია',
+                'dermatologia': 'დერმატოლოგია',
+                'endokrinologia': 'ენდოკრინოლოგია',
+                'zogadi_kirurgia': 'ზოგადი ქირურგია',
+                'terapiuli_stomatologia': 'თერაპიული სტომატოლოგია',
+                'infekciuri': 'ინფექციური',
+                'kardiologia': 'კარდიოლოგია',
+                'kardiokirurgia': 'კარდიოქირურგია',
+                'laboratoriuli_medicina': 'ლაბორატორიული მედიცინა',
+                'narkologia': 'ნარკოლოგია',
+                'nevrologia': 'ნევროლოგია',
+                'neonatologia': 'ნეონატოლოგია',
+                'nefrologia': 'ნეფროლოგია',
+                'onkologia': 'ონკოლოგია',
+                'ortodontia': 'ორთოდონტია',
+                'ortopedia_travmatologia': 'ორთოპედია ტრავმატოლოგია',
+                'ortopediuli_stomatologia': 'ორთოპედიული სტომატოლოგია',
+                'otorinolaringologia': 'ოტორინოლარინგოლოგია',
+                'oftalmologia': 'ოფთალმოლოგია',
+                'patologia': 'პათოლოგია',
+                'pediatria': 'პედიატრია',
+                'plastikuri_kirurgia': 'პლასტიკური და რეკონსტრუქციული ქირურგია',
+                'radiologia': 'რადიოლოგია',
+                'radiacioni_onkologia': 'რადიაციული ონკოლოგია',
+                'reproduqtologia': 'რეპროდუქტოლოგია',
+                'revmatologia': 'რევმატოლოგია',
+                'saokjao_medicina': 'საოჯახო მედიცინა',
+                'sportuli_medicina': 'სპორტული მედიცინა',
+                'toksikologia': 'ტოქსიკოლოგია',
+                'urologia': 'უროლოგია',
+                'ftiziatria_pulmonologia': 'ფთიზიატრია, პულმონოლოგია',
+                'psikiatria': 'ფსიქიატრია',
+                'qba_saxis_kirurgia': 'ყბა-სახის ქირურგია',
+                'shinagani_medicina': 'შინაგანი მედიცინა',
+                'hematologia': 'ჰემატოლოგია',
+                'unknown': 'უცნობი'
             };
             return names[module] || module;
         }
@@ -2605,28 +3220,30 @@
             document.getElementById(modalId).classList.remove('active');
         };
 
-        // Module select change
-        document.getElementById('moduleSelect').addEventListener('change', () => {
-            loadStatistics();
-        });
-
         // Date range change
-        document.getElementById('activityStartDate').addEventListener('change', () => {
-            if (currentActivityTab === 'custom') {
-                loadActivityData();
-            }
-        });
+        if (document.getElementById('activityStartDate')) {
+            document.getElementById('activityStartDate').addEventListener('change', () => {
+                if (currentActivityTab === 'custom') {
+                    loadActivityData();
+                }
+            });
+        }
 
-        document.getElementById('activityEndDate').addEventListener('change', () => {
-            if (currentActivityTab === 'custom') {
-                loadActivityData();
-            }
-        });
+        if (document.getElementById('activityEndDate')) {
+            document.getElementById('activityEndDate').addEventListener('change', () => {
+                if (currentActivityTab === 'custom') {
+                    loadActivityData();
+                }
+            });
+        }
 
         // Auto-refresh online users every 10 seconds
         setInterval(() => {
-            if (document.getElementById('onlineSection').classList.contains('active')) {
+            if (document.getElementById('onlineSection')?.classList.contains('active')) {
                 loadOnlineUsers();
+            }
+            if (document.getElementById('dashboardSection')?.classList.contains('active')) {
+                loadDashboard();
             }
         }, 10000);
 
