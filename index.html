@@ -208,11 +208,53 @@
             display: flex;
             flex-direction: column;
             padding: 24px 0;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+        }
+
+        .sidebar.collapsed .sidebar-header h2 span:last-child,
+        .sidebar.collapsed .sidebar-nav .nav-item span,
+        .sidebar.collapsed .admin-details,
+        .sidebar.collapsed .logout-btn span {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding: 14px;
+        }
+
+        .sidebar.collapsed .nav-item svg {
+            width: 24px;
+            height: 24px;
+            margin: 0;
+        }
+
+        .sidebar.collapsed .admin-info {
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .admin-avatar {
+            margin: 0 auto;
+        }
+
+        .sidebar.collapsed .logout-btn {
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .sidebar.collapsed .logout-btn svg {
+            margin: 0;
         }
 
         .sidebar-header {
             padding: 0 24px 24px;
             border-bottom: 1px solid var(--border);
+            position: relative;
         }
 
         .sidebar-header h2 {
@@ -224,9 +266,48 @@
             gap: 8px;
         }
 
-        .sidebar-header h2 span {
+        .sidebar-header h2 span:first-child {
             color: var(--accent);
             font-size: 24px;
+        }
+
+        .collapse-toggle {
+            position: absolute;
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .collapse-toggle:hover {
+            background: var(--gradient);
+            border-color: var(--accent);
+        }
+
+        .collapse-toggle:hover svg {
+            stroke: white;
+        }
+
+        .collapse-toggle svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--text-muted);
+            transition: transform 0.3s;
+        }
+
+        .sidebar.collapsed .collapse-toggle svg {
+            transform: rotate(180deg);
         }
 
         .sidebar-nav {
@@ -266,6 +347,7 @@
             height: 20px;
             stroke: currentColor;
             fill: none;
+            flex-shrink: 0;
         }
 
         .sidebar-footer {
@@ -291,21 +373,29 @@
             font-weight: 700;
             font-size: 18px;
             color: white;
+            flex-shrink: 0;
         }
 
         .admin-details {
             flex: 1;
+            min-width: 0;
         }
 
         .admin-name {
             font-weight: 600;
             font-size: 14px;
             color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .admin-role {
             color: var(--text-muted);
             font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .logout-btn {
@@ -329,12 +419,21 @@
             background: #fecaca;
         }
 
+        .logout-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            flex-shrink: 0;
+        }
+
         /* Main Content */
         .main-content {
             flex: 1;
             background: var(--bg);
             overflow-y: auto;
             padding: 24px 32px;
+            transition: margin-left 0.3s ease;
         }
 
         .content-header {
@@ -527,6 +626,7 @@
         .action-buttons {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .action-btn {
@@ -978,6 +1078,8 @@
 
         .modules-list {
             margin-top: 16px;
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .module-item {
@@ -1331,6 +1433,218 @@
             stroke-linejoin: round;
             fill: none;
         }
+
+        /* Chat Styles */
+        .chat-container {
+            background: var(--surface);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            height: calc(100vh - 200px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 12px;
+            max-width: 80%;
+        }
+
+        .chat-message.admin {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .chat-bubble {
+            background: var(--surface-light);
+            padding: 12px 16px;
+            border-radius: 16px;
+            position: relative;
+        }
+
+        .chat-message.admin .chat-bubble {
+            background: var(--accent);
+            color: white;
+        }
+
+        .chat-sender {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+        }
+
+        .chat-message.admin .chat-sender {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .chat-time {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .chat-message.admin .chat-time {
+            color: rgba(255,255,255,0.6);
+        }
+
+        .chat-input {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            background: var(--surface);
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .chat-send-btn {
+            width: 44px;
+            height: 44px;
+            background: var(--gradient);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chat-send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow);
+        }
+
+        .chat-send-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: white;
+        }
+
+        .test-stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .test-name {
+            flex: 1;
+            font-size: 13px;
+        }
+
+        .test-progress {
+            width: 150px;
+        }
+
+        .test-percent {
+            min-width: 50px;
+            text-align: right;
+            font-weight: 600;
+        }
+        
+        /* Settings Styles */
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .3s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .3s;
+}
+
+input:checked + .slider {
+    background: var(--gradient);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--accent);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
     </style>
 </head>
 <body>
@@ -1364,10 +1678,11 @@
                         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                         <polyline points="22,6 12,13 2,6"/>
                     </svg>
-                    <p style="margin: 12px 0; color: var(--text-muted);">დადასტყურების კოდი გაიგზავნა ელ.ფოსტაზე</p>
+                    <p style="margin: 12px 0; color: var(--text-muted);">დადასტურების კოდი გაიგზავნა ელ.ფოსტაზე</p>
                 </div>
                 <div class="auth-input-group">
-<input type="text" id="emailCode" class="auth-input" placeholder="კოდი" maxlength="6" style="text-align: center; font-size: 24px; letter-spacing: 8px; font-family: monospace; font-weight: 700;">                </div>
+                    <input type="text" id="emailCode" class="auth-input" placeholder="კოდი" maxlength="6" style="text-align: center; font-size: 24px; letter-spacing: 8px; font-family: monospace; font-weight: 700;">
+                </div>
                 <div style="display: flex; gap: 10px;">
                     <button id="verifyEmailCodeBtn" class="auth-btn" style="flex: 2;">
                         <svg class="icon" viewBox="0 0 24 24">
@@ -1383,13 +1698,13 @@
                         ახალი
                     </button>
                 </div>
-<button id="backToInitialBtn" style="background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 20px; width: auto; padding: 8px 16px; cursor: pointer; font-size: 13px; border-radius: 30px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; opacity: 0.7;">
-    <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
-        <line x1="19" y1="12" x2="5" y2="12"/>
-        <polyline points="12 19 5 12 12 5"/>
-    </svg>
-    უკან
-</button>
+                <button id="backToInitialBtn" style="background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 20px; width: auto; padding: 8px 16px; cursor: pointer; font-size: 13px; border-radius: 30px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; opacity: 0.7;">
+                    <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24">
+                        <line x1="19" y1="12" x2="5" y2="12"/>
+                        <polyline points="12 19 5 12 12 5"/>
+                    </svg>
+                    უკან
+                </button>
             </div>
             
             <div id="authError" class="auth-error"></div>
@@ -1400,12 +1715,17 @@
     <div id="adminPanel">
         <div class="admin-layout">
             <!-- Sidebar -->
-            <div class="sidebar">
+            <div class="sidebar" id="adminSidebar">
                 <div class="sidebar-header">
                     <h2>
                         <span>⚕️</span>
-                        ადმინისტრატორი
+                        <span>ადმინისტრატორი</span>
                     </h2>
+                    <div class="collapse-toggle" onclick="toggleSidebar()">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                    </div>
                 </div>
                 
                 <div class="sidebar-nav">
@@ -1416,7 +1736,7 @@
                             <rect x="14" y="12" width="7" height="9"/>
                             <rect x="3" y="16" width="7" height="5"/>
                         </svg>
-                        დაშბორდი
+                        <span>დაშბორდი</span>
                     </div>
                     <div class="nav-item" data-section="users">
                         <svg class="icon" viewBox="0 0 24 24">
@@ -1425,13 +1745,13 @@
                             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                         </svg>
-                        მომხმარებლები
+                        <span>მომხმარებლები</span>
                     </div>
                     <div class="nav-item" data-section="activity">
                         <svg class="icon" viewBox="0 0 24 24">
                             <path d="M22 12h-4l-3 9-4-18-3 9H2"/>
                         </svg>
-                        აქტივობა
+                        <span>აქტივობა</span>
                     </div>
                     <div class="nav-item" data-section="statistics">
                         <svg class="icon" viewBox="0 0 24 24">
@@ -1439,21 +1759,29 @@
                             <circle cx="12" cy="16" r="5"/>
                             <path d="M12 11v5"/>
                         </svg>
-                        სტატისტიკა
+                        <span>სტატისტიკა</span>
                     </div>
                     <div class="nav-item" data-section="online">
                         <svg class="icon" viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="10"/>
                             <circle cx="12" cy="12" r="3"/>
                         </svg>
-                        ონლაინ
+                        <span>ონლაინ</span>
                     </div>
                     <div class="nav-item" data-section="chat">
                         <svg class="icon" viewBox="0 0 24 24">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                         </svg>
-                        ჩატი
+                        <span>ჩატი</span>
                     </div>
+                    <div class="nav-item" data-section="settings">
+    <svg class="icon" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H5.78a1.65 1.65 0 0 0-1.51 1 1.65 1.65 0 0 0 .33 1.82l.07.09A10 10 0 0 0 12 18a10 10 0 0 0 7.33-3.09z"/>
+        <path d="M12 6v4"/>
+    </svg>
+    <span>პარამეტრები</span>
+</div>
                 </div>
                 
                 <div class="sidebar-footer">
@@ -1470,11 +1798,11 @@
                             <polyline points="16 17 21 12 16 7"/>
                             <line x1="21" y1="12" x2="9" y2="12"/>
                         </svg>
-                        გასვლა
+                        <span>გასვლა</span>
                     </button>
                 </div>
             </div>
-            
+
             <!-- Main Content -->
             <div class="main-content">
                 <!-- Dashboard Section -->
@@ -1569,6 +1897,82 @@
                     </div>
                 </div>
                 
+                <!-- Settings Section -->
+<div id="settingsSection" class="content-section">
+    <div class="content-header">
+        <h2 class="content-title">პარამეტრები</h2>
+    </div>
+    
+    <div class="settings-grid">
+        <!-- ავტორიზაციის პარამეტრები -->
+        <div class="dashboard-card" style="grid-column: span 2;">
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                ავტორიზაციის პარამეტრები
+            </h3>
+            
+            <div style="margin: 20px 0;">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px; background: var(--surface-light); border-radius: 16px;">
+                    <div>
+                        <div style="font-weight: 600; margin-bottom: 4px;">📧 იმეილით ავტორიზაცია</div>
+                        <div style="font-size: 13px; color: var(--text-muted);">გამორთვის შემთხვევაში, ადმინისტრატორი შევა მხოლოდ კოდით (200011)</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="emailAuthToggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 16px; background: var(--surface-light); border-radius: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <svg class="icon" style="color: var(--accent);" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <span style="font-weight: 500;">ინფორმაცია</span>
+                </div>
+                <div style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">
+                    • ჩართვის შემთხვევაში: კოდი 200011-ის შეყვანის შემდეგ დაგჭირდებათ იმეილზე მისული კოდის დადასტურება<br>
+                    • გამორთვის შემთხვევაში: პირდაპირ შეხვალთ კოდის შეყვანის შემდეგ
+                </div>
+            </div>
+        </div>
+        
+        <!-- სხვა პარამეტრები (მომავლისთვის) -->
+        <div class="dashboard-card">
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="2"/>
+                    <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/>
+                    <path d="M12 8v4l2 2"/>
+                </svg>
+                სისტემა
+            </h3>
+            <div style="padding: 12px; color: var(--text-muted); font-size: 13px;">
+                ვერსია: 1.0.0
+            </div>
+        </div>
+        
+        <div class="dashboard-card">
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                შეტყობინებები
+            </h3>
+            <div style="padding: 12px; color: var(--text-muted); font-size: 13px;">
+                მალე დაემატება...
+            </div>
+        </div>
+    </div>
+</div>
+
                 <!-- Users Section -->
                 <div id="usersSection" class="content-section">
                     <div class="content-header">
@@ -1836,7 +2240,7 @@
             console.error("Firebase initialization failed:", error);
         }
 
-        // Google Apps Script Web App URL (თქვენი Santa-ს კოდიდან)
+        // Google Apps Script Web App URL
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzplhhEvFAm3JmglGQvtJrC5ZEb7as5IMRm_GvWYbkJyQbMt8OYfb5RlCG9sHXSodw/exec';
         const ADMIN_EMAIL = "shogiradze.ale@gmail.com";
 
@@ -1849,10 +2253,10 @@
         let currentModuleQuestions = [];
         let currentQuestions = [];
 
-let generatedEmailCode = null;
-let isAdminCodeValid = false;
-let codeExpirationTime = null; // ახალი ცვლადი
-let countdownInterval = null;   // ახალი ცვლადი
+        let generatedEmailCode = null;
+        let isAdminCodeValid = false;
+        let codeExpirationTime = null;
+        let countdownInterval = null;
 
         // DOM Elements
         const authOverlay = document.getElementById('authOverlay');
@@ -1871,7 +2275,81 @@ let countdownInterval = null;   // ახალი ცვლადი
             document.getElementById('activityEndDate').value = today.toISOString().split('T')[0];
         }
 
-        // იმეილის გაგზავნის ფუნქცია Santa-ს კოდიდან
+        // Sidebar collapse function
+        function toggleSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            sidebar.classList.toggle('collapsed');
+            
+            // Save state to localStorage
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('adminSidebarCollapsed', isCollapsed);
+        }
+
+        // Check saved state on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('adminSidebar');
+            const savedState = localStorage.getItem('adminSidebarCollapsed');
+            
+            if (savedState === 'true') {
+                sidebar.classList.add('collapsed');
+            }
+        });
+
+        // Module name mapping function
+        function getModuleName(module) {
+            const names = {
+                'samkurnaloo': 'სამკურნალო',
+                'stomatologia': 'სტომატოლოგია',
+                'alergologia': 'ალერგოლოგია',
+                'angiokirurgia': 'ანგიოქირურგია',
+                'anesteziologia': 'ანესთეზიოლოგია, რეანიმატოლოგია',
+                'bavshvta_gadaudebeli': 'ბავშვთა გადაუდებელი',
+                'bavshvta_kardiorevmatologia': 'ბავშვთა კარდიორევმატოლოგია',
+                'bavshvta_nevrologia': 'ბავშვთა ნევროლოგია',
+                'bavshvta_nevrologia2': 'ბავშვთა ნეფროლოგია',
+                'gadaudebeli_medicina': 'გადაუდებელი მედიცინა',
+                'gastroenterologia': 'გასტროენტეროლოგია',
+                'ginekologia': 'გინეკოლოგია',
+                'dermatologia': 'დერმატოლოგია',
+                'endokrinologia': 'ენდოკრინოლოგია',
+                'zogadi_kirurgia': 'ზოგადი ქირურგია',
+                'terapiuli_stomatologia': 'თერაპიული სტომატოლოგია',
+                'infekciuri': 'ინფექციური',
+                'kardiologia': 'კარდიოლოგია',
+                'kardiokirurgia': 'კარდიოქირურგია',
+                'laboratoriuli_medicina': 'ლაბორატორიული მედიცინა',
+                'narkologia': 'ნარკოლოგია',
+                'nevrologia': 'ნევროლოგია',
+                'neonatologia': 'ნეონატოლოგია',
+                'nefrologia': 'ნეფროლოგია',
+                'onkologia': 'ონკოლოგია',
+                'ortodontia': 'ორთოდონტია',
+                'ortopedia_travmatologia': 'ორთოპედია ტრავმატოლოგია',
+                'ortopediuli_stomatologia': 'ორთოპედიული სტომატოლოგია',
+                'otorinolaringologia': 'ოტორინოლარინგოლოგია',
+                'oftalmologia': 'ოფთალმოლოგია',
+                'patologia': 'პათოლოგია',
+                'pediatria': 'პედიატრია',
+                'plastikuri_kirurgia': 'პლასტიკური და რეკონსტრუქციული ქირურგია',
+                'radiologia': 'რადიოლოგია',
+                'radiacioni_onkologia': 'რადიაციული ონკოლოგია',
+                'reproduqtologia': 'რეპროდუქტოლოგია',
+                'revmatologia': 'რევმატოლოგია',
+                'saokjao_medicina': 'საოჯახო მედიცინა',
+                'sportuli_medicina': 'სპორტული მედიცინა',
+                'toksikologia': 'ტოქსიკოლოგია',
+                'urologia': 'უროლოგია',
+                'ftiziatria_pulmonologia': 'ფთიზიატრია, პულმონოლოგია',
+                'psikiatria': 'ფსიქიატრია',
+                'qba_saxis_kirurgia': 'ყბა-სახის ქირურგია',
+                'shinagani_medicina': 'შინაგანი მედიცინა',
+                'hematologia': 'ჰემატოლოგია',
+                'unknown': 'უცნობი'
+            };
+            return names[module] || module;
+        }
+
+        // Email sending function
         async function sendEmailViaScript(toEmail, subject, message) {
             try {
                 if (!toEmail || !toEmail.includes('@')) {
@@ -1889,7 +2367,7 @@ let countdownInterval = null;   // ახალი ცვლადი
                 const url = `${WEB_APP_URL}?${params.toString()}`;
                 console.log('Sending email to:', toEmail, 'Subject:', subject);
                 
-                const response = await fetch(url, {
+                await fetch(url, {
                     method: 'GET',
                     mode: 'no-cors'
                 });
@@ -1902,142 +2380,152 @@ let countdownInterval = null;   // ახალი ცვლადი
             }
         }
 
-// ტაიმერის დაწყება
-function startCodeTimer() {
-    // ძველი ტაიმერის გასუფთავება
-    if (countdownInterval) {
-        clearInterval(countdownInterval);
-    }
-    
-    // წამზომის ელემენტის დამატება (თუ არ არსებობს)
-    let timerElement = document.getElementById('codeTimer');
-    if (!timerElement) {
-        const emailCodeStep = document.getElementById('emailCodeStep');
-        timerElement = document.createElement('div');
-        timerElement.id = 'codeTimer';
-        timerElement.style.margin = '10px 0';
-        timerElement.style.textAlign = 'center';
-        timerElement.style.fontSize = '14px';
-        timerElement.style.color = 'var(--accent)';
-        timerElement.style.fontWeight = '600';
-        emailCodeStep.insertBefore(timerElement, emailCodeStep.firstChild);
-    }
-    
-    // ტაიმერის განახლება ყოველ წამში
-    countdownInterval = setInterval(() => {
-        const now = Date.now();
-        const timeLeft = codeExpirationTime - now;
-        
-        if (timeLeft <= 0) {
-            // კოდის ვადა გავიდა
-            clearInterval(countdownInterval);
-            timerElement.innerHTML = 'გაგზავნეთ კოდი ხელახლა';
-            timerElement.style.color = 'var(--danger)';
-            
-            // გავაუქმოთ კოდი
-            generatedEmailCode = null;
-            isAdminCodeValid = false;
-            
-            // დავამატოთ ღილაკი ხელახლა გაგზავნისთვის
-            const resendBtn = document.getElementById('resendEmailCodeBtn');
-            if (resendBtn) {
-                resendBtn.style.background = 'var(--gradient)';
-                resendBtn.style.color = 'white';
-                resendBtn.innerHTML = 'გაგზავნა';
+        // Timer function
+        function startCodeTimer() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
             }
             
-        } else {
-            // დარჩენილი დროის ფორმატირება
-            const seconds = Math.floor(timeLeft / 1000);
-            const displaySeconds = seconds < 10 ? `0${seconds}` : seconds;
-            timerElement.innerHTML = `კოდი აქტიურია 00:${displaySeconds}`;
-            timerElement.style.color = seconds < 10 ? 'var(--warning)' : 'var(--accent)';
+            let timerElement = document.getElementById('codeTimer');
+            if (!timerElement) {
+                const emailCodeStep = document.getElementById('emailCodeStep');
+                timerElement = document.createElement('div');
+                timerElement.id = 'codeTimer';
+                timerElement.style.margin = '10px 0';
+                timerElement.style.textAlign = 'center';
+                timerElement.style.fontSize = '14px';
+                timerElement.style.color = 'var(--accent)';
+                timerElement.style.fontWeight = '600';
+                emailCodeStep.insertBefore(timerElement, emailCodeStep.firstChild);
+            }
+            
+            countdownInterval = setInterval(() => {
+                const now = Date.now();
+                const timeLeft = codeExpirationTime - now;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    timerElement.innerHTML = 'გაგზავნეთ კოდი ხელახლა';
+                    timerElement.style.color = 'var(--danger)';
+                    
+                    generatedEmailCode = null;
+                    isAdminCodeValid = false;
+                    
+                    const resendBtn = document.getElementById('resendEmailCodeBtn');
+                    if (resendBtn) {
+                        resendBtn.style.background = 'var(--gradient)';
+                        resendBtn.style.color = 'white';
+                        resendBtn.innerHTML = 'გაგზავნა';
+                    }
+                    
+                } else {
+                    const seconds = Math.floor(timeLeft / 1000);
+                    const displaySeconds = seconds < 10 ? `0${seconds}` : seconds;
+                    timerElement.innerHTML = `კოდი აქტიურია 00:${displaySeconds}`;
+                    timerElement.style.color = seconds < 10 ? 'var(--warning)' : 'var(--accent)';
+                }
+            }, 1000);
         }
-    }, 1000);
+
+        // Show notification
+        function showNotification(message, isError = false) {
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(n => n.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${isError ? 'error' : ''}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+// Settings - Email Auth Toggle
+const EMAIL_AUTH_KEY = 'adminEmailAuthEnabled';
+
+// ჩატვირთვისას წავიკითხოთ შენახული მნიშვნელობა
+let isEmailAuthEnabled = localStorage.getItem(EMAIL_AUTH_KEY) === 'true';
+
+// ტოგლის ინიციალიზაცია
+function initSettings() {
+    const toggle = document.getElementById('emailAuthToggle');
+    if (toggle) {
+        toggle.checked = isEmailAuthEnabled;
+        
+        toggle.addEventListener('change', (e) => {
+            isEmailAuthEnabled = e.target.checked;
+            localStorage.setItem(EMAIL_AUTH_KEY, isEmailAuthEnabled);
+            showNotification(isEmailAuthEnabled ? '📧 იმეილით ავტორიზაცია ჩართულია' : '🔑 იმეილით ავტორიზაცია გამორთულია', false);
+        });
+    }
 }
 
-document.getElementById('verifyEmailCodeBtn').addEventListener('click', () => {
-    const emailCode = document.getElementById('emailCode').value.trim();
+// შევცვალოთ ადმინ კოდის დამუშავება
+document.getElementById('adminCodeBtn').addEventListener('click', async () => {
+    const code = document.getElementById('adminCode').value.trim();
     
-    if (!emailCode || emailCode.length !== 6) {
-        showNotification('შეიყვანეთ 6-ნიშნა კოდი', true);
-        return;
-    }
-    
-    // 🟢 შევამოწმოთ ვადა (ახალი)
-    if (codeExpirationTime && Date.now() > codeExpirationTime) {
-        showNotification('⏰ კოდის ვადა გავიდა', true);
-        return;
-    }
-    
-    if (emailCode === generatedEmailCode) {
-        // ❌ წავშალოთ ძველი შეტყობინებები (თუ არსებობს)
-        const oldNotifications = document.querySelectorAll('.notification');
-        oldNotifications.forEach(n => n.remove());
-        
-        // ✅ წარმატებული ავტორიზაცია
-        isAdminAuthenticated = true;
-        authOverlay.style.display = 'none';
-        adminPanel.style.display = 'block';
-        
-        // 🟢 მხოლოდ ერთი შეტყობინება
-        showNotification('✅ წარმატებით შესვლა', false);
-        
-        // დანარჩენი ფუნქციები
-        loadAllData();
-        startOnlineTracking();
-        initChat();
-        
-        // ტაიმერის გასუფთავება
-        if (countdownInterval) {
-            clearInterval(countdownInterval);
+    if (code === ADMIN_CODE) {
+        if (isEmailAuthEnabled) {
+            // იმეილით ავტორიზაცია ჩართულია
+            showLoading();
+            isAdminCodeValid = true;
+            
+            generatedEmailCode = Math.floor(100000 + Math.random() * 900000).toString();
+            codeExpirationTime = Date.now() + 60000;
+            
+            startCodeTimer();
+            
+            const subject = "UniMed · ადმინისტრატორის კოდი";
+            const message = `თქვენ მოითხოვეთ ავტორიზაცია ადმინისტრატორის პანელზე. 
+იმისათვის, რომ დადასტურდეს თქვენი ავთენტურობა, შეიტანეთ კოდი:
+
+${generatedEmailCode}
+
+კოდი აქტიურია 1 წუთის განმავლობაში.
+
+UniMed`;
+            
+            const emailSent = await sendEmailViaScript(ADMIN_EMAIL, subject, message);
+            
+            hideLoading();
+            
+            if (emailSent) {
+                document.getElementById('initialCodeStep').style.display = 'none';
+                document.getElementById('emailCodeStep').style.display = 'block';
+                document.getElementById('emailCode').focus();
+                showNotification('კოდი გაიგზავნა ელ.ფოსტაზე (მოქმედებს 1 წუთი)', false);
+            } else {
+                showNotification('ელ.ფოსტის გაგზავნა ვერ მოხერხდა', true);
+            }
+        } else {
+            // იმეილით ავტორიზაცია გამორთულია - პირდაპირ შესვლა
+            const oldNotifications = document.querySelectorAll('.notification');
+            oldNotifications.forEach(n => n.remove());
+            
+            isAdminAuthenticated = true;
+            authOverlay.style.display = 'none';
+            adminPanel.style.display = 'block';
+            
+            showNotification('წარმატებული ავტორიზაცია', false);
+            
+            loadAllData();
+            startOnlineTracking();
+            initChat();
+            
+            // გავასუფთავოთ ტაიმერი თუ არსებობს
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
         }
-        
-        // გასუფთავება
-        generatedEmailCode = null;
-        isAdminCodeValid = false;
-        codeExpirationTime = null;
-        
-        // წამზომის ელემენტის წაშლა
-        const timerElement = document.getElementById('codeTimer');
-        if (timerElement) {
-            timerElement.remove();
-        }
-        
     } else {
-        // ❌ არასწორი კოდი
-        document.getElementById('emailCode').classList.add('invalid');
-        
-        // 🟢 მხოლოდ ერთი შეტყობინება
-        showNotification('❌ არასწორი კოდი', true);
-        
-        // წავშალოთ invalid კლასი 2 წამში
-        setTimeout(() => {
-            document.getElementById('emailCode').classList.remove('invalid');
-        }, 2000);
+        showNotification('არასწორი ადმინ კოდი', true);
     }
 });
 
-        // კოდის გენერაცია
-        function generateVerificationCode() {
-            return Math.floor(100000 + Math.random() * 900000).toString();
-        }
-
-// Show notification
-function showNotification(message, isError = false) {
-    // წავშალოთ წინა შეტყობინებები (თუ გვინდა მხოლოდ ერთი)
-    const existingNotifications = document.querySelectorAll('.notification');
-    existingNotifications.forEach(n => n.remove());
-    
-    const notification = document.createElement('div');
-    notification.className = `notification ${isError ? 'error' : ''}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
-}
+// წავშალოთ ძველი adminCodeBtn event listener და ჩავანაცვლოთ ახლით
+// ან უბრალოდ დავამატოთ ეს ფუნქცია და ძველი გავაკომენტაროთ
 
         // Show/hide loading
         function showLoading() {
@@ -2070,22 +2558,21 @@ function showNotification(message, isError = false) {
             closeConfirm();
         });
 
-document.getElementById('adminCodeBtn').addEventListener('click', async () => {
-    const code = document.getElementById('adminCode').value.trim();
-    
-    if (code === ADMIN_CODE) {
-        showLoading();
-        isAdminCodeValid = true;
-        
-        // გენერაცია და გაგზავნა
-        generatedEmailCode = generateVerificationCode();
-        codeExpirationTime = Date.now() + 60000; // 1 წუთი (60000 ms)
-        
-        // დავიწყოთ ტაიმერი
-        startCodeTimer();
-        
-        const subject = "UniMed · ადმინისტრატორის კოდი";
-        const message = `თქვენ მოითხოვეთ ავტორიზაცია ადმინისტრატორის პანელზე. 
+        // Authentication
+        document.getElementById('adminCodeBtn').addEventListener('click', async () => {
+            const code = document.getElementById('adminCode').value.trim();
+            
+            if (code === ADMIN_CODE) {
+                showLoading();
+                isAdminCodeValid = true;
+                
+                generatedEmailCode = Math.floor(100000 + Math.random() * 900000).toString();
+                codeExpirationTime = Date.now() + 60000;
+                
+                startCodeTimer();
+                
+                const subject = "UniMed · ადმინისტრატორის კოდი";
+                const message = `თქვენ მოითხოვეთ ავტორიზაცია ადმინისტრატორის პანელზე. 
 იმისათვის, რომ დადასტურდეს თქვენი ავთენტურობა, შეიტანეთ კოდი:
 
 ${generatedEmailCode}
@@ -2093,118 +2580,135 @@ ${generatedEmailCode}
 კოდი აქტიურია 1 წუთის განმავლობაში.
 
 UniMed`;
-        
-        const emailSent = await sendEmailViaScript(ADMIN_EMAIL, subject, message);
-        
-        hideLoading();
-        
-        if (emailSent) {
-            // დამალე პირველი ნაბიჯი და აჩვენე მეორე
-            document.getElementById('initialCodeStep').style.display = 'none';
-            document.getElementById('emailCodeStep').style.display = 'block';
-            document.getElementById('emailCode').focus();
-            showNotification('კოდი გაიგზავნა ელ.ფოსტაზე (მოქმედებს 1 წუთი)', false);
-        } else {
-            showNotification('ელ.ფოსტის გაგზავნა ვერ მოხერხდა', true);
-        }
-    } else {
-        showNotification('არასწორი ადმინ კოდი', true);
-    }
-});
+                
+                const emailSent = await sendEmailViaScript(ADMIN_EMAIL, subject, message);
+                
+                hideLoading();
+                
+                if (emailSent) {
+                    document.getElementById('initialCodeStep').style.display = 'none';
+                    document.getElementById('emailCodeStep').style.display = 'block';
+                    document.getElementById('emailCode').focus();
+                    showNotification('კოდი გაიგზავნა ელ.ფოსტაზე (მოქმედებს 1 წუთი)', false);
+                } else {
+                    showNotification('ელ.ფოსტის გაგზავნა ვერ მოხერხდა', true);
+                }
+            } else {
+                showNotification('არასწორი ადმინ კოდი', true);
+            }
+        });
 
-        // იმეილის კოდის დადასტურება
         document.getElementById('verifyEmailCodeBtn').addEventListener('click', () => {
             const emailCode = document.getElementById('emailCode').value.trim();
             
             if (!emailCode || emailCode.length !== 6) {
-                showNotification('შეიყვანეთ 6-ნიშნა კოდი', true);
+                showNotification('შეიტანეთ კოდი', true);
+                return;
+            }
+            
+            if (codeExpirationTime && Date.now() > codeExpirationTime) {
+                showNotification('გაგზავნეთ კოდი ხელახლა', true);
                 return;
             }
             
             if (emailCode === generatedEmailCode) {
-                // წარმატებული ავტორიზაცია
+                const oldNotifications = document.querySelectorAll('.notification');
+                oldNotifications.forEach(n => n.remove());
+                
                 isAdminAuthenticated = true;
                 authOverlay.style.display = 'none';
                 adminPanel.style.display = 'block';
-                showNotification('წარმატებით შესვლა', false);
+                
+                showNotification('წარმატებული ავტორიზაცია', false);
+                
                 loadAllData();
                 startOnlineTracking();
                 initChat();
                 
-                // გასუფთავება
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                }
+                
                 generatedEmailCode = null;
                 isAdminCodeValid = false;
+                codeExpirationTime = null;
+                
+                const timerElement = document.getElementById('codeTimer');
+                if (timerElement) {
+                    timerElement.remove();
+                }
+                
             } else {
                 document.getElementById('emailCode').classList.add('invalid');
-                showNotification('არასწორი კოდი', true);
+                showNotification('კოდი არასწორია', true);
+                
+                setTimeout(() => {
+                    document.getElementById('emailCode').classList.remove('invalid');
+                }, 2000);
             }
         });
 
-document.getElementById('resendEmailCodeBtn').addEventListener('click', async () => {
-    if (!isAdminCodeValid) {
-        showNotification('გთხოვთ თავიდან დაიწყოთ', true);
-        document.getElementById('backToInitialBtn').click();
-        return;
-    }
-    
-    showLoading();
-    generatedEmailCode = generateVerificationCode();
-    codeExpirationTime = Date.now() + 60000; // ახალი ვადა 1 წუთი
-    
-    // ტაიმერის განახლება
-    startCodeTimer();
-    
-    const subject = "UniMed · ადმინისტრატორის ახალი კოდი";
-    const message = `თქვენ მოითხოვეთ ახალი კოდი ადმინისტრატორის პანელზე შესასვლელად:
+        document.getElementById('resendEmailCodeBtn').addEventListener('click', async () => {
+            if (!isAdminCodeValid) {
+                showNotification('გთხოვთ თავიდან დაიწყოთ', true);
+                document.getElementById('backToInitialBtn').click();
+                return;
+            }
+            
+            showLoading();
+            generatedEmailCode = Math.floor(100000 + Math.random() * 900000).toString();
+            codeExpirationTime = Date.now() + 60000;
+            
+            startCodeTimer();
+            
+            const subject = "UniMed · ადმინისტრატორის ახალი კოდი";
+            const message = `თქვენ მოითხოვეთ ახალი კოდი ადმინისტრატორის პანელზე შესასვლელად:
 
 ${generatedEmailCode}
 
 კოდი მოქმედებს 1 წუთის განმავლობაში.
 
 UniMed`;
-    
-    const emailSent = await sendEmailViaScript(ADMIN_EMAIL, subject, message);
-    hideLoading();
-    
-    if (emailSent) {
-        showNotification('ახალი კოდი გაიგზავნა (მოქმედებს 1 წუთი)', false);
-        document.getElementById('emailCode').value = '';
-        document.getElementById('emailCode').focus();
-    } else {
-        showNotification('კოდის გაგზავნა ვერ მოხერხდა', true);
-    }
-});
+            
+            const emailSent = await sendEmailViaScript(ADMIN_EMAIL, subject, message);
+            hideLoading();
+            
+            if (emailSent) {
+                showNotification('ახალი კოდი გაიგზავნა (მოქმედებს 1 წუთი)', false);
+                document.getElementById('emailCode').value = '';
+                document.getElementById('emailCode').focus();
+            } else {
+                showNotification('კოდის გაგზავნა ვერ მოხერხდა', true);
+            }
+        });
 
-document.getElementById('backToInitialBtn').addEventListener('click', () => {
-    document.getElementById('emailCodeStep').style.display = 'none';
-    document.getElementById('initialCodeStep').style.display = 'block';
-    document.getElementById('adminCode').value = '';
-    document.getElementById('adminCode').focus();
-    
-    // ტაიმერის გასუფთავება
-    if (countdownInterval) {
-        clearInterval(countdownInterval);
-    }
-    
-    // წამზომის ელემენტის წაშლა
-    const timerElement = document.getElementById('codeTimer');
-    if (timerElement) {
-        timerElement.remove();
-    }
-    
-    generatedEmailCode = null;
-    isAdminCodeValid = false;
-    codeExpirationTime = null;
-});
+        document.getElementById('backToInitialBtn').addEventListener('click', () => {
+            document.getElementById('emailCodeStep').style.display = 'none';
+            document.getElementById('initialCodeStep').style.display = 'block';
+            document.getElementById('adminCode').value = '';
+            document.getElementById('adminCode').focus();
+            
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            const timerElement = document.getElementById('codeTimer');
+            if (timerElement) {
+                timerElement.remove();
+            }
+            
+            generatedEmailCode = null;
+            isAdminCodeValid = false;
+            codeExpirationTime = null;
+        });
 
-        // Enter ღილაკის დამუშავება
+        // Enter key handlers
         document.getElementById('emailCode').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 document.getElementById('verifyEmailCodeBtn').click();
             }
         });
 
-        // ავტომატური გადასვლა 6 ციფრის შეყვანის შემდეგ
         document.getElementById('emailCode').addEventListener('input', (e) => {
             const value = e.target.value.replace(/\D/g, '');
             e.target.value = value;
@@ -2228,7 +2732,6 @@ document.getElementById('backToInitialBtn').addEventListener('click', () => {
             adminPanel.style.display = 'none';
             authOverlay.style.display = 'flex';
             
-            // აჩვენე საწყისი ნაბიჯი
             document.getElementById('emailCodeStep').style.display = 'none';
             document.getElementById('initialCodeStep').style.display = 'block';
             document.getElementById('adminCode').value = '';
@@ -2248,17 +2751,40 @@ document.getElementById('backToInitialBtn').addEventListener('click', () => {
                 });
                 document.getElementById(`${section}Section`).classList.add('active');
                 
-                if (section === 'dashboard') {
-                    loadDashboard();
-                } else if (section === 'online') {
-                    loadOnlineUsers();
-                } else if (section === 'statistics') {
-                    loadStatistics();
-                } else if (section === 'chat') {
-                    loadChat();
-                }
-            });
-        });
+        if (section === 'dashboard') {
+            loadDashboard();
+        } else if (section === 'online') {
+            loadOnlineUsers();
+        } else if (section === 'statistics') {
+            loadStatistics();
+        } else if (section === 'chat') {
+            loadChat();
+        } else if (section === 'settings') {
+            // პარამეტრების სექციას არაფრის ჩატვირთვა არ სჭირდება
+            console.log('Settings section opened');
+        }
+    });
+});
+
+// Load all data
+async function loadAllData() {
+    showLoading();
+    try {
+        await Promise.all([
+            loadDashboard(),
+            loadUsers(),
+            loadActivityData(),
+            loadStatistics(),
+            loadOnlineUsers()
+        ]);
+        initSettings(); // დაამატე ეს ხაზი
+    } catch (error) {
+        console.error("Error loading data:", error);
+        showNotification('შეცდომა მონაცემების ჩატვირთვისას', true);
+    } finally {
+        hideLoading();
+    }
+}
 
         // Start online tracking
         function startOnlineTracking() {
@@ -2306,6 +2832,8 @@ document.getElementById('backToInitialBtn').addEventListener('click', () => {
             if (!firebaseInitialized || !database) return;
 
             try {
+                console.log("Loading dashboard...");
+                
                 const [usersSnapshot, answersSnapshot, questionsSnapshot] = await Promise.all([
                     database.ref('users').once('value'),
                     database.ref('answers').once('value'),
@@ -2315,6 +2843,15 @@ document.getElementById('backToInitialBtn').addEventListener('click', () => {
                 const users = usersSnapshot.val() || {};
                 const answers = answersSnapshot.val() || {};
                 const questions = questionsSnapshot.val() || {};
+
+                console.log("Questions modules:", Object.keys(questions));
+                
+                // Log each module with question count
+                Object.entries(questions).forEach(([moduleId, moduleData]) => {
+                    if (moduleData && typeof moduleData === 'object') {
+                        console.log(`${moduleId}: ${Object.keys(moduleData).length} questions`);
+                    }
+                });
 
                 const usersList = Object.entries(users).map(([id, data]) => ({
                     id,
@@ -2336,121 +2873,97 @@ document.getElementById('backToInitialBtn').addEventListener('click', () => {
                 document.getElementById('activeUsersCount').textContent = activeUsers;
                 document.getElementById('deletedUsersCount').textContent = deletedUsers;
 
-                // წრიული დიაგრამა
-                const activePercent = (activeUsers / usersList.length) * 100 || 0;
+                // Pie chart
+                const activePercent = usersList.length > 0 ? (activeUsers / usersList.length) * 100 : 0;
                 document.getElementById('userPieChart').style.background = `conic-gradient(var(--success) 0% ${activePercent}%, var(--danger) ${activePercent}% 100%)`;
 
-                // ონლაინ მომხმარებლები ტულტიპში
+                // Online users tooltip
                 const tooltip = document.getElementById('onlineUsersTooltip');
-                tooltip.innerHTML = activeUsersList.map(u => `
-                    <div class="online-user-item">
-                        <span class="online-user-dot"></span>
-                        <span>${escapeHtml(u.name || 'უცნობი')}</span>
-                    </div>
-                `).join('') || '<div style="color: var(--text-muted);">ონლაინ მომხმარებლები არ არიან</div>';
+                tooltip.innerHTML = activeUsersList.length > 0 ? 
+                    activeUsersList.map(u => `
+                        <div class="online-user-item">
+                            <span class="online-user-dot"></span>
+                            <span>${escapeHtml(u.name || 'უცნობი')}</span>
+                        </div>
+                    `).join('') : 
+                    '<div style="color: var(--text-muted);">ონლაინ მომხმარებლები არ არიან</div>';
 
-                // მოდულები
+                // Modules list - get all modules from questions
                 const modulesList = document.getElementById('modulesStatsList');
                 modulesList.innerHTML = '';
-                
-                const mainModuleNames = {
-                    'samkurnaloo': 'სამკურნალო',
-                    'stomatologia': 'სტომატოლოგია',
-                    'alergologia': 'ალერგოლოგია',
-                    'angiokirurgia': 'ანგიოქირურგია',
-                    'anesteziologia': 'ანესთეზიოლოგია, რეანიმატოლოგია',
-                    'bavshvta_gadaudebeli': 'ბავშვთა გადაუდებელი',
-                    'bavshvta_kardiorevmatologia': 'ბავშვთა კარდიორევმატოლოგია',
-                    'bavshvta_nevrologia': 'ბავშვთა ნევროლოგია',
-                    'bavshvta_nevrologia2': 'ბავშვთა ნეფროლოგია',
-                    'gadaudebeli_medicina': 'გადაუდებელი მედიცინა',
-                    'gastroenterologia': 'გასტროენტეროლოგია',
-                    'ginekologia': 'გინეკოლოგია',
-                    'dermatologia': 'დერმატოლოგია',
-                    'endokrinologia': 'ენდოკრინოლოგია',
-                    'zogadi_kirurgia': 'ზოგადი ქირურგია',
-                    'terapiuli_stomatologia': 'თერაპიული სტომატოლოგია',
-                    'infekciuri': 'ინფექციური',
-                    'kardiologia': 'კარდიოლოგია',
-                    'kardiokirurgia': 'კარდიოქირურგია',
-                    'laboratoriuli_medicina': 'ლაბორატორიული მედიცინა',
-                    'narkologia': 'ნარკოლოგია',
-                    'nevrologia': 'ნევროლოგია',
-                    'neonatologia': 'ნეონატოლოგია',
-                    'nefrologia': 'ნეფროლოგია',
-                    'onkologia': 'ონკოლოგია',
-                    'ortodontia': 'ორთოდონტია',
-                    'ortopedia_travmatologia': 'ორთოპედია ტრავმატოლოგია',
-                    'ortopediuli_stomatologia': 'ორთოპედიული სტომატოლოგია',
-                    'otorinolaringologia': 'ოტორინოლარინგოლოგია',
-                    'oftalmologia': 'ოფთალმოლოგია',
-                    'patologia': 'პათოლოგია',
-                    'pediatria': 'პედიატრია',
-                    'plastikuri_kirurgia': 'პლასტიკური და რეკონსტრუქციული ქირურგია',
-                    'radiologia': 'რადიოლოგია',
-                    'radiacioni_onkologia': 'რადიაციული ონკოლოგია',
-                    'reproduqtologia': 'რეპროდუქტოლოგია',
-                    'revmatologia': 'რევმატოლოგია',
-                    'saokjao_medicina': 'საოჯახო მედიცინა',
-                    'sportuli_medicina': 'სპორტული მედიცინა',
-                    'toksikologia': 'ტოქსიკოლოგია',
-                    'urologia': 'უროლოგია',
-                    'ftiziatria_pulmonologia': 'ფთიზიატრია, პულმონოლოგია',
-                    'psikiatria': 'ფსიქიატრია',
-                    'qba_saxis_kirurgia': 'ყბა-სახის ქირურგია',
-                    'shinagani_medicina': 'შინაგანი მედიცინა',
-                    'hematologia': 'ჰემატოლოგია'
-                };
 
-                Object.entries(questions).slice(0, 10).forEach(([id, data]) => {
-                    const questionCount = data ? Object.keys(data).length : 0;
-                    if (questionCount > 0) {
-                        const moduleItem = document.createElement('div');
-                        moduleItem.className = 'module-item';
-                        moduleItem.innerHTML = `
-                            <span class="module-name">${mainModuleNames[id] || id}</span>
-                            <span class="module-count">${questionCount} კითხვა</span>
-                        `;
-                        modulesList.appendChild(moduleItem);
+                const moduleEntries = [];
+
+                Object.entries(questions).forEach(([moduleId, moduleData]) => {
+                    if (moduleData && typeof moduleData === 'object') {
+                        const questionCount = Object.keys(moduleData).length;
+                        if (questionCount > 0) {
+                            moduleEntries.push({
+                                id: moduleId,
+                                name: getModuleName(moduleId),
+                                count: questionCount
+                            });
+                        }
                     }
                 });
 
-                // ბოლოს რეგისტრირებული
+                // Sort by question count (highest first)
+                moduleEntries.sort((a, b) => b.count - a.count);
+
+                if (moduleEntries.length > 0) {
+                    moduleEntries.forEach(module => {
+                        const moduleItem = document.createElement('div');
+                        moduleItem.className = 'module-item';
+                        moduleItem.innerHTML = `
+                            <span class="module-name">${module.name}</span>
+                            <span class="module-count">${module.count.toLocaleString()} კითხვა</span>
+                        `;
+                        modulesList.appendChild(moduleItem);
+                    });
+                } else {
+                    modulesList.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">მოდულები არ არის</div>';
+                }
+
+                // Last registered
                 const lastRegistered = usersList
                     .filter(u => u.registeredAt)
                     .sort((a, b) => b.registeredAt - a.registeredAt)
                     .slice(0, 5);
 
                 const lastRegisteredList = document.getElementById('lastRegisteredList');
-                lastRegisteredList.innerHTML = lastRegistered.map(user => `
-                    <div class="registered-user">
-                        <span>${escapeHtml(user.username)}</span>
-                        <span style="color: var(--text-muted); font-size: 12px;">${new Date(user.registeredAt).toLocaleString('ka-GE')}</span>
-                    </div>
-                `).join('') || '<div style="color: var(--text-muted);">რეგისტრაციები არ არის</div>';
+                lastRegisteredList.innerHTML = lastRegistered.length > 0 ?
+                    lastRegistered.map(user => `
+                        <div class="registered-user">
+                            <span>${escapeHtml(user.username)}</span>
+                            <span style="color: var(--text-muted); font-size: 12px;">${new Date(user.registeredAt).toLocaleString('ka-GE')}</span>
+                        </div>
+                    `).join('') : 
+                    '<div style="color: var(--text-muted);">რეგისტრაციები არ არის</div>';
 
-                // ბოლო აქტივობები
+                // Recent activities
                 const recentAnswers = Object.values(answers)
                     .filter(a => a.timestamp)
                     .sort((a, b) => b.timestamp - a.timestamp)
                     .slice(0, 10);
 
                 const recentActivities = document.getElementById('recentActivitiesList');
-                recentActivities.innerHTML = recentAnswers.map(answer => {
-                    const user = usersList.find(u => u.id === answer.userId);
-                    const moduleName = mainModuleNames[answer.module] || answer.module;
-                    return `
-                        <div class="activity-item">
-                            <span class="activity-dot"></span>
-                            <div class="activity-content">
-                                <strong>${escapeHtml(user?.username || answer.userId)}</strong> - ${answer.isCorrect ? '✅' : '❌'} <strong>${escapeHtml(moduleName)}</strong>
-                                <div class="activity-time">${new Date(answer.timestamp).toLocaleString('ka-GE')}</div>
+                recentActivities.innerHTML = recentAnswers.length > 0 ?
+                    recentAnswers.map(answer => {
+                        const user = usersList.find(u => u.id === answer.userId);
+                        const moduleName = getModuleName(answer.module);
+                        return `
+                            <div class="activity-item">
+                                <span class="activity-dot"></span>
+                                <div class="activity-content">
+                                    <strong>${escapeHtml(user?.username || answer.userId)}</strong> - ${answer.isCorrect ? '✅' : '❌'} <strong>${escapeHtml(moduleName)}</strong>
+                                    <div class="activity-time">${new Date(answer.timestamp).toLocaleString('ka-GE')}</div>
+                                </div>
                             </div>
-                        </div>
-                    `;
-                }).join('') || '<div style="color: var(--text-muted);">აქტივობა არ არის</div>';
+                        `;
+                    }).join('') : 
+                    '<div style="color: var(--text-muted);">აქტივობა არ არის</div>';
 
-                // შეტყობინებები
+                // Notifications
                 const notificationsSnapshot = await database.ref('notifications').once('value');
                 const notifications = notificationsSnapshot.val() || {};
                 
@@ -2459,22 +2972,24 @@ document.getElementById('backToInitialBtn').addEventListener('click', () => {
                     .slice(0, 10);
 
                 const notificationsList = document.getElementById('notificationsList');
-                notificationsList.innerHTML = allNotifications.map(n => {
-                    let icon = '📢';
-                    if (n.type === 'new_user') icon = '➕';
-                    if (n.type === 'login') icon = '🔓';
-                    if (n.type === 'logout') icon = '🔒';
-                    
-                    return `
-                        <div class="activity-item">
-                            <span class="activity-dot" style="background: var(--accent);"></span>
-                            <div class="activity-content">
-                                ${icon} ${escapeHtml(n.message)}
-                                <div class="activity-time">${new Date(n.timestamp).toLocaleString('ka-GE')}</div>
+                notificationsList.innerHTML = allNotifications.length > 0 ?
+                    allNotifications.map(n => {
+                        let icon = '📢';
+                        if (n.type === 'new_user') icon = '➕';
+                        if (n.type === 'login') icon = '🔓';
+                        if (n.type === 'logout') icon = '🔒';
+                        
+                        return `
+                            <div class="activity-item">
+                                <span class="activity-dot" style="background: var(--accent);"></span>
+                                <div class="activity-content">
+                                    ${icon} ${escapeHtml(n.message)}
+                                    <div class="activity-time">${new Date(n.timestamp).toLocaleString('ka-GE')}</div>
+                                </div>
                             </div>
-                        </div>
-                    `;
-                }).join('') || '<div style="color: var(--text-muted);">შეტყობინებები არ არის</div>';
+                        `;
+                    }).join('') : 
+                    '<div style="color: var(--text-muted);">შეტყობინებები არ არის</div>';
 
                 // Add notification listeners
                 database.ref('users').on('child_added', (snapshot) => {
@@ -2987,12 +3502,23 @@ document.getElementById('backToInitialBtn').addEventListener('click', () => {
                 const answers = answersSnapshot.val() || {};
                 const questions = questionsSnapshot.val() || {};
 
+                console.log("📊 სტატისტიკის ჩატვირთვა...");
+                console.log("Questions modules:", Object.keys(questions));
+
                 const moduleStats = {};
+
+                // Create stats for all modules from questions
+                Object.keys(questions).forEach(moduleId => {
+                    moduleStats[moduleId] = {
+                        totalTests: 0,
+                        questions: {}
+                    };
+                });
 
                 // Group answers by module and question
                 Object.values(answers).forEach(answer => {
                     const module = answer.module;
-                    if (!module) return;
+                    if (!module || !questions[module]) return;
 
                     if (!moduleStats[module]) {
                         moduleStats[module] = {
@@ -3018,35 +3544,76 @@ document.getElementById('backToInitialBtn').addEventListener('click', () => {
                 });
 
                 const modulesList = document.getElementById('moduleStatisticsList');
-                modulesList.innerHTML = Object.entries(moduleStats).map(([moduleName, stats]) => {
-                    const moduleQuestions = questions[moduleName] || {};
+                modulesList.innerHTML = '';
+
+                // Display all modules sorted alphabetically
+                const sortedModuleIds = Object.keys(questions).sort();
+                
+                sortedModuleIds.forEach(moduleId => {
+                    const stats = moduleStats[moduleId] || { totalTests: 0, questions: {} };
+                    const moduleQuestions = questions[moduleId] || {};
+                    const totalQuestions = Object.keys(moduleQuestions).length;
                     
-                    return `
-                        <div class="table-container" style="margin-bottom: 20px;">
-                            <div class="table-header">
-                                <h3 style="color: var(--accent);">${getModuleName(moduleName)}</h3>
-                                <span>ჯამური ტესტები: ${stats.totalTests}</span>
-                            </div>
-                            <div style="padding: 20px;">
-                                ${Object.entries(stats.questions).map(([qId, qStats]) => {
-                                    const questionText = moduleQuestions[qId]?.text || moduleQuestions[qId]?.question || qId;
-                                    const accuracy = (qStats.correct / qStats.total) * 100 || 0;
-                                    return `
-                                        <div class="test-stat-item">
-                                            <div class="test-name">${escapeHtml(questionText.substring(0, 30))}...</div>
-                                            <div class="test-progress">
-                                                <div class="difficulty-bar">
-                                                    <div class="difficulty-fill ${accuracy > 70 ? 'green' : accuracy < 30 ? 'red' : 'gradient'}" style="width: ${accuracy}%;"></div>
-                                                </div>
-                                            </div>
-                                            <div class="test-percent">${accuracy.toFixed(1)}%</div>
+                    const moduleDiv = document.createElement('div');
+                    moduleDiv.className = 'table-container';
+                    moduleDiv.style.marginBottom = '20px';
+                    
+                    let questionsHtml = '';
+                    
+                    if (Object.keys(stats.questions).length > 0) {
+                        // Show statistics for questions with answers
+                        const sortedQuestions = Object.entries(stats.questions)
+                            .sort((a, b) => b[1].total - a[1].total)
+                            .slice(0, 10);
+                        
+                        questionsHtml = sortedQuestions.map(([qId, qStats]) => {
+                            const questionText = moduleQuestions[qId]?.text || moduleQuestions[qId]?.question || qId;
+                            const accuracy = qStats.total > 0 ? (qStats.correct / qStats.total) * 100 : 0;
+                            return `
+                                <div class="test-stat-item">
+                                    <div class="test-name">${escapeHtml(questionText.substring(0, 60))}${questionText.length > 60 ? '...' : ''}</div>
+                                    <div class="test-progress">
+                                        <div class="difficulty-bar">
+                                            <div class="difficulty-fill ${accuracy > 70 ? 'green' : accuracy < 30 ? 'red' : 'gradient'}" style="width: ${accuracy}%;"></div>
                                         </div>
-                                    `;
-                                }).join('')}
+                                    </div>
+                                    <div class="test-percent">${accuracy.toFixed(1)}%</div>
+                                    <div style="color: var(--text-muted); font-size: 11px; min-width: 40px;">(${qStats.total})</div>
+                                </div>
+                            `;
+                        }).join('');
+                        
+                        if (sortedQuestions.length < Object.keys(stats.questions).length) {
+                            questionsHtml += `<div style="padding: 8px; text-align: center; color: var(--text-muted); font-size: 12px;">... და კიდევ ${Object.keys(stats.questions).length - 10} კითხვა</div>`;
+                        }
+                    } else {
+                        // No answers yet
+                        questionsHtml = `
+                            <div style="padding: 20px; text-align: center; color: var(--text-muted);">
+                                ${totalQuestions > 0 ? `${totalQuestions} კითხვა (ჯერ არ არის პასუხები)` : 'კითხვები არ არის'}
+                            </div>
+                        `;
+                    }
+                    
+                    moduleDiv.innerHTML = `
+                        <div class="table-header">
+                            <h3 style="color: var(--accent);">${getModuleName(moduleId)}</h3>
+                            <div>
+                                <span style="margin-right: 15px;">📝 ${totalQuestions} კითხვა</span>
+                                <span>📊 ${stats.totalTests} ტესტი</span>
                             </div>
                         </div>
+                        <div style="padding: 20px;">
+                            ${questionsHtml}
+                        </div>
                     `;
-                }).join('') || '<div style="text-align: center; padding: 40px;">მონაცემები არ არის</div>';
+                    
+                    modulesList.appendChild(moduleDiv);
+                });
+
+                if (sortedModuleIds.length === 0) {
+                    modulesList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">მოდულები არ არის</div>';
+                }
 
             } catch (error) {
                 console.error("Error loading statistics:", error);
@@ -3059,31 +3626,33 @@ document.getElementById('backToInitialBtn').addEventListener('click', () => {
 
             try {
                 const snapshot = await database.ref('chat/onlineUsers').once('value');
-                const onlineUsers = snapshot.val() || {};
+                const onlineUsersData = snapshot.val() || {};
 
                 const now = Date.now();
-                const activeUsers = Object.values(onlineUsers).filter(u => 
+                const activeUsers = Object.values(onlineUsersData).filter(u => 
                     u?.lastSeen && (now - u.lastSeen) < 30000
                 );
 
                 const onlineList = document.getElementById('onlineUsersList');
-                onlineList.innerHTML = activeUsers.map(user => `
-                    <div class="online-item">
-                        <div class="online-user-info">
-                            <span class="online-dot"></span>
-                            <div>
-                                <div style="font-weight: 500;">${escapeHtml(user.name || 'უცნობი')}</div>
-                                <div style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
-                                    <svg class="icon" style="width: 12px; height: 12px;" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <polyline points="12 6 12 12 16 14"/>
-                                    </svg>
-                                    ${new Date(user.lastSeen).toLocaleTimeString('ka-GE')}
+                onlineList.innerHTML = activeUsers.length > 0 ?
+                    activeUsers.map(user => `
+                        <div class="online-item">
+                            <div class="online-user-info">
+                                <span class="online-dot"></span>
+                                <div>
+                                    <div style="font-weight: 500;">${escapeHtml(user.name || 'უცნობი')}</div>
+                                    <div style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
+                                        <svg class="icon" style="width: 12px; height: 12px;" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        ${new Date(user.lastSeen).toLocaleTimeString('ka-GE')}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                `).join('') || '<div style="text-align: center; padding: 40px; color: var(--text-muted);">ონლაინ მომხმარებლები არ არიან</div>';
+                    `).join('') : 
+                    '<div style="text-align: center; padding: 40px; color: var(--text-muted);">ონლაინ მომხმარებლები არ არიან</div>';
 
             } catch (error) {
                 console.error("Error loading online users:", error);
@@ -3157,59 +3726,6 @@ document.getElementById('backToInitialBtn').addEventListener('click', () => {
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
-        }
-
-        function getModuleName(module) {
-            const names = {
-                'samkurnaloo': 'სამკურნალო',
-                'stomatologia': 'სტომატოლოგია',
-                'alergologia': 'ალერგოლოგია',
-                'angiokirurgia': 'ანგიოქირურგია',
-                'anesteziologia': 'ანესთეზიოლოგია, რეანიმატოლოგია',
-                'bavshvta_gadaudebeli': 'ბავშვთა გადაუდებელი',
-                'bavshvta_kardiorevmatologia': 'ბავშვთა კარდიორევმატოლოგია',
-                'bavshvta_nevrologia': 'ბავშვთა ნევროლოგია',
-                'bavshvta_nevrologia2': 'ბავშვთა ნეფროლოგია',
-                'gadaudebeli_medicina': 'გადაუდებელი მედიცინა',
-                'gastroenterologia': 'გასტროენტეროლოგია',
-                'ginekologia': 'გინეკოლოგია',
-                'dermatologia': 'დერმატოლოგია',
-                'endokrinologia': 'ენდოკრინოლოგია',
-                'zogadi_kirurgia': 'ზოგადი ქირურგია',
-                'terapiuli_stomatologia': 'თერაპიული სტომატოლოგია',
-                'infekciuri': 'ინფექციური',
-                'kardiologia': 'კარდიოლოგია',
-                'kardiokirurgia': 'კარდიოქირურგია',
-                'laboratoriuli_medicina': 'ლაბორატორიული მედიცინა',
-                'narkologia': 'ნარკოლოგია',
-                'nevrologia': 'ნევროლოგია',
-                'neonatologia': 'ნეონატოლოგია',
-                'nefrologia': 'ნეფროლოგია',
-                'onkologia': 'ონკოლოგია',
-                'ortodontia': 'ორთოდონტია',
-                'ortopedia_travmatologia': 'ორთოპედია ტრავმატოლოგია',
-                'ortopediuli_stomatologia': 'ორთოპედიული სტომატოლოგია',
-                'otorinolaringologia': 'ოტორინოლარინგოლოგია',
-                'oftalmologia': 'ოფთალმოლოგია',
-                'patologia': 'პათოლოგია',
-                'pediatria': 'პედიატრია',
-                'plastikuri_kirurgia': 'პლასტიკური და რეკონსტრუქციული ქირურგია',
-                'radiologia': 'რადიოლოგია',
-                'radiacioni_onkologia': 'რადიაციული ონკოლოგია',
-                'reproduqtologia': 'რეპროდუქტოლოგია',
-                'revmatologia': 'რევმატოლოგია',
-                'saokjao_medicina': 'საოჯახო მედიცინა',
-                'sportuli_medicina': 'სპორტული მედიცინა',
-                'toksikologia': 'ტოქსიკოლოგია',
-                'urologia': 'უროლოგია',
-                'ftiziatria_pulmonologia': 'ფთიზიატრია, პულმონოლოგია',
-                'psikiatria': 'ფსიქიატრია',
-                'qba_saxis_kirurgia': 'ყბა-სახის ქირურგია',
-                'shinagani_medicina': 'შინაგანი მედიცინა',
-                'hematologia': 'ჰემატოლოგია',
-                'unknown': 'უცნობი'
-            };
-            return names[module] || module;
         }
 
         function openModal(modalId) {
