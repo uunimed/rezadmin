@@ -1543,6 +1543,18 @@
     }
 }
 
+/* განახლების ანიმაცია */
+@keyframes refreshPulse {
+    0% { background-color: var(--surface); }
+    50% { background-color: rgba(14, 165, 164, 0.1); }
+    100% { background-color: var(--surface); }
+}
+
+.refresh-animation {
+    animation: refreshPulse 0.5s ease;
+}
+
+
 #pieSegment {
     animation: pieAppear 0.6s ease-out;
 }
@@ -1626,6 +1638,17 @@
 /* Add this to the online dot */
 .dashboard-card [style*="background: linear-gradient(135deg, #10b981"] {
     animation: pulse 2s infinite;
+}
+
+/* განახლების ანიმაცია */
+@keyframes dataUpdate {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; background-color: rgba(14, 165, 164, 0.1); }
+    100% { opacity: 1; }
+}
+
+.stat-update {
+    animation: dataUpdate 0.5s ease;
 }
 
     </style>
@@ -1967,6 +1990,7 @@
                         </div>
                     </div>
                     
+
                     <!-- Offline Stats -->
                     <div style="margin-bottom: 20px;">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
@@ -2656,6 +2680,32 @@
         </div>
     </div>
 
+                    <!-- Module Questions Modal (Stretched Popup) -->
+<div id="moduleQuestionsModal" class="modal-overlay">
+    <div class="modal wide" style="max-width: 1400px; margin: 0 0.5cm; width: calc(100% - 1cm);">
+        <div class="modal-header">
+            <h3 id="moduleQuestionsModalTitle">მოდულის კითხვები</h3>
+            <button class="modal-close" onclick="closeModal('moduleQuestionsModal')">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body" id="moduleQuestionsContent" style="max-height: 80vh; overflow-y: auto;">
+            <!-- კითხვები ჩაიტვირთება აქ -->
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn secondary" onclick="closeModal('moduleQuestionsModal')">დახურვა</button>
+        </div>
+    </div>
+</div>
+
+<div id="statisticsRefreshIndicator" style="display: none; margin-bottom: 16px; padding: 8px 16px; background: rgba(14, 165, 164, 0.1); border-radius: 40px; color: var(--accent); font-size: 13px; align-items: center; gap: 8px;">
+    <div class="loading-spinner" style="width: 16px; height: 16px; border-width: 2px;"></div>
+    <span>მონაცემები განახლდება...</span>
+</div>
+
     <script>
         // Firebase Configuration
         const firebaseConfig = {
@@ -2976,14 +3026,184 @@ const MODULE_CSV_URLS = {
 // ქეშირება CSV მონაცემებისთვის
 let cachedModuleCounts = null;
 
+// გლობალური ცვლადები მოდულის კითხვების სტატისტიკისთვის
+let currentModuleQuestionsStats = [];
+
+// ჩატვირთავს ყველა მოდულის ყველა კითხვას (პასუხების გარეშეც)
+async function loadAllModulesQuestionsStats() {
+    if (!firebaseInitialized || !database) return [];
+    
+    try {
+        console.log("📊 ვტვირთავთ ყველა მოდულის ყველა კითხვას...");
+        
+        // ავიღოთ ყველა answers (პასუხები)
+        const answersSnapshot = await database.ref('answers').once('value');
+        const answers = answersSnapshot.val() || {};
+        
+        console.log(`📝 სულ პასუხები: ${Object.keys(answers).length}`);
+        
+        // ჩავტვირთოთ ყველა მოდულის CSV
+        const moduleCounts = await loadAllModuleQuestionCounts();
+        console.log("📦 მოდულების რაოდენობა CSV-დან:", Object.keys(moduleCounts).length);
+        
+        const modulesStats = [];
+        
+        // თითოეული მოდულისთვის CSV-დან
+        for (const [moduleId, questionCount] of Object.entries(moduleCounts)) {
+            if (questionCount === 0) continue;
+            
+            console.log(`📦 მოდული: ${moduleId}, კითხვები: ${questionCount}`);
+            
+            // ჩავტვირთოთ CSV და გამოვიტანოთ ყველა კითხვის ტექსტი
+            let questionsText = {};
+            try {
+                const response = await fetch(MODULE_CSV_URLS[moduleId]);
+                if (response.ok) {
+                    const csvText = await response.text();
+                    const twoColRows = parseCSVTwoColumns(csvText);
+                    const tests = buildTestsFromCSV(twoColRows);
+                    
+                    // შევქმნათ ობიექტი ID -> ტექსტი
+                    tests.forEach((test, index) => {
+                        const questionId = (index + 1).toString();
+                        questionsText[questionId] = test.question;
+                    });
+                }
+            } catch (error) {
+                console.error(`Error loading CSV for ${moduleId}:`, error);
+            }
+            
+            // შევქმნათ სტატისტიკა ყველა კითხვისთვის (პასუხების გარეშეც)
+            const questionStats = [];
+            
+            for (let i = 1; i <= questionCount; i++) {
+                const questionId = i.toString();
+                const questionText = questionsText[questionId] || `კითხვა #${questionId}`;
+                
+                // ვეძებთ პასუხებს ამ კითხვაზე
+                const questionAnswers = Object.values(answers).filter(a => 
+                    a.module === moduleId && 
+                    a.questionId === questionId
+                );
+                
+                // მხოლოდ პირველი პასუხი თითოეული მომხმარებლისგან
+                const uniqueUserAnswers = new Map(); // userId -> {isCorrect, timestamp}
+                
+                questionAnswers.forEach(answer => {
+                    if (answer.userId && !answer.userId.startsWith('guest_')) {
+                        // თუ ჯერ არ გვაქვს ეს მომხმარებელი ან თუ ეს უფრო ძველი პასუხია
+                        if (!uniqueUserAnswers.has(answer.userId) || 
+                            (answer.timestamp && uniqueUserAnswers.get(answer.userId).timestamp > answer.timestamp)) {
+                            uniqueUserAnswers.set(answer.userId, {
+                                isCorrect: answer.isCorrect || false,
+                                timestamp: answer.timestamp || Date.now()
+                            });
+                        }
+                    }
+                });
+                
+                const totalAnswers = uniqueUserAnswers.size;
+                const correctAnswers = Array.from(uniqueUserAnswers.values()).filter(a => a.isCorrect).length;
+                const incorrectAnswers = totalAnswers - correctAnswers;
+                
+                const correctPercent = totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0;
+                
+                questionStats.push({
+                    id: questionId,
+                    text: questionText,
+                    totalAnswers: totalAnswers,
+                    correctAnswers: correctAnswers,
+                    incorrectAnswers: incorrectAnswers,
+                    correctPercent: correctPercent
+                });
+            }
+            
+            modulesStats.push({
+                id: moduleId,
+                name: getModuleName(moduleId),
+                questionCount: questionCount,
+                questions: questionStats
+            });
+        }
+        
+        // დავალაგოთ მოდულები სახელის მიხედვით
+        modulesStats.sort((a, b) => a.name.localeCompare(b.name));
+        
+        console.log(`✅ დავამუშავეთ ${modulesStats.length} მოდული`);
+        console.log(`📊 პირველი მოდულის პირველი კითხვა:`, modulesStats[0]?.questions[0]);
+        
+        return modulesStats;
+        
+    } catch (error) {
+        console.error("❌ შეცდომა მოდულების სტატისტიკის ჩატვირთვისას:", error);
+        return [];
+    }
+}
+
+// Firebase listener რეალურ დროში განახლებისთვის
+let answersListener = null;
+
+function setupRealtimeUpdates() {
+    if (!firebaseInitialized || !database) return;
+    
+    console.log("📡 რეალურ დროში განახლება დაყენდა");
+    
+    // გავაუქმოთ ძველი listener თუ არსებობს
+    if (answersListener) {
+        database.ref('answers').off('value', answersListener);
+    }
+    
+    // მოვუსმინოთ ყველა ცვლილებას answers-ში
+    answersListener = database.ref('answers').on('value', (snapshot) => {
+        console.log("🔄 answers მონაცემები შეიცვალა");
+        
+        // თუ სტატისტიკის გვერდი აქტიურია, განვაახლოთ
+        if (document.getElementById('statisticsSection').classList.contains('active')) {
+            console.log("📊 სტატისტიკის გვერდი აქტიურია, ვტვირთავთ განახლებას...");
+            loadStatistics();
+        }
+        
+        // ასევე განვაახლოთ დაშბორდი თუ აქტიურია
+        if (document.getElementById('dashboardSection').classList.contains('active')) {
+            loadDashboard();
+        }
+    });
+}
+
+// განვაახლოთ loadAllData ფუნქცია
+async function loadAllData() {
+    showLoading();
+    try {
+        await Promise.all([
+            loadDashboard(),
+            loadUsers(),
+            loadActivityData(),
+            loadStatistics(),
+            loadOnlineUsers()
+        ]);
+        initSettings();
+        
+        // დავაყენოთ რეალურ დროში განახლება
+        setupRealtimeUpdates();
+        
+    } catch (error) {
+        console.error("Error loading data:", error);
+        showNotification('შეცდომა მონაცემების ჩატვირთვისას', true);
+    } finally {
+        hideLoading();
+    }
+}
+
 // ჩატვირთავს ყველა მოდულის CSV-ს და დაითვლის კითხვების რაოდენობას
 async function loadAllModuleQuestionCounts() {
     if (cachedModuleCounts) {
-        console.log("Using cached module counts");
+        console.log("Using cached module counts:", cachedModuleCounts);
         return cachedModuleCounts;
     }
     
     console.log("Loading all module CSV files to count questions...");
+    console.log("Total modules to load:", Object.keys(MODULE_CSV_URLS).length);
+    
     const counts = {};
     const totalModules = Object.keys(MODULE_CSV_URLS).length;
     let loadedCount = 0;
@@ -2991,6 +3211,7 @@ async function loadAllModuleQuestionCounts() {
     // ყველა მოდულისთვის პარალელურად ჩავტვირთოთ CSV
     const promises = Object.entries(MODULE_CSV_URLS).map(async ([moduleId, url]) => {
         try {
+            console.log(`Loading ${moduleId}...`);
             const response = await fetch(url);
             if (!response.ok) {
                 console.warn(`Failed to load ${moduleId}: ${response.status}`);
@@ -3000,18 +3221,15 @@ async function loadAllModuleQuestionCounts() {
             }
             
             const csvText = await response.text();
+            console.log(`Loaded ${moduleId}, CSV length: ${csvText.length} characters`);
             
             // გამოვიყენოთ CSV პარსინგის ფუნქციები
             const twoColRows = parseCSVTwoColumns(csvText);
             const tests = buildTestsFromCSV(twoColRows);
             
             counts[moduleId] = tests.length;
+            console.log(`${moduleId} has ${tests.length} questions`);
             loadedCount++;
-            
-            // პროგრესის ჩვენება
-            if (loadedCount % 10 === 0 || loadedCount === totalModules) {
-                console.log(`Loaded ${loadedCount}/${totalModules} modules`);
-            }
             
         } catch (error) {
             console.error(`Error loading ${moduleId}:`, error);
@@ -3023,12 +3241,21 @@ async function loadAllModuleQuestionCounts() {
     await Promise.all(promises);
     
     console.log("Final module counts:", counts);
+    
+    // გავფილტროთ მხოლოდ ის მოდულები, რომლებსაც აქვთ კითხვები
+    const modulesWithQuestions = Object.entries(counts)
+        .filter(([_, count]) => count > 0)
+        .map(([id, count]) => ({ id, count }));
+    
+    console.log(`Modules with questions: ${modulesWithQuestions.length}`);
+    modulesWithQuestions.forEach(m => console.log(`- ${m.id}: ${m.count} questions`));
+    
     cachedModuleCounts = counts;
     return counts;
 }
 
+
 // Load modules stats - TOP 5 MOST ACTIVE MODULES
-// ჩავამატოთ loadModulesStats-ის დასაწყისში
 async function loadModulesStats() {
     if (!firebaseInitialized || !database) return;
     
@@ -3040,13 +3267,13 @@ async function loadModulesStats() {
         console.log("Loading modules stats...");
         
         // ჩავტვირთოთ CSV მონაცემები
+        console.log("Calling loadAllModuleQuestionCounts...");
         const moduleCounts = await loadAllModuleQuestionCounts();
+        console.log("Module counts received:", moduleCounts);
         
         const usersSnapshot = await database.ref('users').once('value');
         const users = usersSnapshot.val() || {};
-
-        const modulesList = document.getElementById('modulesStatsList');
-        modulesList.innerHTML = '';
+        console.log("Total users:", Object.keys(users).length);
 
         // ყველა მოდულის სია მთავარი კოდიდან
         const allModules = [
@@ -3101,96 +3328,102 @@ async function loadModulesStats() {
         const totalUsers = Object.keys(users).length;
         const moduleEntries = [];
 
-// თითოეული მოდულის სტატისტიკის დამუშავება
-for (const moduleInfo of allModules) {
-    const moduleId = moduleInfo.id;
-    const moduleName = moduleInfo.name;
-    
-    // კითხვების რაოდენობა CSV-დან
-    const questionCount = moduleCounts[moduleId] || 0;
+        // თითოეული მოდულის სტატისტიკის დამუშავება
+        for (const moduleInfo of allModules) {
+            const moduleId = moduleInfo.id;
+            const moduleName = moduleInfo.name;
+            
+            // კითხვების რაოდენობა CSV-დან
+            const questionCount = moduleCounts[moduleId] || 0;
+            
+            // მხოლოდ ის მოდულები, რომლებსაც აქვთ კითხვები
+            if (questionCount === 0) continue;
 
-    // მომხმარებლების სტატისტიკა
-    const usersInModule = new Set();
-    const activeNow = new Set();
-    const completedUsers = new Set();  // ეს იყო გამოტოვებული
-    const examUsers = new Set();       // ეს იყო გამოტოვებული
-    const examScores = [];             // ეს იყო გამოტოვებული
-    const now = Date.now();
-    
-    Object.entries(users).forEach(([userId, userData]) => {
-        const progress = userData.progress?.[moduleId];
-        if (progress) {
-            const hasNormal = progress.normal?.answeredQuestions && 
-                             Object.keys(progress.normal.answeredQuestions).length > 0;
-            const hasExam = progress.exam?.answeredQuestions && 
-                           Object.keys(progress.exam.answeredQuestions).length > 0;
+            // მომხმარებლების სტატისტიკა
+            const usersInModule = new Set();
+            const activeNow = new Set();
+            const completedUsers = new Set();
+            const examUsers = new Set();
+            const examScores = [];
+            const now = Date.now();
             
-            if (hasNormal || hasExam) {
-                usersInModule.add(userId);
-                
-                // შევამოწმოთ არის თუ არა მომხმარებელი აქტიურად მომუშავე (ბოლო 24 სთ)
-                const lastActive = progress.lastUpdated || 0;
-                if (lastActive > now - 24 * 60 * 60 * 1000) {
-                    activeNow.add(userId);
+            Object.entries(users).forEach(([userId, userData]) => {
+                const progress = userData.progress?.[moduleId];
+                if (progress) {
+                    const hasNormal = progress.normal?.answeredQuestions && 
+                                     Object.keys(progress.normal.answeredQuestions).length > 0;
+                    const hasExam = progress.exam?.answeredQuestions && 
+                                   Object.keys(progress.exam.answeredQuestions).length > 0;
+                    
+                    if (hasNormal || hasExam) {
+                        usersInModule.add(userId);
+                        
+                        // შევამოწმოთ არის თუ არა მომხმარებელი აქტიურად მომუშავე (ბოლო 24 სთ)
+                        const lastActive = progress.lastUpdated || 0;
+                        if (lastActive > now - 24 * 60 * 60 * 1000) {
+                            activeNow.add(userId);
+                        }
+                    }
+                    
+                    // სრულად დასრულებული მომხმარებლები
+                    if (hasNormal && questionCount > 0 && 
+                        Object.keys(progress.normal.answeredQuestions).length >= questionCount) {
+                        completedUsers.add(userId);
+                    }
+                    
+                    // საგამოცდო სტატისტიკა
+                    if (hasExam) {
+                        examUsers.add(userId);
+                        
+                        const examAnswers = progress.exam.answeredQuestions || {};
+                        let correctCount = 0;
+                        Object.values(examAnswers).forEach(answer => {
+                            if (answer.isCorrect) correctCount++;
+                        });
+                        
+                        if (correctCount > 0) {
+                            examScores.push({
+                                userId,
+                                score: correctCount,
+                                passed: correctCount >= 150,
+                                username: userData.username || userId
+                            });
+                        }
+                    }
                 }
-            }
-            
-            // სრულად დასრულებული მომხმარებლები
-            if (hasNormal && questionCount > 0 && 
-                Object.keys(progress.normal.answeredQuestions).length >= questionCount) {
-                completedUsers.add(userId);
-            }
-            
-            // საგამოცდო სტატისტიკა
-            if (hasExam) {
-                examUsers.add(userId);
-                
-                const examAnswers = progress.exam.answeredQuestions || {};
-                let correctCount = 0;
-                Object.values(examAnswers).forEach(answer => {
-                    if (answer.isCorrect) correctCount++;
+            });
+
+            if (usersInModule.size > 0 || examScores.length > 0) {
+                moduleEntries.push({
+                    id: moduleId,
+                    name: moduleName,
+                    count: questionCount,
+                    totalUsers: usersInModule.size,
+                    activeUsers: activeNow.size,
+                    completed: completedUsers.size,
+                    examParticipants: examUsers.size,
+                    examPassed: examScores.filter(s => s.passed).length,
+                    examFailed: examUsers.size - examScores.filter(s => s.passed).length,
+                    avgScore: examScores.length > 0 ? Math.round(examScores.reduce((sum, s) => sum + s.score, 0) / examScores.length) : 0,
+                    examScores: examScores.sort((a, b) => b.score - a.score).slice(0, 5),
+                    scoreLow: examScores.length > 0 ? (examScores.filter(s => s.score < 100).length / examScores.length) * 100 : 0,
+                    scoreMid: examScores.length > 0 ? (examScores.filter(s => s.score >= 100 && s.score < 150).length / examScores.length) * 100 : 0,
+                    scoreHigh: examScores.length > 0 ? (examScores.filter(s => s.score >= 150).length / examScores.length) * 100 : 0
                 });
-                
-                if (correctCount > 0) {
-                    examScores.push({
-                        userId,
-                        score: correctCount,
-                        passed: correctCount >= 150,
-                        username: userData.username || userId
-                    });
-                }
             }
         }
-    });
 
-    moduleEntries.push({
-        id: moduleId,
-        name: moduleName,
-        count: questionCount,
-        totalUsers: usersInModule.size,
-        activeUsers: activeNow.size,
-        completed: completedUsers.size,
-        examParticipants: examUsers.size,
-        examPassed: examScores.filter(s => s.passed).length,
-        examFailed: examUsers.size - examScores.filter(s => s.passed).length,
-        avgScore: examScores.length > 0 ? Math.round(examScores.reduce((sum, s) => sum + s.score, 0) / examScores.length) : 0,
-        examScores: examScores.sort((a, b) => b.score - a.score).slice(0, 5),
-        scoreLow: examScores.length > 0 ? (examScores.filter(s => s.score < 100).length / examScores.length) * 100 : 0,
-        scoreMid: examScores.length > 0 ? (examScores.filter(s => s.score >= 100 && s.score < 150).length / examScores.length) * 100 : 0,
-        scoreHigh: examScores.length > 0 ? (examScores.filter(s => s.score >= 150).length / examScores.length) * 100 : 0
-    });
-}
-
-        // გავფილტროთ მხოლოდ ის მოდულები, რომლებსაც აქვთ კითხვები
-        const modulesWithQuestions = moduleEntries.filter(m => m.count > 0);
+        console.log(`Total module entries with activity: ${moduleEntries.length}`);
         
         // დავალაგოთ აქტიურობის მიხედვით (ყველაზე მეტი მომხმარებელი)
-        modulesWithQuestions.sort((a, b) => b.totalUsers - a.totalUsers);
+        moduleEntries.sort((a, b) => b.totalUsers - a.totalUsers);
         
-        // ავიღოთ TOP 5
-        const topModules = modulesWithQuestions.slice(0, 3);
+        // ავიღოთ TOP 5 (ან ყველა თუ 5-ზე ნაკლებია)
+        const topModules = moduleEntries.slice(0, Math.min(5, moduleEntries.length));
 
         console.log(`Showing top ${topModules.length} most active modules`);
+
+        modulesList.innerHTML = ''; // გავასუფთაოთ
 
         // მოდულების ჩვენება
         if (topModules.length > 0) {
@@ -3204,9 +3437,6 @@ for (const moduleInfo of allModules) {
                 moduleItem.style.marginBottom = '8px';
                 moduleItem.style.background = index === 0 ? 'linear-gradient(145deg, var(--surface), rgba(14,165,164,0.05))' : 'var(--surface)';
                 moduleItem.style.border = index === 0 ? '1px solid var(--accent)' : '1px solid var(--border)';
-                
-// მედლები მოვუშოროთ - ცარიელი სტრიქონი
-let medalIcon = '';
                 
                 moduleItem.onmouseover = () => {
                     moduleItem.style.background = 'var(--surface-light)';
@@ -3226,7 +3456,6 @@ let medalIcon = '';
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <span style="font-weight: 700; color: var(--accent);">#${index + 1}</span>
                             <span style="font-weight: 600; font-size: 16px; color: var(--text);">${module.name}</span>
-                            ${medalIcon}
                         </div>
                         <span style="font-weight: 700; font-size: 18px; color: var(--accent);">${module.count}</span>
                     </div>
@@ -3251,48 +3480,108 @@ let medalIcon = '';
                 modulesList.appendChild(moduleItem);
             });
             
-            // დაამატეთ ღილაკი ყველა მოდულის სანახავად
-            const viewAllBtn = document.createElement('div');
-            viewAllBtn.style.cssText = `
-                margin-top: 16px;
-                padding: 12px;
-                text-align: center;
-                background: var(--surface-light);
-                border-radius: 12px;
-                cursor: pointer;
-                font-size: 13px;
-                font-weight: 500;
-                color: var(--accent);
-                transition: all 0.2s;
-                border: 1px solid var(--border);
-            `;
-            viewAllBtn.innerHTML = `
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-                ყველა მოდულის ნახვა (${modulesWithQuestions.length})
-            `;
-            viewAllBtn.onmouseover = () => {
-                viewAllBtn.style.background = 'var(--surface)';
-                viewAllBtn.style.borderColor = 'var(--accent)';
-            };
-            viewAllBtn.onmouseout = () => {
-                viewAllBtn.style.background = 'var(--surface-light)';
-                viewAllBtn.style.borderColor = 'var(--border)';
-            };
-            viewAllBtn.onclick = () => showAllModules(modulesWithQuestions);
-            
-            modulesList.appendChild(viewAllBtn);
+            // დაამატეთ ღილაკი ყველა მოდულის სანახავად, თუ 5-ზე მეტია
+            if (moduleEntries.length > 5) {
+                const viewAllBtn = document.createElement('div');
+                viewAllBtn.style.cssText = `
+                    margin-top: 16px;
+                    padding: 12px;
+                    text-align: center;
+                    background: var(--surface-light);
+                    border-radius: 12px;
+                    cursor: pointer;
+                    font-size: 13px;
+                    font-weight: 500;
+                    color: var(--accent);
+                    transition: all 0.2s;
+                    border: 1px solid var(--border);
+                `;
+                viewAllBtn.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                    ყველა მოდულის ნახვა (${moduleEntries.length})
+                `;
+                viewAllBtn.onmouseover = () => {
+                    viewAllBtn.style.background = 'var(--surface)';
+                    viewAllBtn.style.borderColor = 'var(--accent)';
+                };
+                viewAllBtn.onmouseout = () => {
+                    viewAllBtn.style.background = 'var(--surface-light)';
+                    viewAllBtn.style.borderColor = 'var(--border)';
+                };
+                viewAllBtn.onclick = () => showAllModules(moduleEntries);
+                
+                modulesList.appendChild(viewAllBtn);
+            }
             
         } else {
-            modulesList.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 40px;">მოდულები არ არის</div>';
+            modulesList.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 40px;">📭 აქტიური მოდულები არ არის</div>';
         }
 
         return topModules;
         
     } catch (error) {
         console.error("Error loading modules stats:", error);
+        modulesList.innerHTML = '<div style="color: var(--danger); text-align: center; padding: 40px;">❌ შეცდომა მოდულების ჩატვირთვისას</div>';
         return [];
+    }
+}
+
+// დაამატეთ ეს ფუნქცია - რეალურ დროში მოუსმინოს პასუხებს
+function setupAnswersListener() {
+    if (!firebaseInitialized || !database) return;
+    
+    console.log("📡 Answers listener დაყენდა");
+    
+    // მოვუსმინოთ ახალ პასუხებს
+    database.ref('answers').on('child_added', (snapshot) => {
+        const newAnswer = snapshot.val();
+        console.log("🆕 ახალი პასუხი:", newAnswer);
+        
+        // თუ სტატისტიკის გვერდი აქტიურია, განვაახლოთ
+        if (document.getElementById('statisticsSection').classList.contains('active')) {
+            console.log("📊 სტატისტიკის გვერდი აქტიურია, ვტვირთავთ განახლებას...");
+            loadStatistics();
+        }
+        
+        // ასევე განვაახლოთ დაშბორდი თუ აქტიურია
+        if (document.getElementById('dashboardSection').classList.contains('active')) {
+            loadDashboard();
+        }
+    });
+    
+    // ასევე მოვუსმინოთ პასუხების ცვლილებას (თუ რამე შეიცვალა)
+    database.ref('answers').on('child_changed', (snapshot) => {
+        console.log("🔄 პასუხი შეიცვალა:", snapshot.val());
+        
+        if (document.getElementById('statisticsSection').classList.contains('active')) {
+            loadStatistics();
+        }
+    });
+}
+
+// განვაახლოთ loadAllData ფუნქცია
+async function loadAllData() {
+    showLoading();
+    try {
+        await Promise.all([
+            loadDashboard(),    // ეს უკვე იძახებს loadModulesStats()-ს
+            loadUsers(),
+            loadActivityData(),
+            loadStatistics(),
+            loadOnlineUsers()
+        ]);
+        initSettings();
+        
+        // დავაყენოთ answers listener
+        setupAnswersListener();
+        
+    } catch (error) {
+        console.error("Error loading data:", error);
+        showNotification('შეცდომა მონაცემების ჩატვირთვისას', true);
+    } finally {
+        hideLoading();
     }
 }
 
@@ -3661,6 +3950,63 @@ function showModuleDetails(module) {
     `;
     
     openModal('moduleDetailsModal');
+}
+
+// ინდიკატორის ჩვენება/დამალვა
+function showRefreshIndicator() {
+    const indicator = document.getElementById('statisticsRefreshIndicator');
+    if (indicator) {
+        indicator.style.display = 'flex';
+    }
+}
+
+function hideRefreshIndicator() {
+    const indicator = document.getElementById('statisticsRefreshIndicator');
+    if (indicator) {
+        indicator.style.display = 'none';
+    }
+}
+
+// განვაახლოთ setupAnswersListener
+function setupAnswersListener() {
+    if (!firebaseInitialized || !database) return;
+    
+    console.log("📡 Answers listener დაყენდა");
+    
+    // მოვუსმინოთ ახალ პასუხებს
+    database.ref('answers').on('child_added', (snapshot) => {
+        const newAnswer = snapshot.val();
+        console.log("🆕 ახალი პასუხი:", newAnswer);
+        
+        // თუ სტატისტიკის გვერდი აქტიურია, განვაახლოთ
+        if (document.getElementById('statisticsSection').classList.contains('active')) {
+            console.log("📊 სტატისტიკის გვერდი აქტიურია, ვტვირთავთ განახლებას...");
+            showRefreshIndicator();
+            loadStatistics().finally(() => {
+                hideRefreshIndicator();
+            });
+        }
+        
+        // ასევე განვაახლოთ დაშბორდი თუ აქტიურია
+        if (document.getElementById('dashboardSection').classList.contains('active')) {
+            showRefreshIndicator();
+            loadDashboard().finally(() => {
+                hideRefreshIndicator();
+            });
+        }
+    });
+    
+    // ასევე მოვუსმინოთ პასუხების ცვლილებას (თუ რამე შეიცვალა)
+    database.ref('answers').on('child_changed', (snapshot) => {
+        console.log("🔄 პასუხი შეიცვალა:", snapshot.val());
+        
+        if (document.getElementById('statisticsSection').classList.contains('active')) {
+            showRefreshIndicator();
+            loadStatistics().finally(() => {
+                hideRefreshIndicator();
+            });
+        }
+    });
 }
 
 // Update loadDashboard function to include modules stats
@@ -4638,132 +4984,324 @@ async function loadAllData() {
             }
         }
 
-        // Load statistics
-        async function loadStatistics() {
-            if (!firebaseInitialized || !database) return;
-
-            try {
-                const [answersSnapshot, questionsSnapshot] = await Promise.all([
-                    database.ref('answers').once('value'),
-                    database.ref('questions').once('value')
-                ]);
-
-                const answers = answersSnapshot.val() || {};
-                const questions = questionsSnapshot.val() || {};
-
-                console.log("📊 სტატისტიკის ჩატვირთვა...");
-                console.log("Questions modules:", Object.keys(questions));
-
-                const moduleStats = {};
-
-                Object.keys(questions).forEach(moduleId => {
-                    moduleStats[moduleId] = {
-                        totalTests: 0,
-                        questions: {}
-                    };
-                });
-
-                Object.values(answers).forEach(answer => {
-                    const module = answer.module;
-                    if (!module || !questions[module]) return;
-
-                    if (!moduleStats[module]) {
-                        moduleStats[module] = {
-                            totalTests: 0,
-                            questions: {}
-                        };
-                    }
-
-                    moduleStats[module].totalTests++;
-                    
-                    if (answer.questionId) {
-                        if (!moduleStats[module].questions[answer.questionId]) {
-                            moduleStats[module].questions[answer.questionId] = {
-                                total: 0,
-                                correct: 0
-                            };
-                        }
-                        moduleStats[module].questions[answer.questionId].total++;
-                        if (answer.isCorrect) {
-                            moduleStats[module].questions[answer.questionId].correct++;
-                        }
-                    }
-                });
-
-                const modulesList = document.getElementById('moduleStatisticsList');
-                modulesList.innerHTML = '';
-
-                const sortedModuleIds = Object.keys(questions).sort();
+// სორტირების ფუნქცია
+window.sortModuleQuestions = function(type) {
+    if (!window.currentSortedModule) return;
+    
+    // განვაახლოთ ღილაკების სტილი
+    document.querySelectorAll('#moduleQuestionsContent .filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    let sortedQuestions = [...window.currentSortedModule.questions];
+    
+    if (type === 'default') {
+        sortedQuestions.sort((a, b) => {
+            const aNum = parseInt(a.id) || 0;
+            const bNum = parseInt(b.id) || 0;
+            return aNum - bNum;
+        });
+    } else if (type === 'best') {
+        sortedQuestions.sort((a, b) => b.correctPercent - a.correctPercent);
+    } else if (type === 'worst') {
+        sortedQuestions.sort((a, b) => a.correctPercent - b.correctPercent);
+    } else if (type === 'most') {
+        sortedQuestions.sort((a, b) => b.totalAnswers - a.totalAnswers);
+    }
+    
+    // განვაახლოთ ჩვენება
+    const modalContent = document.getElementById('moduleQuestionsContent');
+    
+    let questionsHtml = `
+        <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="filter-btn ${type === 'default' ? 'active' : ''}" onclick="sortModuleQuestions('default')">🔢 ნაგულისხმევი (ID)</button>
+                <button class="filter-btn ${type === 'best' ? 'active' : ''}" onclick="sortModuleQuestions('best')">✅ ყველაზე კარგი</button>
+                <button class="filter-btn ${type === 'worst' ? 'active' : ''}" onclick="sortModuleQuestions('worst')">❌ ყველაზე ცუდი</button>
+                <button class="filter-btn ${type === 'most' ? 'active' : ''}" onclick="sortModuleQuestions('most')">📊 ყველაზე მეტი პასუხი</button>
+            </div>
+            <div style="color: var(--text-muted); font-size: 14px;">
+                📝 სულ კითხვები: ${window.currentSortedModule.questionCount} | 
+                📊 პასუხები: ${window.currentSortedModule.questions.reduce((sum, q) => sum + q.totalAnswers, 0)}
+            </div>
+        </div>
+    `;
+    
+    sortedQuestions.forEach((q, index) => {
+        const barColor = q.correctPercent > 70 ? 'var(--success)' : 
+                        (q.correctPercent < 30 ? 'var(--danger)' : 'var(--warning)');
+        
+        questionsHtml += `
+            <div style="background: var(--surface-light); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                        <span style="background: var(--accent); color: white; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;">${index + 1}</span>
+                        <span style="font-weight: 600; color: var(--text);">${escapeHtml(q.text)}</span>
+                    </div>
+                    <span style="background: var(--surface); padding: 4px 10px; border-radius: 40px; font-size: 12px; color: var(--text-muted); border: 1px solid var(--border); white-space: nowrap;">
+                        ID: ${q.id}
+                    </span>
+                </div>
                 
-                sortedModuleIds.forEach(moduleId => {
-                    const stats = moduleStats[moduleId] || { totalTests: 0, questions: {} };
-                    const moduleQuestions = questions[moduleId] || {};
-                    const totalQuestions = Object.keys(moduleQuestions).length;
+                <div style="margin-top: 16px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: var(--text-muted); font-size: 13px;">ამ კითხვას სულ გასცა პასუხი:</span>
+                        <span style="font-weight: 600; font-size: 14px;">
+                            <span style="color: var(--success);">✅ ${q.correctAnswers}</span> / 
+                            <span style="color: var(--danger);">❌ ${q.incorrectAnswers}</span> = 
+                            <span style="color: ${barColor};">${q.totalAnswers}</span>
+                        </span>
+                    </div>
                     
-                    const moduleDiv = document.createElement('div');
-                    moduleDiv.className = 'table-container';
-                    moduleDiv.style.marginBottom = '20px';
+                    <!-- Progress bar -->
+                    <div style="height: 24px; background: var(--surface); border-radius: 40px; overflow: hidden; display: flex; margin-bottom: 6px; border: 1px solid var(--border);">
+                        <div style="background: var(--success); width: ${q.correctPercent}%; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: white; font-size: 12px; font-weight: 600;">
+                            ${q.correctPercent > 10 ? q.correctPercent + '%' : ''}
+                        </div>
+                        <div style="background: var(--danger); width: ${100 - q.correctPercent}%; height: 100%; display: flex; align-items: center; padding-left: 8px; color: white; font-size: 12px; font-weight: 600;">
+                            ${q.correctPercent <= 90 ? (100 - q.correctPercent) + '%' : ''}
+                        </div>
+                    </div>
                     
-                    let questionsHtml = '';
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted);">
+                        <span>0%</span>
+                        <span>სწორი: ${q.correctPercent}%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    modalContent.innerHTML = questionsHtml;
+};
+
+// მოდულის კითხვების ჩვენება Popup-ში
+function showModuleQuestions(moduleId, moduleName) {
+    console.log("🔍 showModuleQuestions გამოიძახა:", moduleId, moduleName);
+    console.log("🔍 currentModuleQuestionsStats სიგრძე:", currentModuleQuestionsStats ? currentModuleQuestionsStats.length : 0);
+    
+    if (!moduleId) {
+        console.error("❌ moduleId არ არის");
+        showNotification('მოდულის ID არ არის მითითებული', true);
+        return;
+    }
+    
+    if (!currentModuleQuestionsStats || !currentModuleQuestionsStats.length) {
+        console.error("❌ currentModuleQuestionsStats ცარიელია");
+        showNotification('მონაცემები ჯერ არ არის ჩატვირთული', true);
+        
+        // ვცადოთ ხელახლა ჩატვირთვა
+        loadStatistics();
+        return;
+    }
+    
+    // ვიპოვოთ მოდული
+    const moduleStats = currentModuleQuestionsStats.find(m => m.id === moduleId);
+    console.log("🔍 ნაპოვნი მოდული:", moduleStats);
+    
+    if (!moduleStats) {
+        console.error("❌ მოდული ვერ მოიძებნა ID:", moduleId);
+        console.log("🔍 ხელმისაწვდომი ID-ები:", currentModuleQuestionsStats.map(m => m.id));
+        showNotification('მოდული ვერ მოიძებნა', true);
+        return;
+    }
+    
+    // Popup-ის სათაური
+    document.getElementById('moduleQuestionsModalTitle').textContent = `${moduleName} - კითხვების სტატისტიკა`;
+    
+    // Popup-ის შიგთავსი
+    const modalContent = document.getElementById('moduleQuestionsContent');
+    
+    // სორტირების ღილაკები
+    let questionsHtml = `
+        <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="filter-btn active" onclick="sortModuleQuestions('default')">🔢 ნაგულისხმევი (ID)</button>
+                <button class="filter-btn" onclick="sortModuleQuestions('best')">✅ ყველაზე კარგი</button>
+                <button class="filter-btn" onclick="sortModuleQuestions('worst')">❌ ყველაზე ცუდი</button>
+                <button class="filter-btn" onclick="sortModuleQuestions('most')">📊 ყველაზე მეტი პასუხი</button>
+            </div>
+            <div style="color: var(--text-muted); font-size: 14px;">
+                📝 სულ კითხვები: ${moduleStats.questionCount} | 
+                📊 პასუხები: ${moduleStats.questions.reduce((sum, q) => sum + q.totalAnswers, 0)}
+            </div>
+        </div>
+    `;
+    
+    // კითხვების სია
+    if (moduleStats.questions.length > 0) {
+        moduleStats.questions.forEach((q, index) => {
+            const barColor = q.correctPercent > 70 ? 'var(--success)' : 
+                            (q.correctPercent < 30 ? 'var(--danger)' : 'var(--warning)');
+            
+            questionsHtml += `
+                <div style="background: var(--surface-light); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                            <span style="background: var(--accent); color: white; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;">${index + 1}</span>
+                            <span style="font-weight: 600; color: var(--text);">${escapeHtml(q.text)}</span>
+                        </div>
+                        <span style="background: var(--surface); padding: 4px 10px; border-radius: 40px; font-size: 12px; color: var(--text-muted); border: 1px solid var(--border); white-space: nowrap;">
+                            ID: ${q.id}
+                        </span>
+                    </div>
                     
-                    if (Object.keys(stats.questions).length > 0) {
-                        const sortedQuestions = Object.entries(stats.questions)
-                            .sort((a, b) => b[1].total - a[1].total)
-                            .slice(0, 10);
+                    <div style="margin-top: 16px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: var(--text-muted); font-size: 13px;">ამ კითხვას სულ გასცა პასუხი:</span>
+                            <span style="font-weight: 600; font-size: 14px;">
+                                <span style="color: var(--success);">✅ ${q.correctAnswers}</span> / 
+                                <span style="color: var(--danger);">❌ ${q.incorrectAnswers}</span> = 
+                                <span style="color: ${barColor};">${q.totalAnswers}</span>
+                            </span>
+                        </div>
                         
-                        questionsHtml = sortedQuestions.map(([qId, qStats]) => {
-                            const questionText = moduleQuestions[qId]?.text || moduleQuestions[qId]?.question || qId;
-                            const accuracy = qStats.total > 0 ? (qStats.correct / qStats.total) * 100 : 0;
-                            return `
-                                <div class="test-stat-item">
-                                    <div class="test-name">${escapeHtml(questionText.substring(0, 60))}${questionText.length > 60 ? '...' : ''}</div>
-                                    <div class="test-progress">
-                                        <div class="difficulty-bar">
-                                            <div class="difficulty-fill ${accuracy > 70 ? 'green' : accuracy < 30 ? 'red' : 'gradient'}" style="width: ${accuracy}%;"></div>
-                                        </div>
-                                    </div>
-                                    <div class="test-percent">${accuracy.toFixed(1)}%</div>
-                                    <div style="color: var(--text-muted); font-size: 11px; min-width: 40px;">(${qStats.total})</div>
-                                </div>
-                            `;
-                        }).join('');
-                        
-                        if (sortedQuestions.length < Object.keys(stats.questions).length) {
-                            questionsHtml += `<div style="padding: 8px; text-align: center; color: var(--text-muted); font-size: 12px;">... და კიდევ ${Object.keys(stats.questions).length - 10} კითხვა</div>`;
-                        }
-                    } else {
-                        questionsHtml = `
-                            <div style="padding: 20px; text-align: center; color: var(--text-muted);">
-                                ${totalQuestions > 0 ? `${totalQuestions} კითხვა (ჯერ არ არის პასუხები)` : 'კითხვები არ არის'}
+                        <!-- Progress bar -->
+                        <div style="height: 24px; background: var(--surface); border-radius: 40px; overflow: hidden; display: flex; margin-bottom: 6px; border: 1px solid var(--border);">
+                            <div style="background: var(--success); width: ${q.correctPercent}%; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: white; font-size: 12px; font-weight: 600; transition: width 0.3s;">
+                                ${q.correctPercent > 10 ? q.correctPercent + '%' : ''}
                             </div>
-                        `;
-                    }
-                    
-                    moduleDiv.innerHTML = `
-                        <div class="table-header">
-                            <h3 style="color: var(--accent);">${getModuleName(moduleId)}</h3>
-                            <div>
-                                <span style="margin-right: 15px;">📝 ${totalQuestions} კითხვა</span>
-                                <span>📊 ${stats.totalTests} ტესტი</span>
+                            <div style="background: var(--danger); width: ${100 - q.correctPercent}%; height: 100%; display: flex; align-items: center; padding-left: 8px; color: white; font-size: 12px; font-weight: 600; transition: width 0.3s;">
+                                ${q.correctPercent <= 90 ? (100 - q.correctPercent) + '%' : ''}
                             </div>
                         </div>
-                        <div style="padding: 20px;">
-                            ${questionsHtml}
+                        
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted);">
+                            <span>0%</span>
+                            <span>სწორი: ${q.correctPercent}%</span>
+                            <span>100%</span>
                         </div>
-                    `;
-                    
-                    modulesList.appendChild(moduleDiv);
-                });
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        questionsHtml += '<div style="text-align: center; padding: 60px; color: var(--text-muted);">📭 ამ მოდულზე ჯერ არ არის პასუხები</div>';
+    }
+    
+    modalContent.innerHTML = questionsHtml;
+    
+    // შევინახოთ მიმდინარე მოდულის კითხვები სორტირებისთვის
+    window.currentSortedModule = moduleStats;
+    
+    // გავხსნათ Popup
+    console.log("✅ Popup-ის გახსნა:", moduleId);
+    openModal('moduleQuestionsModal');
+}
 
-                if (sortedModuleIds.length === 0) {
-                    modulesList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">მოდულები არ არის</div>';
-                }
+// განახლებული loadStatistics ფუნქცია
+async function loadStatistics() {
+    if (!firebaseInitialized || !database) return;
 
-            } catch (error) {
-                console.error("Error loading statistics:", error);
-            }
+    try {
+        showLoading();
+        
+        // ჩავტვირთოთ ყველა მოდულის სტატისტიკა
+        currentModuleQuestionsStats = await loadAllModulesQuestionsStats();
+        
+        const modulesList = document.getElementById('moduleStatisticsList');
+        
+        // დავამატოთ ანიმაციის კლასი
+        modulesList.classList.add('stat-update');
+        
+        modulesList.innerHTML = '';
+
+        if (currentModuleQuestionsStats.length === 0) {
+            modulesList.innerHTML = '<div style="text-align: center; padding: 60px; color: var(--text-muted);">📭 მოდულები არ არის</div>';
+            hideLoading();
+            
+            // მოვხსნათ ანიმაციის კლასი
+            setTimeout(() => {
+                modulesList.classList.remove('stat-update');
+            }, 500);
+            
+            return;
         }
 
+        // თითოეული მოდულისთვის შევქმნათ ბარათი
+        currentModuleQuestionsStats.forEach(moduleStats => {
+            const moduleCard = document.createElement('div');
+            moduleCard.className = 'table-container';
+            moduleCard.style.marginBottom = '20px';
+            moduleCard.style.cursor = 'pointer';
+            moduleCard.style.transition = 'all 0.3s ease';
+            
+            // მოვამზადოთ პატარა პრევიუ პირველი 3 კითხვით
+            const previewQuestions = moduleStats.questions.slice(0, 3);
+            let previewHtml = '';
+            
+            if (previewQuestions.length > 0) {
+                previewHtml = previewQuestions.map(q => {
+                    const barColor = q.correctPercent > 70 ? 'var(--success)' : 
+                                    (q.correctPercent < 30 ? 'var(--danger)' : 'var(--warning)');
+                    return `
+                        <div style="padding: 8px 0; border-bottom: 1px solid var(--border);">
+                            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+                                <span style="color: var(--text);">${escapeHtml(q.text.substring(0, 60))}${q.text.length > 60 ? '...' : ''}</span>
+                                <span style="color: ${barColor}; font-weight: 600;">${q.correctPercent}% (${q.totalAnswers})</span>
+                            </div>
+                            <div style="height: 4px; background: var(--surface-light); border-radius: 2px; overflow: hidden;">
+                                <div style="height: 100%; width: ${q.correctPercent}%; background: ${barColor};"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // მოვამზადოთ უსაფრთხო სახელი onclick-ისთვის
+            const safeModuleName = moduleStats.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+            moduleCard.innerHTML = `
+                <div class="table-header" style="cursor: pointer;" onclick="showModuleQuestions('${moduleStats.id}', '${safeModuleName}')">
+                    <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                            <polyline points="2 17 12 22 22 17"/>
+                            <polyline points="2 12 12 17 22 12"/>
+                        </svg>
+                        <h3 style="color: var(--accent); flex: 1; font-size: 18px;">${moduleStats.name}</h3>
+                        <div style="display: flex; gap: 20px; margin-right: 20px;">
+                            <span style="color: var(--text-muted);">📝 ${moduleStats.questionCount} კითხვა</span>
+                            <span style="color: var(--text-muted);">📊 ${moduleStats.questions.reduce((sum, q) => sum + q.totalAnswers, 0)} პასუხი</span>
+                        </div>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </div>
+                </div>
+                <div style="padding: 16px 20px;">
+                    ${previewHtml || '<div style="color: var(--text-muted); padding: 10px;">პასუხები ჯერ არ არის</div>'}
+                </div>
+            `;
+            
+            // Hover ეფექტი
+            moduleCard.onmouseover = () => {
+                moduleCard.style.transform = 'translateY(-2px)';
+                moduleCard.style.boxShadow = 'var(--shadow-lg)';
+            };
+            moduleCard.onmouseout = () => {
+                moduleCard.style.transform = 'translateY(0)';
+                moduleCard.style.boxShadow = 'var(--shadow)';
+            };
+            
+            modulesList.appendChild(moduleCard);
+        });
+
+    } catch (error) {
+        console.error("Error loading statistics:", error);
+        showNotification('შეცდომა სტატისტიკის ჩატვირთვისას', true);
+    } finally {
+        hideLoading();
+        
+        // მოვხსნათ ანიმაციის კლასი
+        setTimeout(() => {
+            const modulesList = document.getElementById('moduleStatisticsList');
+            modulesList.classList.remove('stat-update');
+        }, 500);
+    }
+}
         // Load online users
         async function loadOnlineUsers() {
             if (!firebaseInitialized || !database) return;
