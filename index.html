@@ -1718,7 +1718,37 @@ input:checked + .slider:before {
             <div class="sidebar" id="adminSidebar">
                 <div class="sidebar-header">
                     <h2>
-                        <span>⚕️</span>
+                        <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+  <!-- მთავარი წრე - უფრო მკვეთრი ლურჯი -->
+  <circle cx="16" cy="16" r="15" fill="#2563EB" opacity="0.35"/>
+  
+  <defs>
+    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF; stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A5B4FC; stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <g fill="none" stroke="url(#lineGradient)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+    <!-- თავი და ტანი - უფრო სქელი ხაზები -->
+    <path d="M12,13 Q12,9 16,9 Q20,9 20,13 L20,15 Q20,17 16,17 Q12,17 12,15 Z" />
+    <path d="M12,12 Q12,9 16,9 Q20,9 20,12 Q21,12 21,13.5 Q21,15 20,15 M12,15 Q11,15 11,13.5 Q11,12 12,12" />
+    
+    <!-- ხელები -->
+    <path d="M14,17 L14,18.5 Q14,19.5 16,19.5 Q18,19.5 18,18.5 L18,17" />
+    
+    <!-- ფეხები -->
+    <path d="M8,24 L24,24 M8,24 Q8,20 14,19.5 M24,24 Q24,21.5 22,20.5" />
+    
+    <!-- დეკორატიული ელემენტები -->
+    <g transform="translate(20.5, 21) scale(0.045)">
+        <circle cx="50" cy="50" r="15" stroke="#FFFFFF" stroke-width="16" fill="none"/>
+        <path d="M50,10 L50,20 M50,80 L50,90 M10,50 L20,50 M80,50 L90,50 M22,22 L29,29 M71,71 L78,78 M22,78 L29,71 M71,29 L78,22" 
+              stroke="#FFFFFF" 
+              stroke-width="16"/>
+    </g>
+  </g>
+</svg>
                         <span>ადმინისტრატორი</span>
                     </h2>
                     <div class="collapse-toggle" onclick="toggleSidebar()">
@@ -1813,33 +1843,60 @@ input:checked + .slider:before {
                     
                     <div class="dashboard-grid">
                         <!-- მომხმარებლების სტატისტიკა -->
-                        <div class="dashboard-card">
-                            <h3>
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                    <circle cx="9" cy="7" r="4"/>
-                                </svg>
-                                მომხმარებლები
-                            </h3>
-                            <div class="pie-chart">
-                                <div class="pie-segment" id="userPieChart"></div>
-                                <div class="pie-legend">
-                                    <div class="legend-item">
-                                        <span class="legend-color active"></span>
-                                        <span>აქტიური: <span id="activeUsersCount">0</span></span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <span class="legend-color deleted"></span>
-                                        <span>წაშლილი: <span id="deletedUsersCount">0</span></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="margin-top: 16px; text-align: center; font-size: 14px; color: var(--text-muted);" class="online-users-hover">
-                                სულ: <span id="totalUsersCount">0</span>
-                                <div class="online-users-tooltip" id="onlineUsersTooltip"></div>
-                            </div>
-                        </div>
-
+  <!-- მომხმარებლების სტატისტიკა -->
+<div class="dashboard-card">
+    <h3>
+        <svg class="icon" viewBox="0 0 24 24">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+        </svg>
+        მომხმარებლები
+    </h3>
+    <div style="display: flex; align-items: center; gap: 30px; margin: 20px 0;">
+        <!-- დიდი დიაგრამა -->
+        <div style="position: relative; width: 160px; height: 160px;" 
+             id="userPieContainer" 
+             onmouseover="showPieTooltip(event)" 
+             onmousemove="movePieTooltip(event)" 
+             onmouseout="hidePieTooltip()">
+            <div id="userPieChart" style="width: 100%; height: 100%; border-radius: 50%; transition: all 0.3s;"></div>
+            
+            <!-- ჰოვერის ტულტიპი -->
+            <div id="pieTooltip" style="
+                position: fixed;
+                display: none;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 12px;
+                box-shadow: var(--shadow-lg);
+                min-width: 200px;
+                max-height: 300px;
+                overflow-y: auto;
+                z-index: 10000;
+                pointer-events: none;
+                font-size: 13px;
+            "></div>
+        </div>
+        
+        <!-- ლეგენდა -->
+        <div style="flex: 1;">
+            <div class="pie-legend">
+                <div class="legend-item" style="margin-bottom: 15px; cursor: pointer;" onmouseover="showOnlineUsers()" onmouseout="hidePieTooltip()">
+                    <span class="legend-color active" style="width: 16px; height: 16px;"></span>
+                    <span style="font-size: 15px;">ონლაინ: <span id="activeUsersCount">0</span></span>
+                </div>
+                <div class="legend-item" style="cursor: pointer;" onmouseover="showOfflineUsers()" onmouseout="hidePieTooltip()">
+                    <span class="legend-color deleted" style="width: 16px; height: 16px; background: var(--text-muted);"></span>
+                    <span style="font-size: 15px;">24სთ ოფლაინ: <span id="offline24hCount">0</span></span>
+                </div>
+            </div>
+            <div style="margin-top: 20px; font-size: 15px; color: var(--text); border-top: 1px solid var(--border); padding-top: 15px;">
+                <strong>სულ: <span id="totalUsersCount">0</span></strong>
+            </div>
+        </div>
+    </div>
+</div>
                         <!-- მოდულები -->
                         <div class="dashboard-card">
                             <h3>
@@ -2213,356 +2270,538 @@ input:checked + .slider:before {
         </div>
     </div>
 
-    <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAOyV8LZWBkU5W8UbTF082l1ft1T2Rj1Yc",
-            authDomain: "rezidentura-7bfd5.firebaseapp.com",
-            databaseURL: "https://rezidentura-7bfd5-default-rtdb.firebaseio.com",
-            projectId: "rezidentura-7bfd5",
-            storageBucket: "rezidentura-7bfd5.firebasestorage.app",
-            messagingSenderId: "1005787481414",
-            appId: "1:1005787481414:web:7c5a31471a3d1c1a159147"
-        };
+<script>
+    // Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyAOyV8LZWBkU5W8UbTF082l1ft1T2Rj1Yc",
+        authDomain: "rezidentura-7bfd5.firebaseapp.com",
+        databaseURL: "https://rezidentura-7bfd5-default-rtdb.firebaseio.com",
+        projectId: "rezidentura-7bfd5",
+        storageBucket: "rezidentura-7bfd5.firebasestorage.app",
+        messagingSenderId: "1005787481414",
+        appId: "1:1005787481414:web:7c5a31471a3d1c1a159147"
+    };
 
-        // Initialize Firebase
-        let database = null;
-        let firebaseInitialized = false;
+    // Initialize Firebase
+    let database = null;
+    let firebaseInitialized = false;
 
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            database = firebase.database();
-            firebaseInitialized = true;
-            console.log("Firebase initialized successfully");
-        } catch (error) {
-            console.error("Firebase initialization failed:", error);
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
+        database = firebase.database();
+        firebaseInitialized = true;
+        console.log("Firebase initialized successfully");
+    } catch (error) {
+        console.error("Firebase initialization failed:", error);
+    }
 
-        // Google Apps Script Web App URL
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzplhhEvFAm3JmglGQvtJrC5ZEb7as5IMRm_GvWYbkJyQbMt8OYfb5RlCG9sHXSodw/exec';
-        const ADMIN_EMAIL = "shogiradze.ale@gmail.com";
+    // Google Apps Script Web App URL
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzplhhEvFAm3JmglGQvtJrC5ZEb7as5IMRm_GvWYbkJyQbMt8OYfb5RlCG9sHXSodw/exec';
+    const ADMIN_EMAIL = "shogiradze.ale@gmail.com";
 
-        // Admin Authentication
-        const ADMIN_CODE = "200011";
-        let isAdminAuthenticated = false;
-        let currentActivityTab = 'custom';
-        let onlineUsers = {};
-        let currentQuestionFilter = 'all';
-        let currentModuleQuestions = [];
-        let currentQuestions = [];
+    // Admin Authentication
+    const ADMIN_CODE = "200011";
+    let isAdminAuthenticated = false;
+    let currentActivityTab = 'custom';
+    let onlineUsers = {};
+    let currentQuestionFilter = 'all';
+    let currentModuleQuestions = [];
+    let currentQuestions = [];
 
-        let generatedEmailCode = null;
-        let isAdminCodeValid = false;
-        let codeExpirationTime = null;
-        let countdownInterval = null;
+    let generatedEmailCode = null;
+    let isAdminCodeValid = false;
+    let codeExpirationTime = null;
+    let countdownInterval = null;
 
-        // DOM Elements
-        const authOverlay = document.getElementById('authOverlay');
-        const adminPanel = document.getElementById('adminPanel');
-        const adminCode = document.getElementById('adminCode');
-        const authError = document.getElementById('authError');
-        const loadingOverlay = document.getElementById('loadingOverlay');
+    // Settings - Email Auth Toggle
+    const EMAIL_AUTH_KEY = 'adminEmailAuthEnabled';
 
-        // Set default dates for activity
-        const today = new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // ჩატვირთვისას წავიკითხოთ შენახული მნიშვნელობა
+    let isEmailAuthEnabled = localStorage.getItem(EMAIL_AUTH_KEY) === 'true';
+
+    // DOM Elements
+    const authOverlay = document.getElementById('authOverlay');
+    const adminPanel = document.getElementById('adminPanel');
+    const adminCode = document.getElementById('adminCode');
+    const authError = document.getElementById('authError');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    // Set default dates for activity
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    if (document.getElementById('activityStartDate')) {
+        document.getElementById('activityStartDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+        document.getElementById('activityEndDate').value = today.toISOString().split('T')[0];
+    }
+
+    // Sidebar collapse function
+    function toggleSidebar() {
+        const sidebar = document.getElementById('adminSidebar');
+        sidebar.classList.toggle('collapsed');
         
-        if (document.getElementById('activityStartDate')) {
-            document.getElementById('activityStartDate').value = thirtyDaysAgo.toISOString().split('T')[0];
-            document.getElementById('activityEndDate').value = today.toISOString().split('T')[0];
+        // Save state to localStorage
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        localStorage.setItem('adminSidebarCollapsed', isCollapsed);
+    }
+
+    // Check saved state on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebar = document.getElementById('adminSidebar');
+        const savedState = localStorage.getItem('adminSidebarCollapsed');
+        
+        if (savedState === 'true') {
+            sidebar.classList.add('collapsed');
         }
+    });
 
-        // Sidebar collapse function
-        function toggleSidebar() {
-            const sidebar = document.getElementById('adminSidebar');
-            sidebar.classList.toggle('collapsed');
-            
-            // Save state to localStorage
-            const isCollapsed = sidebar.classList.contains('collapsed');
-            localStorage.setItem('adminSidebarCollapsed', isCollapsed);
-        }
+    // Module name mapping function
+    function getModuleName(module) {
+        const names = {
+            'samkurnaloo': 'სამკურნალო',
+            'stomatologia': 'სტომატოლოგია',
+            'alergologia': 'ალერგოლოგია',
+            'angiokirurgia': 'ანგიოქირურგია',
+            'anesteziologia': 'ანესთეზიოლოგია, რეანიმატოლოგია',
+            'bavshvta_gadaudebeli': 'ბავშვთა გადაუდებელი',
+            'bavshvta_kardiorevmatologia': 'ბავშვთა კარდიორევმატოლოგია',
+            'bavshvta_nevrologia': 'ბავშვთა ნევროლოგია',
+            'bavshvta_nevrologia2': 'ბავშვთა ნეფროლოგია',
+            'gadaudebeli_medicina': 'გადაუდებელი მედიცინა',
+            'gastroenterologia': 'გასტროენტეროლოგია',
+            'ginekologia': 'გინეკოლოგია',
+            'dermatologia': 'დერმატოლოგია',
+            'endokrinologia': 'ენდოკრინოლოგია',
+            'zogadi_kirurgia': 'ზოგადი ქირურგია',
+            'terapiuli_stomatologia': 'თერაპიული სტომატოლოგია',
+            'infekciuri': 'ინფექციური',
+            'kardiologia': 'კარდიოლოგია',
+            'kardiokirurgia': 'კარდიოქირურგია',
+            'laboratoriuli_medicina': 'ლაბორატორიული მედიცინა',
+            'narkologia': 'ნარკოლოგია',
+            'nevrologia': 'ნევროლოგია',
+            'neonatologia': 'ნეონატოლოგია',
+            'nefrologia': 'ნეფროლოგია',
+            'onkologia': 'ონკოლოგია',
+            'ortodontia': 'ორთოდონტია',
+            'ortopedia_travmatologia': 'ორთოპედია ტრავმატოლოგია',
+            'ortopediuli_stomatologia': 'ორთოპედიული სტომატოლოგია',
+            'otorinolaringologia': 'ოტორინოლარინგოლოგია',
+            'oftalmologia': 'ოფთალმოლოგია',
+            'patologia': 'პათოლოგია',
+            'pediatria': 'პედიატრია',
+            'plastikuri_kirurgia': 'პლასტიკური და რეკონსტრუქციული ქირურგია',
+            'radiologia': 'რადიოლოგია',
+            'radiacioni_onkologia': 'რადიაციული ონკოლოგია',
+            'reproduqtologia': 'რეპროდუქტოლოგია',
+            'revmatologia': 'რევმატოლოგია',
+            'saokjao_medicina': 'საოჯახო მედიცინა',
+            'sportuli_medicina': 'სპორტული მედიცინა',
+            'toksikologia': 'ტოქსიკოლოგია',
+            'urologia': 'უროლოგია',
+            'ftiziatria_pulmonologia': 'ფთიზიატრია, პულმონოლოგია',
+            'psikiatria': 'ფსიქიატრია',
+            'qba_saxis_kirurgia': 'ყბა-სახის ქირურგია',
+            'shinagani_medicina': 'შინაგანი მედიცინა',
+            'hematologia': 'ჰემატოლოგია',
+            'unknown': 'უცნობი'
+        };
+        return names[module] || module;
+    }
 
-        // Check saved state on load
-        document.addEventListener('DOMContentLoaded', () => {
-            const sidebar = document.getElementById('adminSidebar');
-            const savedState = localStorage.getItem('adminSidebarCollapsed');
-            
-            if (savedState === 'true') {
-                sidebar.classList.add('collapsed');
-            }
-        });
-
-        // Module name mapping function
-        function getModuleName(module) {
-            const names = {
-                'samkurnaloo': 'სამკურნალო',
-                'stomatologia': 'სტომატოლოგია',
-                'alergologia': 'ალერგოლოგია',
-                'angiokirurgia': 'ანგიოქირურგია',
-                'anesteziologia': 'ანესთეზიოლოგია, რეანიმატოლოგია',
-                'bavshvta_gadaudebeli': 'ბავშვთა გადაუდებელი',
-                'bavshvta_kardiorevmatologia': 'ბავშვთა კარდიორევმატოლოგია',
-                'bavshvta_nevrologia': 'ბავშვთა ნევროლოგია',
-                'bavshvta_nevrologia2': 'ბავშვთა ნეფროლოგია',
-                'gadaudebeli_medicina': 'გადაუდებელი მედიცინა',
-                'gastroenterologia': 'გასტროენტეროლოგია',
-                'ginekologia': 'გინეკოლოგია',
-                'dermatologia': 'დერმატოლოგია',
-                'endokrinologia': 'ენდოკრინოლოგია',
-                'zogadi_kirurgia': 'ზოგადი ქირურგია',
-                'terapiuli_stomatologia': 'თერაპიული სტომატოლოგია',
-                'infekciuri': 'ინფექციური',
-                'kardiologia': 'კარდიოლოგია',
-                'kardiokirurgia': 'კარდიოქირურგია',
-                'laboratoriuli_medicina': 'ლაბორატორიული მედიცინა',
-                'narkologia': 'ნარკოლოგია',
-                'nevrologia': 'ნევროლოგია',
-                'neonatologia': 'ნეონატოლოგია',
-                'nefrologia': 'ნეფროლოგია',
-                'onkologia': 'ონკოლოგია',
-                'ortodontia': 'ორთოდონტია',
-                'ortopedia_travmatologia': 'ორთოპედია ტრავმატოლოგია',
-                'ortopediuli_stomatologia': 'ორთოპედიული სტომატოლოგია',
-                'otorinolaringologia': 'ოტორინოლარინგოლოგია',
-                'oftalmologia': 'ოფთალმოლოგია',
-                'patologia': 'პათოლოგია',
-                'pediatria': 'პედიატრია',
-                'plastikuri_kirurgia': 'პლასტიკური და რეკონსტრუქციული ქირურგია',
-                'radiologia': 'რადიოლოგია',
-                'radiacioni_onkologia': 'რადიაციული ონკოლოგია',
-                'reproduqtologia': 'რეპროდუქტოლოგია',
-                'revmatologia': 'რევმატოლოგია',
-                'saokjao_medicina': 'საოჯახო მედიცინა',
-                'sportuli_medicina': 'სპორტული მედიცინა',
-                'toksikologia': 'ტოქსიკოლოგია',
-                'urologia': 'უროლოგია',
-                'ftiziatria_pulmonologia': 'ფთიზიატრია, პულმონოლოგია',
-                'psikiatria': 'ფსიქიატრია',
-                'qba_saxis_kirurgia': 'ყბა-სახის ქირურგია',
-                'shinagani_medicina': 'შინაგანი მედიცინა',
-                'hematologia': 'ჰემატოლოგია',
-                'unknown': 'უცნობი'
-            };
-            return names[module] || module;
-        }
-
-        // Email sending function
-        async function sendEmailViaScript(toEmail, subject, message) {
-            try {
-                if (!toEmail || !toEmail.includes('@')) {
-                    console.log('Invalid email address:', toEmail);
-                    return false;
-                }
-
-                const params = new URLSearchParams({
-                    to: toEmail,
-                    subject: subject,
-                    message: message,
-                    timestamp: Date.now()
-                });
-                
-                const url = `${WEB_APP_URL}?${params.toString()}`;
-                console.log('Sending email to:', toEmail, 'Subject:', subject);
-                
-                await fetch(url, {
-                    method: 'GET',
-                    mode: 'no-cors'
-                });
-                
-                return true;
-                
-            } catch (error) {
-                console.error('Email sending failed:', error);
+    // Email sending function
+    async function sendEmailViaScript(toEmail, subject, message) {
+        try {
+            if (!toEmail || !toEmail.includes('@')) {
+                console.log('Invalid email address:', toEmail);
                 return false;
             }
+
+            const params = new URLSearchParams({
+                to: toEmail,
+                subject: subject,
+                message: message,
+                timestamp: Date.now()
+            });
+            
+            const url = `${WEB_APP_URL}?${params.toString()}`;
+            console.log('Sending email to:', toEmail, 'Subject:', subject);
+            
+            await fetch(url, {
+                method: 'GET',
+                mode: 'no-cors'
+            });
+            
+            return true;
+            
+        } catch (error) {
+            console.error('Email sending failed:', error);
+            return false;
         }
+    }
 
-        // Timer function
-        function startCodeTimer() {
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-            }
-            
-            let timerElement = document.getElementById('codeTimer');
-            if (!timerElement) {
-                const emailCodeStep = document.getElementById('emailCodeStep');
-                timerElement = document.createElement('div');
-                timerElement.id = 'codeTimer';
-                timerElement.style.margin = '10px 0';
-                timerElement.style.textAlign = 'center';
-                timerElement.style.fontSize = '14px';
-                timerElement.style.color = 'var(--accent)';
-                timerElement.style.fontWeight = '600';
-                emailCodeStep.insertBefore(timerElement, emailCodeStep.firstChild);
-            }
-            
-            countdownInterval = setInterval(() => {
-                const now = Date.now();
-                const timeLeft = codeExpirationTime - now;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    timerElement.innerHTML = 'გაგზავნეთ კოდი ხელახლა';
-                    timerElement.style.color = 'var(--danger)';
-                    
-                    generatedEmailCode = null;
-                    isAdminCodeValid = false;
-                    
-                    const resendBtn = document.getElementById('resendEmailCodeBtn');
-                    if (resendBtn) {
-                        resendBtn.style.background = 'var(--gradient)';
-                        resendBtn.style.color = 'white';
-                        resendBtn.innerHTML = 'გაგზავნა';
-                    }
-                    
-                } else {
-                    const seconds = Math.floor(timeLeft / 1000);
-                    const displaySeconds = seconds < 10 ? `0${seconds}` : seconds;
-                    timerElement.innerHTML = `კოდი აქტიურია 00:${displaySeconds}`;
-                    timerElement.style.color = seconds < 10 ? 'var(--warning)' : 'var(--accent)';
-                }
-            }, 1000);
+    // Timer function
+    function startCodeTimer() {
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
         }
-
-        // Show notification
-        function showNotification(message, isError = false) {
-            const existingNotifications = document.querySelectorAll('.notification');
-            existingNotifications.forEach(n => n.remove());
-            
-            const notification = document.createElement('div');
-            notification.className = `notification ${isError ? 'error' : ''}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-// Settings - Email Auth Toggle
-const EMAIL_AUTH_KEY = 'adminEmailAuthEnabled';
-
-// ჩატვირთვისას წავიკითხოთ შენახული მნიშვნელობა
-let isEmailAuthEnabled = localStorage.getItem(EMAIL_AUTH_KEY) === 'true';
-
-// ტოგლის ინიციალიზაცია
-function initSettings() {
-    const toggle = document.getElementById('emailAuthToggle');
-    if (toggle) {
-        toggle.checked = isEmailAuthEnabled;
         
-        toggle.addEventListener('change', (e) => {
-            isEmailAuthEnabled = e.target.checked;
-            localStorage.setItem(EMAIL_AUTH_KEY, isEmailAuthEnabled);
-            showNotification(isEmailAuthEnabled ? '📧 იმეილით ავტორიზაცია ჩართულია' : '🔑 იმეილით ავტორიზაცია გამორთულია', false);
-        });
+        let timerElement = document.getElementById('codeTimer');
+        if (!timerElement) {
+            const emailCodeStep = document.getElementById('emailCodeStep');
+            timerElement = document.createElement('div');
+            timerElement.id = 'codeTimer';
+            timerElement.style.margin = '10px 0';
+            timerElement.style.textAlign = 'center';
+            timerElement.style.fontSize = '14px';
+            timerElement.style.color = 'var(--accent)';
+            timerElement.style.fontWeight = '600';
+            emailCodeStep.insertBefore(timerElement, emailCodeStep.firstChild);
+        }
+        
+        countdownInterval = setInterval(() => {
+            const now = Date.now();
+            const timeLeft = codeExpirationTime - now;
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                timerElement.innerHTML = 'გაგზავნეთ კოდი ხელახლა';
+                timerElement.style.color = 'var(--danger)';
+                
+                generatedEmailCode = null;
+                isAdminCodeValid = false;
+                
+                const resendBtn = document.getElementById('resendEmailCodeBtn');
+                if (resendBtn) {
+                    resendBtn.style.background = 'var(--gradient)';
+                    resendBtn.style.color = 'white';
+                    resendBtn.innerHTML = 'გაგზავნა';
+                }
+                
+            } else {
+                const seconds = Math.floor(timeLeft / 1000);
+                const displaySeconds = seconds < 10 ? `0${seconds}` : seconds;
+                timerElement.innerHTML = `კოდი აქტიურია 00:${displaySeconds}`;
+                timerElement.style.color = seconds < 10 ? 'var(--warning)' : 'var(--accent)';
+            }
+        }, 1000);
+    }
+
+// Pie chart hover functions
+let currentPieSegment = 'online'; // 'online' ან 'offline'
+
+function showPieTooltip(event) {
+    const rect = document.getElementById('userPieContainer').getBoundingClientRect();
+    const mouseX = event.clientX;
+    const mouseY = event.clientY;
+    
+    // გავიგოთ რომელ ფერზე ვართ
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    const angle = Math.atan2(mouseY - centerY, mouseX - centerX) * 180 / Math.PI;
+    const normalizedAngle = angle < 0 ? angle + 360 : angle;
+    
+    // წავიკითხოთ პროცენტები
+    const totalUsers = parseInt(document.getElementById('totalUsersCount').textContent) || 0;
+    const activeUsers = parseInt(document.getElementById('activeUsersCount').textContent) || 0;
+    const offline24h = parseInt(document.getElementById('offline24hCount').textContent) || 0;
+    
+    const activePercent = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
+    const offline24hPercent = totalUsers > 0 ? (offline24h / totalUsers) * 100 : 0;
+    const inactivePercent = 100 - activePercent - offline24hPercent;
+    
+    // მწვანე სექტორი (ონლაინ)
+    const greenAngle = (activePercent / 100) * 360;
+    // ნაცრისფერი სექტორი (24სთ ოფლაინ)
+    const grayAngle = (offline24hPercent / 100) * 360;
+    
+    if (normalizedAngle < greenAngle) {
+        // ონლაინ სექტორზე ვართ
+        if (currentPieSegment !== 'online') {
+            currentPieSegment = 'online';
+            updatePieInfo('online');
+        }
+        showOnlineUsers(event);
+    } else if (normalizedAngle < greenAngle + grayAngle) {
+        // 24სთ ოფლაინ სექტორზე ვართ
+        if (currentPieSegment !== 'offline24h') {
+            currentPieSegment = 'offline24h';
+            updatePieInfo('offline24h');
+        }
+        showOfflineUsers(event);
+    } else {
+        // 24სთ+ ოფლაინ სექტორზე ვართ
+        if (currentPieSegment !== 'inactive') {
+            currentPieSegment = 'inactive';
+            updatePieInfo('inactive');
+        }
+        showInactiveUsers(event);
     }
 }
 
-// შევცვალოთ ადმინ კოდის დამუშავება
-document.getElementById('adminCodeBtn').addEventListener('click', async () => {
-    const code = document.getElementById('adminCode').value.trim();
+function updatePieInfo(segment) {
+    const legendOnline = document.querySelector('.legend-item:first-child span:last-child');
+    const legendOffline = document.querySelector('.legend-item:last-child span:last-child');
+    const totalUsersSpan = document.querySelector('.dashboard-card div strong');
     
-    if (code === ADMIN_CODE) {
-        if (isEmailAuthEnabled) {
-            // იმეილით ავტორიზაცია ჩართულია
-            showLoading();
-            isAdminCodeValid = true;
-            
-            generatedEmailCode = Math.floor(100000 + Math.random() * 900000).toString();
-            codeExpirationTime = Date.now() + 60000;
-            
-            startCodeTimer();
-            
-            const subject = "UniMed · ადმინისტრატორის კოდი";
-            const message = `თქვენ მოითხოვეთ ავტორიზაცია ადმინისტრატორის პანელზე. 
-იმისათვის, რომ დადასტურდეს თქვენი ავთენტურობა, შეიტანეთ კოდი:
-
-${generatedEmailCode}
-
-კოდი აქტიურია 1 წუთის განმავლობაში.
-
-UniMed`;
-            
-            const emailSent = await sendEmailViaScript(ADMIN_EMAIL, subject, message);
-            
-            hideLoading();
-            
-            if (emailSent) {
-                document.getElementById('initialCodeStep').style.display = 'none';
-                document.getElementById('emailCodeStep').style.display = 'block';
-                document.getElementById('emailCode').focus();
-                showNotification('კოდი გაიგზავნა ელ.ფოსტაზე (მოქმედებს 1 წუთი)', false);
-            } else {
-                showNotification('ელ.ფოსტის გაგზავნა ვერ მოხერხდა', true);
+    const totalUsers = parseInt(document.getElementById('totalUsersCount').textContent) || 0;
+    const activeUsers = parseInt(document.getElementById('activeUsersCount').textContent) || 0;
+    const offline24h = parseInt(document.getElementById('offline24hCount').textContent) || 0;
+    const inactiveUsers = totalUsers - activeUsers - offline24h;
+    
+    switch(segment) {
+        case 'online':
+            legendOnline.innerHTML = `ონლაინ: <span style="font-weight: 700; color: var(--success);">${activeUsers}</span>`;
+            legendOffline.innerHTML = `24სთ ოფლაინ: <span style="color: var(--text-muted);">${offline24h}</span>`;
+            if (totalUsersSpan) {
+                totalUsersSpan.innerHTML = `სულ: <span style="font-weight: 700;">${totalUsers}</span> (აქტიური: ${activeUsers})`;
             }
-        } else {
-            // იმეილით ავტორიზაცია გამორთულია - პირდაპირ შესვლა
-            const oldNotifications = document.querySelectorAll('.notification');
-            oldNotifications.forEach(n => n.remove());
-            
-            isAdminAuthenticated = true;
-            authOverlay.style.display = 'none';
-            adminPanel.style.display = 'block';
-            
-            showNotification('წარმატებული ავტორიზაცია', false);
-            
-            loadAllData();
-            startOnlineTracking();
-            initChat();
-            
-            // გავასუფთავოთ ტაიმერი თუ არსებობს
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
+            break;
+        case 'offline24h':
+            legendOnline.innerHTML = `ონლაინ: <span style="color: var(--text-muted);">${activeUsers}</span>`;
+            legendOffline.innerHTML = `24სთ ოფლაინ: <span style="font-weight: 700; color: var(--warning);">${offline24h}</span>`;
+            if (totalUsersSpan) {
+                totalUsersSpan.innerHTML = `სულ: <span style="font-weight: 700;">${totalUsers}</span> (24სთ: ${offline24h})`;
             }
-        }
-    } else {
-        showNotification('არასწორი ადმინ კოდი', true);
+            break;
+        case 'inactive':
+            legendOnline.innerHTML = `ონლაინ: <span style="color: var(--text-muted);">${activeUsers}</span>`;
+            legendOffline.innerHTML = `24სთ ოფლაინ: <span style="color: var(--text-muted);">${offline24h}</span>`;
+            if (totalUsersSpan) {
+                totalUsersSpan.innerHTML = `სულ: <span style="font-weight: 700;">${totalUsers}</span> (არააქტიური: ${inactiveUsers})`;
+            }
+            break;
     }
-});
+}
 
-// წავშალოთ ძველი adminCodeBtn event listener და ჩავანაცვლოთ ახლით
-// ან უბრალოდ დავამატოთ ეს ფუნქცია და ძველი გავაკომენტაროთ
+function movePieTooltip(event) {
+    const tooltip = document.getElementById('pieTooltip');
+    if (tooltip.style.display === 'block') {
+        tooltip.style.left = (event.clientX + 20) + 'px';
+        tooltip.style.top = (event.clientY - 150) + 'px';
+    }
+}
 
-        // Show/hide loading
-        function showLoading() {
-            loadingOverlay.classList.add('active');
-        }
+function hidePieTooltip() {
+    document.getElementById('pieTooltip').style.display = 'none';
+    // დავაბრუნოთ ნორმალური ჩვენება
+    updatePieInfo(currentPieSegment);
+}
 
-        function hideLoading() {
-            loadingOverlay.classList.remove('active');
-        }
+function showOnlineUsers(event) {
+    const tooltip = document.getElementById('pieTooltip');
+    const now = Date.now();
+    
+    const onlineList = Object.values(onlineUsers)
+        .filter(u => u?.lastSeen && (now - u.lastSeen) < 30000)
+        .map(u => {
+            const lastSeen = new Date(u.lastSeen).toLocaleTimeString('ka-GE');
+            return `
+                <div class="online-user-item" style="border-left: 3px solid var(--success); padding-left: 8px;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600;">${escapeHtml(u.name || 'უცნობი')}</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">ბოლო: ${lastSeen}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    
+    tooltip.innerHTML = onlineList.length > 0 ? 
+        `<div style="font-weight: 600; margin-bottom: 8px; color: var(--success);">🟢 ონლაინ (${onlineList.length})</div>${onlineList}` : 
+        '<div style="color: var(--text-muted);">🟢 ონლაინ მომხმარებლები არ არიან</div>';
+    
+    tooltip.style.display = 'block';
+    movePieTooltip(event);
+}
 
-        // Confirmation dialog
-        let confirmCallback = null;
-
-        function showConfirm(title, message, onConfirm) {
-            document.getElementById('confirmTitle').textContent = title;
-            document.getElementById('confirmMessage').textContent = message;
-            confirmCallback = onConfirm;
-            document.getElementById('confirmDialog').classList.add('active');
-        }
-
-        function closeConfirm() {
-            document.getElementById('confirmDialog').classList.remove('active');
-            confirmCallback = null;
-        }
-
-        document.getElementById('confirmActionBtn').addEventListener('click', () => {
-            if (confirmCallback) {
-                confirmCallback();
+function showOfflineUsers(event) {
+    const tooltip = document.getElementById('pieTooltip');
+    const now = Date.now();
+    const oneDayAgo = now - 24 * 60 * 60 * 1000;
+    
+    database.ref('users').once('value', (snapshot) => {
+        const users = snapshot.val() || {};
+        const offline24hList = [];
+        
+        Object.entries(users).forEach(([id, user]) => {
+            const lastSeen = user.lastUpdated || user.registeredAt || 0;
+            // თუ ბოლო 24 საათში ყოფილა ონლაინ, მაგრამ ახლა არ არის
+            if (lastSeen > oneDayAgo && lastSeen < now - 30000) {
+                offline24hList.push({
+                    name: user.username || id,
+                    lastSeen: lastSeen
+                });
             }
-            closeConfirm();
         });
+        
+        // დავალაგოთ ბოლო დროით (უახლესი ზემოთ)
+        offline24hList.sort((a, b) => b.lastSeen - a.lastSeen);
+        
+        tooltip.innerHTML = offline24hList.length > 0 ? 
+            `<div style="font-weight: 600; margin-bottom: 8px; color: var(--warning);">🟡 ბოლო 24სთ (${offline24hList.length})</div>` +
+            offline24hList.map(u => {
+                const timeAgo = getTimeAgo(u.lastSeen);
+                return `
+                    <div class="online-user-item" style="border-left: 3px solid var(--warning); padding-left: 8px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600;">${escapeHtml(u.name)}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">${timeAgo}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('') : 
+            '<div style="color: var(--text-muted);">🟡 ბოლო 24 საათში აქტიური მომხმარებლები არ არიან</div>';
+        tooltip.style.display = 'block';
+        movePieTooltip(event);
+    });
+}
 
-        // Authentication
-        document.getElementById('adminCodeBtn').addEventListener('click', async () => {
-            const code = document.getElementById('adminCode').value.trim();
+function showInactiveUsers(event) {
+    const tooltip = document.getElementById('pieTooltip');
+    const now = Date.now();
+    const oneDayAgo = now - 24 * 60 * 60 * 1000;
+    
+    database.ref('users').once('value', (snapshot) => {
+        const users = snapshot.val() || {};
+        const inactiveList = [];
+        
+        Object.entries(users).forEach(([id, user]) => {
+            const lastSeen = user.lastUpdated || user.registeredAt || 0;
+            // თუ 24 საათზე მეტია არ ყოფილა ონლაინ
+            if (lastSeen < oneDayAgo) {
+                inactiveList.push({
+                    name: user.username || id,
+                    lastSeen: lastSeen
+                });
+            }
+        });
+        
+        // დავალაგოთ ბოლო დროით (უახლესი ზემოთ)
+        inactiveList.sort((a, b) => b.lastSeen - a.lastSeen);
+        
+        tooltip.innerHTML = inactiveList.length > 0 ? 
+            `<div style="font-weight: 600; margin-bottom: 8px; color: var(--text-muted);">⚪ 24სთ+ არააქტიური (${inactiveList.length})</div>` +
+            inactiveList.slice(0, 15).map(u => {
+                const lastSeenDate = u.lastSeen ? new Date(u.lastSeen).toLocaleDateString('ka-GE') : 'არასდროს';
+                return `
+                    <div class="online-user-item" style="border-left: 3px solid var(--text-muted); padding-left: 8px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600;">${escapeHtml(u.name)}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">ბოლო: ${lastSeenDate}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('') + (inactiveList.length > 15 ? `<div style="text-align: center; margin-top: 8px; color: var(--text-muted); font-size: 11px;">... და კიდევ ${inactiveList.length - 15}</div>` : '') : 
+            '<div style="color: var(--text-muted);">⚪ არააქტიური მომხმარებლები არ არიან</div>';
+        tooltip.style.display = 'block';
+        movePieTooltip(event);
+    });
+}
+
+function getTimeAgo(timestamp) {
+    if (!timestamp) return 'არასდროს';
+    
+    const now = Date.now();
+    const diff = now - timestamp;
+    
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'ახლახანს';
+    if (minutes < 60) return `${minutes} წთ წინ`;
+    if (hours < 24) return `${hours} სთ წინ`;
+    return `${days} დღე წინ`;
+}
+
+// ლეგენდაზე ჰოვერის ფუნქციები
+function showOnlineUsersFromLegend() {
+    currentPieSegment = 'online';
+    updatePieInfo('online');
+    
+    // სიმულაცია ვთქვათ, თითქოს დიაგრამაზე ვართ
+    const event = { clientX: 0, clientY: 0 };
+    showOnlineUsers(event);
+}
+
+function showOfflineUsersFromLegend() {
+    currentPieSegment = 'offline24h';
+    updatePieInfo('offline24h');
+    
+    const event = { clientX: 0, clientY: 0 };
+    showOfflineUsers(event);
+}
+    // Show notification
+    function showNotification(message, isError = false) {
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(n => n.remove());
+        
+        const notification = document.createElement('div');
+        notification.className = `notification ${isError ? 'error' : ''}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    // Show/hide loading
+    function showLoading() {
+        loadingOverlay.classList.add('active');
+    }
+
+    function hideLoading() {
+        loadingOverlay.classList.remove('active');
+    }
+
+    // Confirmation dialog
+    let confirmCallback = null;
+
+    function showConfirm(title, message, onConfirm) {
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmMessage').textContent = message;
+        confirmCallback = onConfirm;
+        document.getElementById('confirmDialog').classList.add('active');
+    }
+
+    function closeConfirm() {
+        document.getElementById('confirmDialog').classList.remove('active');
+        confirmCallback = null;
+    }
+
+    document.getElementById('confirmActionBtn').addEventListener('click', () => {
+        if (confirmCallback) {
+            confirmCallback();
+        }
+        closeConfirm();
+    });
+
+    // ტოგლის ინიციალიზაცია
+    function initSettings() {
+        const toggle = document.getElementById('emailAuthToggle');
+        if (toggle) {
+            toggle.checked = isEmailAuthEnabled;
             
-            if (code === ADMIN_CODE) {
+            toggle.addEventListener('change', (e) => {
+                isEmailAuthEnabled = e.target.checked;
+                localStorage.setItem(EMAIL_AUTH_KEY, isEmailAuthEnabled);
+                showNotification(isEmailAuthEnabled ? '📧 იმეილით ავტორიზაცია ჩართულია' : '🔑 იმეილით ავტორიზაცია გამორთულია', false);
+            });
+        }
+    }
+
+    // ადმინ კოდის დამუშავება
+    document.getElementById('adminCodeBtn').addEventListener('click', async () => {
+        const code = document.getElementById('adminCode').value.trim();
+        
+        if (code === ADMIN_CODE) {
+            if (isEmailAuthEnabled) {
+                // იმეილით ავტორიზაცია ჩართულია
                 showLoading();
                 isAdminCodeValid = true;
                 
@@ -2594,24 +2833,7 @@ UniMed`;
                     showNotification('ელ.ფოსტის გაგზავნა ვერ მოხერხდა', true);
                 }
             } else {
-                showNotification('არასწორი ადმინ კოდი', true);
-            }
-        });
-
-        document.getElementById('verifyEmailCodeBtn').addEventListener('click', () => {
-            const emailCode = document.getElementById('emailCode').value.trim();
-            
-            if (!emailCode || emailCode.length !== 6) {
-                showNotification('შეიტანეთ კოდი', true);
-                return;
-            }
-            
-            if (codeExpirationTime && Date.now() > codeExpirationTime) {
-                showNotification('გაგზავნეთ კოდი ხელახლა', true);
-                return;
-            }
-            
-            if (emailCode === generatedEmailCode) {
+                // იმეილით ავტორიზაცია გამორთულია - პირდაპირ შესვლა
                 const oldNotifications = document.querySelectorAll('.notification');
                 oldNotifications.forEach(n => n.remove());
                 
@@ -2625,1148 +2847,1166 @@ UniMed`;
                 startOnlineTracking();
                 initChat();
                 
+                // გავასუფთავოთ ტაიმერი თუ არსებობს
                 if (countdownInterval) {
                     clearInterval(countdownInterval);
                 }
-                
-                generatedEmailCode = null;
-                isAdminCodeValid = false;
-                codeExpirationTime = null;
-                
-                const timerElement = document.getElementById('codeTimer');
-                if (timerElement) {
-                    timerElement.remove();
-                }
-                
-            } else {
-                document.getElementById('emailCode').classList.add('invalid');
-                showNotification('კოდი არასწორია', true);
-                
-                setTimeout(() => {
-                    document.getElementById('emailCode').classList.remove('invalid');
-                }, 2000);
             }
-        });
+        } else {
+            showNotification('არასწორი ადმინ კოდი', true);
+        }
+    });
 
-        document.getElementById('resendEmailCodeBtn').addEventListener('click', async () => {
-            if (!isAdminCodeValid) {
-                showNotification('გთხოვთ თავიდან დაიწყოთ', true);
-                document.getElementById('backToInitialBtn').click();
-                return;
-            }
+    document.getElementById('verifyEmailCodeBtn').addEventListener('click', () => {
+        const emailCode = document.getElementById('emailCode').value.trim();
+        
+        if (!emailCode || emailCode.length !== 6) {
+            showNotification('შეიტანეთ კოდი', true);
+            return;
+        }
+        
+        if (codeExpirationTime && Date.now() > codeExpirationTime) {
+            showNotification('გაგზავნეთ კოდი ხელახლა', true);
+            return;
+        }
+        
+        if (emailCode === generatedEmailCode) {
+            const oldNotifications = document.querySelectorAll('.notification');
+            oldNotifications.forEach(n => n.remove());
             
-            showLoading();
-            generatedEmailCode = Math.floor(100000 + Math.random() * 900000).toString();
-            codeExpirationTime = Date.now() + 60000;
+            isAdminAuthenticated = true;
+            authOverlay.style.display = 'none';
+            adminPanel.style.display = 'block';
             
-            startCodeTimer();
+            showNotification('წარმატებული ავტორიზაცია', false);
             
-            const subject = "UniMed · ადმინისტრატორის ახალი კოდი";
-            const message = `თქვენ მოითხოვეთ ახალი კოდი ადმინისტრატორის პანელზე შესასვლელად:
-
-${generatedEmailCode}
-
-კოდი მოქმედებს 1 წუთის განმავლობაში.
-
-UniMed`;
-            
-            const emailSent = await sendEmailViaScript(ADMIN_EMAIL, subject, message);
-            hideLoading();
-            
-            if (emailSent) {
-                showNotification('ახალი კოდი გაიგზავნა (მოქმედებს 1 წუთი)', false);
-                document.getElementById('emailCode').value = '';
-                document.getElementById('emailCode').focus();
-            } else {
-                showNotification('კოდის გაგზავნა ვერ მოხერხდა', true);
-            }
-        });
-
-        document.getElementById('backToInitialBtn').addEventListener('click', () => {
-            document.getElementById('emailCodeStep').style.display = 'none';
-            document.getElementById('initialCodeStep').style.display = 'block';
-            document.getElementById('adminCode').value = '';
-            document.getElementById('adminCode').focus();
+            loadAllData();
+            startOnlineTracking();
+            initChat();
             
             if (countdownInterval) {
                 clearInterval(countdownInterval);
             }
+            
+            generatedEmailCode = null;
+            isAdminCodeValid = false;
+            codeExpirationTime = null;
             
             const timerElement = document.getElementById('codeTimer');
             if (timerElement) {
                 timerElement.remove();
             }
             
-            generatedEmailCode = null;
-            isAdminCodeValid = false;
-            codeExpirationTime = null;
-        });
-
-        // Enter key handlers
-        document.getElementById('emailCode').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                document.getElementById('verifyEmailCodeBtn').click();
-            }
-        });
-
-        document.getElementById('emailCode').addEventListener('input', (e) => {
-            const value = e.target.value.replace(/\D/g, '');
-            e.target.value = value;
+        } else {
+            document.getElementById('emailCode').classList.add('invalid');
+            showNotification('კოდი არასწორია', true);
             
-            if (value.length === 6) {
-                document.getElementById('verifyEmailCodeBtn').click();
-            }
-        });
-
-        adminCode.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                document.getElementById('adminCodeBtn').click();
-            }
-        });
-
-        // Logout
-        document.getElementById('adminLogoutBtn').addEventListener('click', () => {
-            isAdminAuthenticated = false;
-            isAdminCodeValid = false;
-            generatedEmailCode = null;
-            adminPanel.style.display = 'none';
-            authOverlay.style.display = 'flex';
-            
-            document.getElementById('emailCodeStep').style.display = 'none';
-            document.getElementById('initialCodeStep').style.display = 'block';
-            document.getElementById('adminCode').value = '';
-            document.getElementById('emailCode').value = '';
-            authError.style.display = 'none';
-        });
-
-        // Navigation
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => {
-                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                item.classList.add('active');
-                
-                const section = item.dataset.section;
-                document.querySelectorAll('.content-section').forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.getElementById(`${section}Section`).classList.add('active');
-                
-        if (section === 'dashboard') {
-            loadDashboard();
-        } else if (section === 'online') {
-            loadOnlineUsers();
-        } else if (section === 'statistics') {
-            loadStatistics();
-        } else if (section === 'chat') {
-            loadChat();
-        } else if (section === 'settings') {
-            // პარამეტრების სექციას არაფრის ჩატვირთვა არ სჭირდება
-            console.log('Settings section opened');
+            setTimeout(() => {
+                document.getElementById('emailCode').classList.remove('invalid');
+            }, 2000);
         }
     });
-});
 
-// Load all data
-async function loadAllData() {
-    showLoading();
-    try {
-        await Promise.all([
-            loadDashboard(),
-            loadUsers(),
-            loadActivityData(),
-            loadStatistics(),
-            loadOnlineUsers()
-        ]);
-        initSettings(); // დაამატე ეს ხაზი
-    } catch (error) {
-        console.error("Error loading data:", error);
-        showNotification('შეცდომა მონაცემების ჩატვირთვისას', true);
-    } finally {
+    document.getElementById('resendEmailCodeBtn').addEventListener('click', async () => {
+        if (!isAdminCodeValid) {
+            showNotification('გთხოვთ თავიდან დაიწყოთ', true);
+            document.getElementById('backToInitialBtn').click();
+            return;
+        }
+        
+        showLoading();
+        generatedEmailCode = Math.floor(100000 + Math.random() * 900000).toString();
+        codeExpirationTime = Date.now() + 60000;
+        
+        startCodeTimer();
+        
+        const subject = "UniMed · ადმინისტრატორის ახალი კოდი";
+        const message = `თქვენ მოითხოვეთ ახალი კოდი ადმინისტრატორის პანელზე შესასვლელად:
+
+${generatedEmailCode}
+
+კოდი მოქმედებს 1 წუთის განმავლობაში.
+
+UniMed`;
+        
+        const emailSent = await sendEmailViaScript(ADMIN_EMAIL, subject, message);
         hideLoading();
-    }
-}
+        
+        if (emailSent) {
+            showNotification('ახალი კოდი გაიგზავნა (მოქმედებს 1 წუთი)', false);
+            document.getElementById('emailCode').value = '';
+            document.getElementById('emailCode').focus();
+        } else {
+            showNotification('კოდის გაგზავნა ვერ მოხერხდა', true);
+        }
+    });
 
-        // Start online tracking
-        function startOnlineTracking() {
-            if (!firebaseInitialized || !database) return;
+    document.getElementById('backToInitialBtn').addEventListener('click', () => {
+        document.getElementById('emailCodeStep').style.display = 'none';
+        document.getElementById('initialCodeStep').style.display = 'block';
+        document.getElementById('adminCode').value = '';
+        document.getElementById('adminCode').focus();
+        
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+        
+        const timerElement = document.getElementById('codeTimer');
+        if (timerElement) {
+            timerElement.remove();
+        }
+        
+        generatedEmailCode = null;
+        isAdminCodeValid = false;
+        codeExpirationTime = null;
+    });
+
+    // Enter key handlers
+    document.getElementById('emailCode').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            document.getElementById('verifyEmailCodeBtn').click();
+        }
+    });
+
+    document.getElementById('emailCode').addEventListener('input', (e) => {
+        const value = e.target.value.replace(/\D/g, '');
+        e.target.value = value;
+        
+        if (value.length === 6) {
+            document.getElementById('verifyEmailCodeBtn').click();
+        }
+    });
+
+    adminCode.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            document.getElementById('adminCodeBtn').click();
+        }
+    });
+
+    // Logout
+    document.getElementById('adminLogoutBtn').addEventListener('click', () => {
+        isAdminAuthenticated = false;
+        isAdminCodeValid = false;
+        generatedEmailCode = null;
+        adminPanel.style.display = 'none';
+        authOverlay.style.display = 'flex';
+        
+        document.getElementById('emailCodeStep').style.display = 'none';
+        document.getElementById('initialCodeStep').style.display = 'block';
+        document.getElementById('adminCode').value = '';
+        document.getElementById('emailCode').value = '';
+        authError.style.display = 'none';
+    });
+
+    // Navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
             
-            database.ref('chat/onlineUsers').on('value', (snapshot) => {
-                onlineUsers = snapshot.val() || {};
-                const now = Date.now();
-                const activeUsers = Object.values(onlineUsers).filter(u => 
-                    u?.lastSeen && (now - u.lastSeen) < 30000
-                );
-                
-                document.getElementById('onlineUsersCount').textContent = activeUsers.length;
-                
-                if (document.getElementById('dashboardSection').classList.contains('active')) {
-                    loadDashboard();
-                }
-                if (document.getElementById('usersSection').classList.contains('active')) {
-                    loadUsers();
+            const section = item.dataset.section;
+            document.querySelectorAll('.content-section').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${section}Section`).classList.add('active');
+            
+            if (section === 'dashboard') {
+                loadDashboard();
+            } else if (section === 'online') {
+                loadOnlineUsers();
+            } else if (section === 'statistics') {
+                loadStatistics();
+            } else if (section === 'chat') {
+                loadChat();
+            } else if (section === 'settings') {
+                // პარამეტრების სექციას არაფრის ჩატვირთვა არ სჭირდება
+                console.log('Settings section opened');
+            }
+        });
+    });
+
+    // Start online tracking
+    function startOnlineTracking() {
+        if (!firebaseInitialized || !database) return;
+        
+        database.ref('chat/onlineUsers').on('value', (snapshot) => {
+            onlineUsers = snapshot.val() || {};
+            const now = Date.now();
+            const activeUsers = Object.values(onlineUsers).filter(u => 
+                u?.lastSeen && (now - u.lastSeen) < 30000
+            );
+            
+            document.getElementById('onlineUsersCount').textContent = activeUsers.length;
+            
+            if (document.getElementById('dashboardSection').classList.contains('active')) {
+                loadDashboard();
+            }
+            if (document.getElementById('usersSection').classList.contains('active')) {
+                loadUsers();
+            }
+        });
+    }
+
+    // Load all data
+    async function loadAllData() {
+        showLoading();
+        try {
+            await Promise.all([
+                loadDashboard(),
+                loadUsers(),
+                loadActivityData(),
+                loadStatistics(),
+                loadOnlineUsers()
+            ]);
+            initSettings(); // დაამატე ეს ხაზი
+        } catch (error) {
+            console.error("Error loading data:", error);
+            showNotification('შეცდომა მონაცემების ჩატვირთვისას', true);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Load Dashboard
+    async function loadDashboard() {
+        if (!firebaseInitialized || !database) return;
+
+        try {
+            console.log("Loading dashboard...");
+            
+            const [usersSnapshot, answersSnapshot, questionsSnapshot] = await Promise.all([
+                database.ref('users').once('value'),
+                database.ref('answers').once('value'),
+                database.ref('questions').once('value')
+            ]);
+
+            const users = usersSnapshot.val() || {};
+            const answers = answersSnapshot.val() || {};
+            const questions = questionsSnapshot.val() || {};
+
+            console.log("Questions modules:", Object.keys(questions));
+            
+            // Log each module with question count
+            Object.entries(questions).forEach(([moduleId, moduleData]) => {
+                if (moduleData && typeof moduleData === 'object') {
+                    console.log(`${moduleId}: ${Object.keys(moduleData).length} questions`);
                 }
             });
-        }
 
-        // Load all data
-        async function loadAllData() {
-            showLoading();
-            try {
-                await Promise.all([
-                    loadDashboard(),
-                    loadUsers(),
-                    loadActivityData(),
-                    loadStatistics(),
-                    loadOnlineUsers()
-                ]);
-            } catch (error) {
-                console.error("Error loading data:", error);
-                showNotification('შეცდომა მონაცემების ჩატვირთვისას', true);
-            } finally {
-                hideLoading();
-            }
-        }
+            const usersList = Object.entries(users).map(([id, data]) => ({
+                id,
+                username: data.username || id,
+                registeredAt: data.registeredAt || data.lastUpdated || 0,
+                lastUpdated: data.lastUpdated || 0,
+                progress: data.progress || {}
+            }));
 
-        // Load Dashboard
-        async function loadDashboard() {
-            if (!firebaseInitialized || !database) return;
+            const now = Date.now();
+            const activeUsersList = Object.values(onlineUsers).filter(u => 
+                u?.lastSeen && (now - u.lastSeen) < 30000
+            );
 
-            try {
-                console.log("Loading dashboard...");
-                
-                const [usersSnapshot, answersSnapshot, questionsSnapshot] = await Promise.all([
-                    database.ref('users').once('value'),
-                    database.ref('answers').once('value'),
-                    database.ref('questions').once('value')
-                ]);
+            const activeUsers = activeUsersList.length;
+            const deletedUsers = 0;
 
-                const users = usersSnapshot.val() || {};
-                const answers = answersSnapshot.val() || {};
-                const questions = questionsSnapshot.val() || {};
+            document.getElementById('totalUsersCount').textContent = usersList.length;
+            document.getElementById('activeUsersCount').textContent = activeUsers;
+            document.getElementById('deletedUsersCount').textContent = deletedUsers;
 
-                console.log("Questions modules:", Object.keys(questions));
-                
-                // Log each module with question count
-                Object.entries(questions).forEach(([moduleId, moduleData]) => {
-                    if (moduleData && typeof moduleData === 'object') {
-                        console.log(`${moduleId}: ${Object.keys(moduleData).length} questions`);
+            // Pie chart
+            const activePercent = usersList.length > 0 ? (activeUsers / usersList.length) * 100 : 0;
+            document.getElementById('userPieChart').style.background = `conic-gradient(var(--success) 0% ${activePercent}%, var(--danger) ${activePercent}% 100%)`;
+
+            // Online users tooltip
+            const tooltip = document.getElementById('onlineUsersTooltip');
+            tooltip.innerHTML = activeUsersList.length > 0 ? 
+                activeUsersList.map(u => `
+                    <div class="online-user-item">
+                        <span class="online-user-dot"></span>
+                        <span>${escapeHtml(u.name || 'უცნობი')}</span>
+                    </div>
+                `).join('') : 
+                '<div style="color: var(--text-muted);">ონლაინ მომხმარებლები არ არიან</div>';
+
+            // Modules list - get all modules from questions
+            const modulesList = document.getElementById('modulesStatsList');
+            modulesList.innerHTML = '';
+
+            const moduleEntries = [];
+
+            Object.entries(questions).forEach(([moduleId, moduleData]) => {
+                if (moduleData && typeof moduleData === 'object') {
+                    const questionCount = Object.keys(moduleData).length;
+                    if (questionCount > 0) {
+                        moduleEntries.push({
+                            id: moduleId,
+                            name: getModuleName(moduleId),
+                            count: questionCount
+                        });
                     }
-                });
-
-                const usersList = Object.entries(users).map(([id, data]) => ({
-                    id,
-                    username: data.username || id,
-                    registeredAt: data.registeredAt || data.lastUpdated || 0,
-                    lastUpdated: data.lastUpdated || 0,
-                    progress: data.progress || {}
-                }));
-
-                const now = Date.now();
-                const activeUsersList = Object.values(onlineUsers).filter(u => 
-                    u?.lastSeen && (now - u.lastSeen) < 30000
-                );
-
-                const activeUsers = activeUsersList.length;
-                const deletedUsers = 0;
-
-                document.getElementById('totalUsersCount').textContent = usersList.length;
-                document.getElementById('activeUsersCount').textContent = activeUsers;
-                document.getElementById('deletedUsersCount').textContent = deletedUsers;
-
-                // Pie chart
-                const activePercent = usersList.length > 0 ? (activeUsers / usersList.length) * 100 : 0;
-                document.getElementById('userPieChart').style.background = `conic-gradient(var(--success) 0% ${activePercent}%, var(--danger) ${activePercent}% 100%)`;
-
-                // Online users tooltip
-                const tooltip = document.getElementById('onlineUsersTooltip');
-                tooltip.innerHTML = activeUsersList.length > 0 ? 
-                    activeUsersList.map(u => `
-                        <div class="online-user-item">
-                            <span class="online-user-dot"></span>
-                            <span>${escapeHtml(u.name || 'უცნობი')}</span>
-                        </div>
-                    `).join('') : 
-                    '<div style="color: var(--text-muted);">ონლაინ მომხმარებლები არ არიან</div>';
-
-                // Modules list - get all modules from questions
-                const modulesList = document.getElementById('modulesStatsList');
-                modulesList.innerHTML = '';
-
-                const moduleEntries = [];
-
-                Object.entries(questions).forEach(([moduleId, moduleData]) => {
-                    if (moduleData && typeof moduleData === 'object') {
-                        const questionCount = Object.keys(moduleData).length;
-                        if (questionCount > 0) {
-                            moduleEntries.push({
-                                id: moduleId,
-                                name: getModuleName(moduleId),
-                                count: questionCount
-                            });
-                        }
-                    }
-                });
-
-                // Sort by question count (highest first)
-                moduleEntries.sort((a, b) => b.count - a.count);
-
-                if (moduleEntries.length > 0) {
-                    moduleEntries.forEach(module => {
-                        const moduleItem = document.createElement('div');
-                        moduleItem.className = 'module-item';
-                        moduleItem.innerHTML = `
-                            <span class="module-name">${module.name}</span>
-                            <span class="module-count">${module.count.toLocaleString()} კითხვა</span>
-                        `;
-                        modulesList.appendChild(moduleItem);
-                    });
-                } else {
-                    modulesList.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">მოდულები არ არის</div>';
                 }
+            });
 
-                // Last registered
-                const lastRegistered = usersList
-                    .filter(u => u.registeredAt)
-                    .sort((a, b) => b.registeredAt - a.registeredAt)
-                    .slice(0, 5);
+            // Sort by question count (highest first)
+            moduleEntries.sort((a, b) => b.count - a.count);
 
-                const lastRegisteredList = document.getElementById('lastRegisteredList');
-                lastRegisteredList.innerHTML = lastRegistered.length > 0 ?
-                    lastRegistered.map(user => `
-                        <div class="registered-user">
-                            <span>${escapeHtml(user.username)}</span>
-                            <span style="color: var(--text-muted); font-size: 12px;">${new Date(user.registeredAt).toLocaleString('ka-GE')}</span>
+            if (moduleEntries.length > 0) {
+                moduleEntries.forEach(module => {
+                    const moduleItem = document.createElement('div');
+                    moduleItem.className = 'module-item';
+                    moduleItem.innerHTML = `
+                        <span class="module-name">${module.name}</span>
+                        <span class="module-count">${module.count.toLocaleString()} კითხვა</span>
+                    `;
+                    modulesList.appendChild(moduleItem);
+                });
+            } else {
+                modulesList.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 20px;">მოდულები არ არის</div>';
+            }
+
+            // Last registered
+            const lastRegistered = usersList
+                .filter(u => u.registeredAt)
+                .sort((a, b) => b.registeredAt - a.registeredAt)
+                .slice(0, 5);
+
+            const lastRegisteredList = document.getElementById('lastRegisteredList');
+            lastRegisteredList.innerHTML = lastRegistered.length > 0 ?
+                lastRegistered.map(user => `
+                    <div class="registered-user">
+                        <span>${escapeHtml(user.username)}</span>
+                        <span style="color: var(--text-muted); font-size: 12px;">${new Date(user.registeredAt).toLocaleString('ka-GE')}</span>
+                    </div>
+                `).join('') : 
+                '<div style="color: var(--text-muted);">რეგისტრაციები არ არის</div>';
+
+            // Recent activities
+            const recentAnswers = Object.values(answers)
+                .filter(a => a.timestamp)
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .slice(0, 10);
+
+            const recentActivities = document.getElementById('recentActivitiesList');
+            recentActivities.innerHTML = recentAnswers.length > 0 ?
+                recentAnswers.map(answer => {
+                    const user = usersList.find(u => u.id === answer.userId);
+                    const moduleName = getModuleName(answer.module);
+                    return `
+                        <div class="activity-item">
+                            <span class="activity-dot"></span>
+                            <div class="activity-content">
+                                <strong>${escapeHtml(user?.username || answer.userId)}</strong> - ${answer.isCorrect ? '✅' : '❌'} <strong>${escapeHtml(moduleName)}</strong>
+                                <div class="activity-time">${new Date(answer.timestamp).toLocaleString('ka-GE')}</div>
+                            </div>
                         </div>
-                    `).join('') : 
-                    '<div style="color: var(--text-muted);">რეგისტრაციები არ არის</div>';
+                    `;
+                }).join('') : 
+                '<div style="color: var(--text-muted);">აქტივობა არ არის</div>';
 
-                // Recent activities
-                const recentAnswers = Object.values(answers)
-                    .filter(a => a.timestamp)
-                    .sort((a, b) => b.timestamp - a.timestamp)
-                    .slice(0, 10);
+            // Notifications
+            const notificationsSnapshot = await database.ref('notifications').once('value');
+            const notifications = notificationsSnapshot.val() || {};
+            
+            const allNotifications = Object.values(notifications)
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .slice(0, 10);
 
-                const recentActivities = document.getElementById('recentActivitiesList');
-                recentActivities.innerHTML = recentAnswers.length > 0 ?
-                    recentAnswers.map(answer => {
-                        const user = usersList.find(u => u.id === answer.userId);
-                        const moduleName = getModuleName(answer.module);
-                        return `
-                            <div class="activity-item">
-                                <span class="activity-dot"></span>
-                                <div class="activity-content">
-                                    <strong>${escapeHtml(user?.username || answer.userId)}</strong> - ${answer.isCorrect ? '✅' : '❌'} <strong>${escapeHtml(moduleName)}</strong>
-                                    <div class="activity-time">${new Date(answer.timestamp).toLocaleString('ka-GE')}</div>
-                                </div>
+            const notificationsList = document.getElementById('notificationsList');
+            notificationsList.innerHTML = allNotifications.length > 0 ?
+                allNotifications.map(n => {
+                    let icon = '📢';
+                    if (n.type === 'new_user') icon = '➕';
+                    if (n.type === 'login') icon = '🔓';
+                    if (n.type === 'logout') icon = '🔒';
+                    
+                    return `
+                        <div class="activity-item">
+                            <span class="activity-dot" style="background: var(--accent);"></span>
+                            <div class="activity-content">
+                                ${icon} ${escapeHtml(n.message)}
+                                <div class="activity-time">${new Date(n.timestamp).toLocaleString('ka-GE')}</div>
                             </div>
-                        `;
-                    }).join('') : 
-                    '<div style="color: var(--text-muted);">აქტივობა არ არის</div>';
+                        </div>
+                    `;
+                }).join('') : 
+                '<div style="color: var(--text-muted);">შეტყობინებები არ არის</div>';
 
-                // Notifications
-                const notificationsSnapshot = await database.ref('notifications').once('value');
-                const notifications = notificationsSnapshot.val() || {};
-                
-                const allNotifications = Object.values(notifications)
-                    .sort((a, b) => b.timestamp - a.timestamp)
-                    .slice(0, 10);
+            // Add notification listeners
+            database.ref('users').on('child_added', (snapshot) => {
+                const user = snapshot.val();
+                const notification = {
+                    message: `➕ ახალი მომხმარებელი დაემატა: ${user.username || snapshot.key}`,
+                    timestamp: Date.now(),
+                    type: 'new_user'
+                };
+                database.ref('notifications').push(notification);
+            });
 
-                const notificationsList = document.getElementById('notificationsList');
-                notificationsList.innerHTML = allNotifications.length > 0 ?
-                    allNotifications.map(n => {
-                        let icon = '📢';
-                        if (n.type === 'new_user') icon = '➕';
-                        if (n.type === 'login') icon = '🔓';
-                        if (n.type === 'logout') icon = '🔒';
-                        
-                        return `
-                            <div class="activity-item">
-                                <span class="activity-dot" style="background: var(--accent);"></span>
-                                <div class="activity-content">
-                                    ${icon} ${escapeHtml(n.message)}
-                                    <div class="activity-time">${new Date(n.timestamp).toLocaleString('ka-GE')}</div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('') : 
-                    '<div style="color: var(--text-muted);">შეტყობინებები არ არის</div>';
-
-                // Add notification listeners
-                database.ref('users').on('child_added', (snapshot) => {
-                    const user = snapshot.val();
+            database.ref('chat/onlineUsers').on('child_added', (snapshot) => {
+                const user = snapshot.val();
+                if (user && user.name) {
                     const notification = {
-                        message: `➕ ახალი მომხმარებელი დაემატა: ${user.username || snapshot.key}`,
+                        message: `🔓 ${user.name} შემოვიდა სისტემაში`,
                         timestamp: Date.now(),
-                        type: 'new_user'
+                        type: 'login'
                     };
                     database.ref('notifications').push(notification);
-                });
+                }
+            });
 
-                database.ref('chat/onlineUsers').on('child_added', (snapshot) => {
-                    const user = snapshot.val();
-                    if (user && user.name) {
-                        const notification = {
-                            message: `🔓 ${user.name} შემოვიდა სისტემაში`,
-                            timestamp: Date.now(),
-                            type: 'login'
-                        };
-                        database.ref('notifications').push(notification);
-                    }
-                });
+            database.ref('chat/onlineUsers').on('child_removed', (snapshot) => {
+                const user = snapshot.val();
+                if (user && user.name) {
+                    const notification = {
+                        message: `🔒 ${user.name} გავიდა სისტემიდან`,
+                        timestamp: Date.now(),
+                        type: 'logout'
+                    };
+                    database.ref('notifications').push(notification);
+                }
+            });
 
-                database.ref('chat/onlineUsers').on('child_removed', (snapshot) => {
-                    const user = snapshot.val();
-                    if (user && user.name) {
-                        const notification = {
-                            message: `🔒 ${user.name} გავიდა სისტემიდან`,
-                            timestamp: Date.now(),
-                            type: 'logout'
-                        };
-                        database.ref('notifications').push(notification);
-                    }
-                });
-
-            } catch (error) {
-                console.error("Error loading dashboard:", error);
-            }
+        } catch (error) {
+            console.error("Error loading dashboard:", error);
         }
+    }
 
-        // Load users
-        async function loadUsers() {
-            if (!firebaseInitialized || !database) return;
+    // Load users
+    async function loadUsers() {
+        if (!firebaseInitialized || !database) return;
 
-            try {
-                const snapshot = await database.ref('users').once('value');
-                const users = snapshot.val() || {};
-                
-                const now = Date.now();
-                const usersList = Object.entries(users).map(([key, data]) => ({
-                    id: key,
-                    username: data.username || key,
-                    password: data.password || '',
-                    registeredAt: data.registeredAt || data.lastUpdated || 0,
-                    lastUpdated: data.lastUpdated || 0,
-                    progress: data.progress || {},
-                    isOnline: Object.values(onlineUsers).some(u => 
-                        (u.userId === key || u.name === key) && 
-                        (now - (u.lastSeen || 0)) < 30000
-                    )
-                }));
+        try {
+            const snapshot = await database.ref('users').once('value');
+            const users = snapshot.val() || {};
+            
+            const now = Date.now();
+            const usersList = Object.entries(users).map(([key, data]) => ({
+                id: key,
+                username: data.username || key,
+                password: data.password || '',
+                registeredAt: data.registeredAt || data.lastUpdated || 0,
+                lastUpdated: data.lastUpdated || 0,
+                progress: data.progress || {},
+                isOnline: Object.values(onlineUsers).some(u => 
+                    (u.userId === key || u.name === key) && 
+                    (now - (u.lastSeen || 0)) < 30000
+                )
+            }));
 
-                document.getElementById('totalUsers').textContent = usersList.length;
-                renderUsersTable(usersList);
-                setupUserSearch(usersList);
+            document.getElementById('totalUsers').textContent = usersList.length;
+            renderUsersTable(usersList);
+            setupUserSearch(usersList);
 
-            } catch (error) {
-                console.error("Error loading users:", error);
-            }
+        } catch (error) {
+            console.error("Error loading users:", error);
         }
+    }
 
-        function renderUsersTable(users) {
-            const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = '';
+    function renderUsersTable(users) {
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = '';
 
-            users.sort((a, b) => b.isOnline - a.isOnline).forEach(user => {
-                const registrationDate = user.registeredAt ? new Date(user.registeredAt).toLocaleString('ka-GE') : 'უცნობია';
-                const lastLogin = user.lastUpdated ? new Date(user.lastUpdated).toLocaleString('ka-GE') : 'უცნობია';
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>
-                        <strong>${escapeHtml(user.username)}</strong>
-                    </td>
-                    <td>
-                        <div class="user-status">
-                            <span class="status-dot ${user.isOnline ? 'online' : 'offline'}"></span>
-                            ${user.isOnline ? 'ონლაინ' : 'ოფლაინ'}
-                        </div>
-                    </td>
-                    <td>${registrationDate}</td>
-                    <td>${lastLogin}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn view" onclick="viewUserDetails('${user.id}')">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="3"/>
-                                    <path d="M22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10z"/>
-                                </svg>
-                                ნახვა
-                            </button>
-                            <button class="action-btn edit" onclick="editUser('${user.id}')">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                                </svg>
-                                რედ
-                            </button>
-                            <button class="action-btn delete" onclick="confirmDeleteUser('${user.id}')">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <polyline points="3 6 5 6 21 6"/>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                </svg>
-                                წაშლა
-                            </button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
+        users.sort((a, b) => b.isOnline - a.isOnline).forEach(user => {
+            const registrationDate = user.registeredAt ? new Date(user.registeredAt).toLocaleString('ka-GE') : 'უცნობია';
+            const lastLogin = user.lastUpdated ? new Date(user.lastUpdated).toLocaleString('ka-GE') : 'უცნობია';
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <strong>${escapeHtml(user.username)}</strong>
+                </td>
+                <td>
+                    <div class="user-status">
+                        <span class="status-dot ${user.isOnline ? 'online' : 'offline'}"></span>
+                        ${user.isOnline ? 'ონლაინ' : 'ოფლაინ'}
+                    </div>
+                </td>
+                <td>${registrationDate}</td>
+                <td>${lastLogin}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn view" onclick="viewUserDetails('${user.id}')">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10z"/>
+                            </svg>
+                            ნახვა
+                        </button>
+                        <button class="action-btn edit" onclick="editUser('${user.id}')">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                            </svg>
+                            რედ
+                        </button>
+                        <button class="action-btn delete" onclick="confirmDeleteUser('${user.id}')">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            წაშლა
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function setupUserSearch(users) {
+        const searchInput = document.getElementById('userSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = users.filter(user => 
+                    user.username.toLowerCase().includes(term)
+                );
+                renderUsersTable(filtered);
             });
         }
+    }
 
-        function setupUserSearch(users) {
-            const searchInput = document.getElementById('userSearch');
-            if (searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    const term = e.target.value.toLowerCase();
-                    const filtered = users.filter(user => 
-                        user.username.toLowerCase().includes(term)
-                    );
-                    renderUsersTable(filtered);
-                });
+    // Confirm delete user
+    window.confirmDeleteUser = function(userId) {
+        showConfirm(
+            'მომხმარებლის წაშლა',
+            'დარწმუნებული ხართ? მომხმარებელი მყისიერად გაეთიშება!',
+            () => deleteUser(userId)
+        );
+    };
+
+    // Delete user with force logout
+    window.deleteUser = async function(userId) {
+        showLoading();
+        try {
+            await database.ref(`users/${userId}`).remove();
+            await database.ref('system/forceLogout').set({
+                userId: userId,
+                timestamp: Date.now(),
+                reason: 'წაშლილია'
+            });
+            
+            const updates = {};
+            Object.entries(onlineUsers).forEach(([key, user]) => {
+                if (user.userId === userId || user.name === userId) {
+                    updates[key] = null;
+                }
+            });
+            if (Object.keys(updates).length > 0) {
+                await database.ref('chat/onlineUsers').update(updates);
             }
+            
+            const notification = {
+                message: `❌ მომხმარებელი ${userId} წაიშალა`,
+                timestamp: Date.now(),
+                type: 'delete'
+            };
+            await database.ref('notifications').push(notification);
+            
+            showNotification('მომხმარებელი წაიშალა', false);
+            await loadUsers();
+            await loadDashboard();
+            
+            setTimeout(async () => {
+                await database.ref('system/forceLogout').remove();
+            }, 5000);
+            
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            showNotification('შეცდომა წაშლისას', true);
+        } finally {
+            hideLoading();
         }
+    };
 
-        // Confirm delete user
-        window.confirmDeleteUser = function(userId) {
-            showConfirm(
-                'მომხმარებლის წაშლა',
-                'დარწმუნებული ხართ? მომხმარებელი მყისიერად გაეთიშება!',
-                () => deleteUser(userId)
-            );
-        };
+    // View user details
+    window.viewUserDetails = async function(userId) {
+        showLoading();
+        try {
+            const [userSnapshot, questionsSnapshot] = await Promise.all([
+                database.ref(`users/${userId}`).once('value'),
+                database.ref('questions').once('value')
+            ]);
 
-        // Delete user with force logout
-        window.deleteUser = async function(userId) {
-            showLoading();
-            try {
-                await database.ref(`users/${userId}`).remove();
-                await database.ref('system/forceLogout').set({
-                    userId: userId,
-                    timestamp: Date.now(),
-                    reason: 'წაშლილია'
-                });
-                
-                const updates = {};
-                Object.entries(onlineUsers).forEach(([key, user]) => {
-                    if (user.userId === userId || user.name === userId) {
-                        updates[key] = null;
-                    }
-                });
-                if (Object.keys(updates).length > 0) {
-                    await database.ref('chat/onlineUsers').update(updates);
-                }
-                
-                const notification = {
-                    message: `❌ მომხმარებელი ${userId} წაიშალა`,
-                    timestamp: Date.now(),
-                    type: 'delete'
-                };
-                await database.ref('notifications').push(notification);
-                
-                showNotification('მომხმარებელი წაიშალა', false);
-                await loadUsers();
-                await loadDashboard();
-                
-                setTimeout(async () => {
-                    await database.ref('system/forceLogout').remove();
-                }, 5000);
-                
-            } catch (error) {
-                console.error("Error deleting user:", error);
-                showNotification('შეცდომა წაშლისას', true);
-            } finally {
-                hideLoading();
-            }
-        };
-
-        // View user details
-        window.viewUserDetails = async function(userId) {
-            showLoading();
-            try {
-                const [userSnapshot, questionsSnapshot] = await Promise.all([
-                    database.ref(`users/${userId}`).once('value'),
-                    database.ref('questions').once('value')
-                ]);
-
-                const user = userSnapshot.val();
-                const allQuestions = questionsSnapshot.val() || {};
-                
-                if (!user) {
-                    showNotification('მომხმარებელი არ მოიძებნა', true);
-                    return;
-                }
-
-                const modalContent = document.getElementById('userDetailsContent');
-                
-                // Collect questions by module
-                const modulesWithQuestions = {};
-
-                if (user.progress) {
-                    for (const [moduleName, moduleData] of Object.entries(user.progress)) {
-                        const moduleQuestions = allQuestions[moduleName] || {};
-                        const totalQuestionsInModule = Object.keys(moduleQuestions).length;
-                        
-                        const answeredQuestions = [];
-                        
-                        ['normal', 'exam'].forEach(mode => {
-                            const answers = moduleData[mode]?.answeredQuestions || {};
-                            for (const [qId, answer] of Object.entries(answers)) {
-                                const questionData = moduleQuestions[qId] || { text: qId };
-                                answeredQuestions.push({
-                                    id: qId,
-                                    text: questionData.text || questionData.question || qId,
-                                    isCorrect: answer.isCorrect,
-                                    timestamp: answer.timestamp || 0,
-                                    mode: mode
-                                });
-                            }
-                        });
-
-                        answeredQuestions.sort((a, b) => b.timestamp - a.timestamp);
-
-                        modulesWithQuestions[moduleName] = {
-                            total: totalQuestionsInModule,
-                            answered: answeredQuestions.length,
-                            questions: answeredQuestions
-                        };
-                    }
-                }
-
-                modalContent.innerHTML = `
-                    <div style="margin-bottom: 20px;">
-                        <div style="background: var(--surface-light); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                <div>
-                                    <div style="color: var(--text-muted); font-size: 12px;">მომხმარებელი</div>
-                                    <div style="font-weight: 600;">${escapeHtml(user.username)}</div>
-                                </div>
-                                <div>
-                                    <div style="color: var(--text-muted); font-size: 12px;">პაროლი</div>
-                                    <div style="font-family: monospace;">${escapeHtml(user.password)}</div>
-                                </div>
-                                <div>
-                                    <div style="color: var(--text-muted); font-size: 12px;">რეგისტრაცია</div>
-                                    <div>${user.registeredAt ? new Date(user.registeredAt).toLocaleString('ka-GE') : 'უცნობია'}</div>
-                                </div>
-                                <div>
-                                    <div style="color: var(--text-muted); font-size: 12px;">ბოლო შესვლა</div>
-                                    <div>${user.lastUpdated ? new Date(user.lastUpdated).toLocaleString('ka-GE') : 'უცნობია'}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h4 style="margin: 20px 0 12px;">კითხვები</h4>
-                        
-                        ${Object.entries(modulesWithQuestions).length > 0 ? 
-                            Object.entries(modulesWithQuestions).map(([moduleName, data]) => {
-                                const percentage = data.total > 0 ? Math.round((data.answered / data.total) * 100) : 0;
-                                return `
-                                    <div style="margin-bottom: 30px;">
-                                        <div class="module-stats-header">
-                                            <strong>${getModuleName(moduleName)}</strong>
-                                            <span>${data.answered}/${data.total} (${percentage}%)</span>
-                                        </div>
-                                        <div class="module-progress-bar">
-                                            <div class="module-progress-fill" style="width: ${percentage}%;"></div>
-                                        </div>
-                                        ${data.questions.map(q => `
-                                            <div class="question-row">
-                                                <div class="question-id">#${q.id}</div>
-                                                <div class="question-text-small">${escapeHtml(q.text.substring(0, 100))}${q.text.length > 100 ? '...' : ''}</div>
-                                                <div class="answer-badge ${q.isCorrect ? 'correct' : 'incorrect'}">
-                                                    ${q.isCorrect ? '✅ სწორი' : '❌ არასწორი'}
-                                                </div>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                `;
-                            }).join('') 
-                            : '<div style="text-align: center; padding: 40px;">პასუხები არ არის</div>'
-                        }
-                    </div>
-                `;
-
-                openModal('userDetailsModal');
-            } catch (error) {
-                console.error("Error loading user details:", error);
-                showNotification('შეცდომა მომხმარებლის დეტალების ჩატვირთვისას', true);
-            } finally {
-                hideLoading();
-            }
-        };
-
-        // Edit user
-        window.editUser = function(userId) {
-            document.getElementById('editUserId').value = userId;
-            document.getElementById('editUsername').value = '';
-            document.getElementById('editPassword').value = '';
-            openModal('editUserModal');
-        };
-
-        window.saveUserEdit = async function() {
-            const userId = document.getElementById('editUserId').value;
-            const newUsername = document.getElementById('editUsername').value.trim();
-            const newPassword = document.getElementById('editPassword').value.trim();
-
-            if (!newUsername && !newPassword) {
-                showNotification('გთხოვთ შეიყვანოთ ახალი მონაცემები', true);
+            const user = userSnapshot.val();
+            const allQuestions = questionsSnapshot.val() || {};
+            
+            if (!user) {
+                showNotification('მომხმარებელი არ მოიძებნა', true);
                 return;
             }
 
-            showLoading();
-            try {
-                const snapshot = await database.ref(`users/${userId}`).once('value');
-                const userData = snapshot.val();
+            const modalContent = document.getElementById('userDetailsContent');
+            
+            // Collect questions by module
+            const modulesWithQuestions = {};
 
-                if (!userData) {
-                    showNotification('მომხმარებელი არ მოიძებნა', true);
-                    return;
-                }
-
-                if (newUsername) {
-                    const newUserId = newUsername.replace(/[.#$[\]]/g, '_');
-                    await database.ref(`users/${newUserId}`).set({
-                        ...userData,
-                        username: newUsername,
-                        lastUpdated: Date.now()
+            if (user.progress) {
+                for (const [moduleName, moduleData] of Object.entries(user.progress)) {
+                    const moduleQuestions = allQuestions[moduleName] || {};
+                    const totalQuestionsInModule = Object.keys(moduleQuestions).length;
+                    
+                    const answeredQuestions = [];
+                    
+                    ['normal', 'exam'].forEach(mode => {
+                        const answers = moduleData[mode]?.answeredQuestions || {};
+                        for (const [qId, answer] of Object.entries(answers)) {
+                            const questionData = moduleQuestions[qId] || { text: qId };
+                            answeredQuestions.push({
+                                id: qId,
+                                text: questionData.text || questionData.question || qId,
+                                isCorrect: answer.isCorrect,
+                                timestamp: answer.timestamp || 0,
+                                mode: mode
+                            });
+                        }
                     });
-                    
-                    await database.ref(`users/${userId}`).remove();
-                    
-                    if (newPassword) {
-                        await database.ref(`users/${newUserId}/password`).set(newPassword);
-                    }
-                } else if (newPassword) {
-                    await database.ref(`users/${userId}/password`).set(newPassword);
-                    await database.ref(`users/${userId}/lastUpdated`).set(Date.now());
-                }
-                
-                closeModal('editUserModal');
-                showNotification('მომხმარებელი წარმატებით განახლდა', false);
-                await loadUsers();
 
-            } catch (error) {
-                console.error("Error editing user:", error);
-                showNotification('შეცდომა მომხმარებლის რედაქტირებისას', true);
-            } finally {
-                hideLoading();
-            }
-        };
+                    answeredQuestions.sort((a, b) => b.timestamp - a.timestamp);
 
-        // Switch activity tab
-        window.switchActivityTab = function(tab, event) {
-            currentActivityTab = tab;
-            document.querySelectorAll('.activity-tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            if (document.querySelector('.date-range')) {
-                if (tab === 'custom') {
-                    document.querySelector('.date-range').style.display = 'flex';
-                } else {
-                    document.querySelector('.date-range').style.display = 'none';
-                }
-            }
-            
-            loadActivityData();
-        };
-
-        // Load activity data with date range
-        async function loadActivityData() {
-            if (!firebaseInitialized || !database) return;
-
-            try {
-                const [usersSnapshot, answersSnapshot] = await Promise.all([
-                    database.ref('users').once('value'),
-                    database.ref('answers').once('value')
-                ]);
-
-                const users = usersSnapshot.val() || {};
-                const answers = answersSnapshot.val() || {};
-
-                // Get date range
-                let startTime, endTime;
-                
-                if (currentActivityTab === 'custom') {
-                    const startDate = document.getElementById('activityStartDate').value;
-                    const endDate = document.getElementById('activityEndDate').value;
-                    
-                    if (startDate && endDate) {
-                        startTime = new Date(startDate).setHours(0, 0, 0, 0);
-                        endTime = new Date(endDate).setHours(23, 59, 59, 999);
-                    } else {
-                        const now = Date.now();
-                        endTime = now;
-                        startTime = now - 30 * 24 * 60 * 60 * 1000;
-                    }
-                } else {
-                    const now = Date.now();
-                    const timeRanges = {
-                        day: 24 * 60 * 60 * 1000,
-                        week: 7 * 24 * 60 * 60 * 1000,
-                        month: 30 * 24 * 60 * 60 * 1000,
-                        year: 365 * 24 * 60 * 60 * 1000
+                    modulesWithQuestions[moduleName] = {
+                        total: totalQuestionsInModule,
+                        answered: answeredQuestions.length,
+                        questions: answeredQuestions
                     };
-                    endTime = now;
-                    startTime = now - timeRanges[currentActivityTab];
                 }
-
-                let activeUsers = 0;
-                Object.values(users).forEach(user => {
-                    if (user.lastUpdated && user.lastUpdated >= startTime && user.lastUpdated <= endTime) {
-                        activeUsers++;
-                    }
-                });
-
-                let newRegistrations = 0;
-                Object.values(users).forEach(user => {
-                    if (user.registeredAt && user.registeredAt >= startTime && user.registeredAt <= endTime) {
-                        newRegistrations++;
-                    }
-                });
-
-                let totalTests = 0;
-                let correctTests = 0;
-                const moduleStats = {};
-                const userTestCounts = {};
-
-                Object.values(answers).forEach(answer => {
-                    if (answer.timestamp && answer.timestamp >= startTime && answer.timestamp <= endTime) {
-                        totalTests++;
-                        if (answer.isCorrect) correctTests++;
-                        
-                        const module = answer.module || 'unknown';
-                        if (!moduleStats[module]) {
-                            moduleStats[module] = { users: new Set(), tests: 0, correct: 0 };
-                        }
-                        moduleStats[module].tests++;
-                        moduleStats[module].correct += answer.isCorrect ? 1 : 0;
-                        if (answer.userId) {
-                            moduleStats[module].users.add(answer.userId);
-                            userTestCounts[answer.userId] = (userTestCounts[answer.userId] || 0) + 1;
-                        }
-                    }
-                });
-
-                const avgTestsPerUser = totalTests / (Object.keys(userTestCounts).length || 1);
-
-                document.getElementById('activityStats').innerHTML = `
-                    <div class="stat-card">
-                        <div class="stat-title">აქტიური მომხმარებელი</div>
-                        <div class="stat-value">${activeUsers}</div>
-                        <div class="stat-change">${((activeUsers / Object.keys(users).length) * 100 || 0).toFixed(1)}%</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-title">ახალი რეგისტრაცია</div>
-                        <div class="stat-value">${newRegistrations}</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-title">შესრულებული ტესტი</div>
-                        <div class="stat-value">${totalTests}</div>
-                        <div class="stat-change">საშ. ${avgTestsPerUser.toFixed(1)}/მომხ</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-title">სწორი პასუხი</div>
-                        <div class="stat-value">${((correctTests / totalTests) * 100 || 0).toFixed(1)}%</div>
-                        <div class="stat-change">${correctTests}/${totalTests}</div>
-                    </div>
-                `;
-
-                const tableBody = document.getElementById('activityTableBody');
-                tableBody.innerHTML = Object.entries(moduleStats)
-                    .sort((a, b) => b[1].tests - a[1].tests)
-                    .map(([module, stats]) => `
-                    <tr>
-                        <td><strong>${getModuleName(module)}</strong></td>
-                        <td>${stats.users.size}</td>
-                        <td>${stats.tests}</td>
-                        <td>${stats.correct}</td>
-                        <td>${((stats.correct / stats.tests) * 100 || 0).toFixed(1)}%</td>
-                        <td>${(stats.tests / stats.users.size || 0).toFixed(1)}</td>
-                    </tr>
-                `).join('');
-
-            } catch (error) {
-                console.error("Error loading activity:", error);
             }
+
+            modalContent.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="background: var(--surface-light); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div>
+                                <div style="color: var(--text-muted); font-size: 12px;">მომხმარებელი</div>
+                                <div style="font-weight: 600;">${escapeHtml(user.username)}</div>
+                            </div>
+                            <div>
+                                <div style="color: var(--text-muted); font-size: 12px;">პაროლი</div>
+                                <div style="font-family: monospace;">${escapeHtml(user.password)}</div>
+                            </div>
+                            <div>
+                                <div style="color: var(--text-muted); font-size: 12px;">რეგისტრაცია</div>
+                                <div>${user.registeredAt ? new Date(user.registeredAt).toLocaleString('ka-GE') : 'უცნობია'}</div>
+                            </div>
+                            <div>
+                                <div style="color: var(--text-muted); font-size: 12px;">ბოლო შესვლა</div>
+                                <div>${user.lastUpdated ? new Date(user.lastUpdated).toLocaleString('ka-GE') : 'უცნობია'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 20px 0 12px;">კითხვები</h4>
+                    
+                    ${Object.entries(modulesWithQuestions).length > 0 ? 
+                        Object.entries(modulesWithQuestions).map(([moduleName, data]) => {
+                            const percentage = data.total > 0 ? Math.round((data.answered / data.total) * 100) : 0;
+                            return `
+                                <div style="margin-bottom: 30px;">
+                                    <div class="module-stats-header">
+                                        <strong>${getModuleName(moduleName)}</strong>
+                                        <span>${data.answered}/${data.total} (${percentage}%)</span>
+                                    </div>
+                                    <div class="module-progress-bar">
+                                        <div class="module-progress-fill" style="width: ${percentage}%;"></div>
+                                    </div>
+                                    ${data.questions.map(q => `
+                                        <div class="question-row">
+                                            <div class="question-id">#${q.id}</div>
+                                            <div class="question-text-small">${escapeHtml(q.text.substring(0, 100))}${q.text.length > 100 ? '...' : ''}</div>
+                                            <div class="answer-badge ${q.isCorrect ? 'correct' : 'incorrect'}">
+                                                ${q.isCorrect ? '✅ სწორი' : '❌ არასწორი'}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                        }).join('') 
+                        : '<div style="text-align: center; padding: 40px;">პასუხები არ არის</div>'
+                    }
+                </div>
+            `;
+
+            openModal('userDetailsModal');
+        } catch (error) {
+            console.error("Error loading user details:", error);
+            showNotification('შეცდომა მომხმარებლის დეტალების ჩატვირთვისას', true);
+        } finally {
+            hideLoading();
+        }
+    };
+
+    // Edit user
+    window.editUser = function(userId) {
+        document.getElementById('editUserId').value = userId;
+        document.getElementById('editUsername').value = '';
+        document.getElementById('editPassword').value = '';
+        openModal('editUserModal');
+    };
+
+    window.saveUserEdit = async function() {
+        const userId = document.getElementById('editUserId').value;
+        const newUsername = document.getElementById('editUsername').value.trim();
+        const newPassword = document.getElementById('editPassword').value.trim();
+
+        if (!newUsername && !newPassword) {
+            showNotification('გთხოვთ შეიყვანოთ ახალი მონაცემები', true);
+            return;
         }
 
-        // Load statistics
-        async function loadStatistics() {
-            if (!firebaseInitialized || !database) return;
+        showLoading();
+        try {
+            const snapshot = await database.ref(`users/${userId}`).once('value');
+            const userData = snapshot.val();
 
-            try {
-                const [answersSnapshot, questionsSnapshot] = await Promise.all([
-                    database.ref('answers').once('value'),
-                    database.ref('questions').once('value')
-                ]);
+            if (!userData) {
+                showNotification('მომხმარებელი არ მოიძებნა', true);
+                return;
+            }
 
-                const answers = answersSnapshot.val() || {};
-                const questions = questionsSnapshot.val() || {};
+            if (newUsername) {
+                const newUserId = newUsername.replace(/[.#$[\]]/g, '_');
+                await database.ref(`users/${newUserId}`).set({
+                    ...userData,
+                    username: newUsername,
+                    lastUpdated: Date.now()
+                });
+                
+                await database.ref(`users/${userId}`).remove();
+                
+                if (newPassword) {
+                    await database.ref(`users/${newUserId}/password`).set(newPassword);
+                }
+            } else if (newPassword) {
+                await database.ref(`users/${userId}/password`).set(newPassword);
+                await database.ref(`users/${userId}/lastUpdated`).set(Date.now());
+            }
+            
+            closeModal('editUserModal');
+            showNotification('მომხმარებელი წარმატებით განახლდა', false);
+            await loadUsers();
 
-                console.log("📊 სტატისტიკის ჩატვირთვა...");
-                console.log("Questions modules:", Object.keys(questions));
+        } catch (error) {
+            console.error("Error editing user:", error);
+            showNotification('შეცდომა მომხმარებლის რედაქტირებისას', true);
+        } finally {
+            hideLoading();
+        }
+    };
 
-                const moduleStats = {};
+    // Switch activity tab
+    window.switchActivityTab = function(tab, event) {
+        currentActivityTab = tab;
+        document.querySelectorAll('.activity-tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        if (document.querySelector('.date-range')) {
+            if (tab === 'custom') {
+                document.querySelector('.date-range').style.display = 'flex';
+            } else {
+                document.querySelector('.date-range').style.display = 'none';
+            }
+        }
+        
+        loadActivityData();
+    };
 
-                // Create stats for all modules from questions
-                Object.keys(questions).forEach(moduleId => {
-                    moduleStats[moduleId] = {
+    // Load activity data with date range
+    async function loadActivityData() {
+        if (!firebaseInitialized || !database) return;
+
+        try {
+            const [usersSnapshot, answersSnapshot] = await Promise.all([
+                database.ref('users').once('value'),
+                database.ref('answers').once('value')
+            ]);
+
+            const users = usersSnapshot.val() || {};
+            const answers = answersSnapshot.val() || {};
+
+            // Get date range
+            let startTime, endTime;
+            
+            if (currentActivityTab === 'custom') {
+                const startDate = document.getElementById('activityStartDate').value;
+                const endDate = document.getElementById('activityEndDate').value;
+                
+                if (startDate && endDate) {
+                    startTime = new Date(startDate).setHours(0, 0, 0, 0);
+                    endTime = new Date(endDate).setHours(23, 59, 59, 999);
+                } else {
+                    const now = Date.now();
+                    endTime = now;
+                    startTime = now - 30 * 24 * 60 * 60 * 1000;
+                }
+            } else {
+                const now = Date.now();
+                const timeRanges = {
+                    day: 24 * 60 * 60 * 1000,
+                    week: 7 * 24 * 60 * 60 * 1000,
+                    month: 30 * 24 * 60 * 60 * 1000,
+                    year: 365 * 24 * 60 * 60 * 1000
+                };
+                endTime = now;
+                startTime = now - timeRanges[currentActivityTab];
+            }
+
+            let activeUsers = 0;
+            Object.values(users).forEach(user => {
+                if (user.lastUpdated && user.lastUpdated >= startTime && user.lastUpdated <= endTime) {
+                    activeUsers++;
+                }
+            });
+
+            let newRegistrations = 0;
+            Object.values(users).forEach(user => {
+                if (user.registeredAt && user.registeredAt >= startTime && user.registeredAt <= endTime) {
+                    newRegistrations++;
+                }
+            });
+
+            let totalTests = 0;
+            let correctTests = 0;
+            const moduleStats = {};
+            const userTestCounts = {};
+
+            Object.values(answers).forEach(answer => {
+                if (answer.timestamp && answer.timestamp >= startTime && answer.timestamp <= endTime) {
+                    totalTests++;
+                    if (answer.isCorrect) correctTests++;
+                    
+                    const module = answer.module || 'unknown';
+                    if (!moduleStats[module]) {
+                        moduleStats[module] = { users: new Set(), tests: 0, correct: 0 };
+                    }
+                    moduleStats[module].tests++;
+                    moduleStats[module].correct += answer.isCorrect ? 1 : 0;
+                    if (answer.userId) {
+                        moduleStats[module].users.add(answer.userId);
+                        userTestCounts[answer.userId] = (userTestCounts[answer.userId] || 0) + 1;
+                    }
+                }
+            });
+
+            const avgTestsPerUser = totalTests / (Object.keys(userTestCounts).length || 1);
+
+            document.getElementById('activityStats').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-title">აქტიური მომხმარებელი</div>
+                    <div class="stat-value">${activeUsers}</div>
+                    <div class="stat-change">${((activeUsers / Object.keys(users).length) * 100 || 0).toFixed(1)}%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">ახალი რეგისტრაცია</div>
+                    <div class="stat-value">${newRegistrations}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">შესრულებული ტესტი</div>
+                    <div class="stat-value">${totalTests}</div>
+                    <div class="stat-change">საშ. ${avgTestsPerUser.toFixed(1)}/მომხ</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">სწორი პასუხი</div>
+                    <div class="stat-value">${((correctTests / totalTests) * 100 || 0).toFixed(1)}%</div>
+                    <div class="stat-change">${correctTests}/${totalTests}</div>
+                </div>
+            `;
+
+            const tableBody = document.getElementById('activityTableBody');
+            tableBody.innerHTML = Object.entries(moduleStats)
+                .sort((a, b) => b[1].tests - a[1].tests)
+                .map(([module, stats]) => `
+                <tr>
+                    <td><strong>${getModuleName(module)}</strong></td>
+                    <td>${stats.users.size}</td>
+                    <td>${stats.tests}</td>
+                    <td>${stats.correct}</td>
+                    <td>${((stats.correct / stats.tests) * 100 || 0).toFixed(1)}%</td>
+                    <td>${(stats.tests / stats.users.size || 0).toFixed(1)}</td>
+                </tr>
+            `).join('');
+
+        } catch (error) {
+            console.error("Error loading activity:", error);
+        }
+    }
+
+    // Load statistics
+    async function loadStatistics() {
+        if (!firebaseInitialized || !database) return;
+
+        try {
+            const [answersSnapshot, questionsSnapshot] = await Promise.all([
+                database.ref('answers').once('value'),
+                database.ref('questions').once('value')
+            ]);
+
+            const answers = answersSnapshot.val() || {};
+            const questions = questionsSnapshot.val() || {};
+
+            console.log("📊 სტატისტიკის ჩატვირთვა...");
+            console.log("Questions modules:", Object.keys(questions));
+
+            const moduleStats = {};
+
+            // Create stats for all modules from questions
+            Object.keys(questions).forEach(moduleId => {
+                moduleStats[moduleId] = {
+                    totalTests: 0,
+                    questions: {}
+                };
+            });
+
+            // Group answers by module and question
+            Object.values(answers).forEach(answer => {
+                const module = answer.module;
+                if (!module || !questions[module]) return;
+
+                if (!moduleStats[module]) {
+                    moduleStats[module] = {
                         totalTests: 0,
                         questions: {}
                     };
-                });
+                }
 
-                // Group answers by module and question
-                Object.values(answers).forEach(answer => {
-                    const module = answer.module;
-                    if (!module || !questions[module]) return;
-
-                    if (!moduleStats[module]) {
-                        moduleStats[module] = {
-                            totalTests: 0,
-                            questions: {}
+                moduleStats[module].totalTests++;
+                
+                if (answer.questionId) {
+                    if (!moduleStats[module].questions[answer.questionId]) {
+                        moduleStats[module].questions[answer.questionId] = {
+                            total: 0,
+                            correct: 0
                         };
                     }
-
-                    moduleStats[module].totalTests++;
-                    
-                    if (answer.questionId) {
-                        if (!moduleStats[module].questions[answer.questionId]) {
-                            moduleStats[module].questions[answer.questionId] = {
-                                total: 0,
-                                correct: 0
-                            };
-                        }
-                        moduleStats[module].questions[answer.questionId].total++;
-                        if (answer.isCorrect) {
-                            moduleStats[module].questions[answer.questionId].correct++;
-                        }
+                    moduleStats[module].questions[answer.questionId].total++;
+                    if (answer.isCorrect) {
+                        moduleStats[module].questions[answer.questionId].correct++;
                     }
-                });
+                }
+            });
 
-                const modulesList = document.getElementById('moduleStatisticsList');
-                modulesList.innerHTML = '';
+            const modulesList = document.getElementById('moduleStatisticsList');
+            modulesList.innerHTML = '';
 
-                // Display all modules sorted alphabetically
-                const sortedModuleIds = Object.keys(questions).sort();
+            // Display all modules sorted alphabetically
+            const sortedModuleIds = Object.keys(questions).sort();
+            
+            sortedModuleIds.forEach(moduleId => {
+                const stats = moduleStats[moduleId] || { totalTests: 0, questions: {} };
+                const moduleQuestions = questions[moduleId] || {};
+                const totalQuestions = Object.keys(moduleQuestions).length;
                 
-                sortedModuleIds.forEach(moduleId => {
-                    const stats = moduleStats[moduleId] || { totalTests: 0, questions: {} };
-                    const moduleQuestions = questions[moduleId] || {};
-                    const totalQuestions = Object.keys(moduleQuestions).length;
+                const moduleDiv = document.createElement('div');
+                moduleDiv.className = 'table-container';
+                moduleDiv.style.marginBottom = '20px';
+                
+                let questionsHtml = '';
+                
+                if (Object.keys(stats.questions).length > 0) {
+                    // Show statistics for questions with answers
+                    const sortedQuestions = Object.entries(stats.questions)
+                        .sort((a, b) => b[1].total - a[1].total)
+                        .slice(0, 10);
                     
-                    const moduleDiv = document.createElement('div');
-                    moduleDiv.className = 'table-container';
-                    moduleDiv.style.marginBottom = '20px';
-                    
-                    let questionsHtml = '';
-                    
-                    if (Object.keys(stats.questions).length > 0) {
-                        // Show statistics for questions with answers
-                        const sortedQuestions = Object.entries(stats.questions)
-                            .sort((a, b) => b[1].total - a[1].total)
-                            .slice(0, 10);
-                        
-                        questionsHtml = sortedQuestions.map(([qId, qStats]) => {
-                            const questionText = moduleQuestions[qId]?.text || moduleQuestions[qId]?.question || qId;
-                            const accuracy = qStats.total > 0 ? (qStats.correct / qStats.total) * 100 : 0;
-                            return `
-                                <div class="test-stat-item">
-                                    <div class="test-name">${escapeHtml(questionText.substring(0, 60))}${questionText.length > 60 ? '...' : ''}</div>
-                                    <div class="test-progress">
-                                        <div class="difficulty-bar">
-                                            <div class="difficulty-fill ${accuracy > 70 ? 'green' : accuracy < 30 ? 'red' : 'gradient'}" style="width: ${accuracy}%;"></div>
-                                        </div>
+                    questionsHtml = sortedQuestions.map(([qId, qStats]) => {
+                        const questionText = moduleQuestions[qId]?.text || moduleQuestions[qId]?.question || qId;
+                        const accuracy = qStats.total > 0 ? (qStats.correct / qStats.total) * 100 : 0;
+                        return `
+                            <div class="test-stat-item">
+                                <div class="test-name">${escapeHtml(questionText.substring(0, 60))}${questionText.length > 60 ? '...' : ''}</div>
+                                <div class="test-progress">
+                                    <div class="difficulty-bar">
+                                        <div class="difficulty-fill ${accuracy > 70 ? 'green' : accuracy < 30 ? 'red' : 'gradient'}" style="width: ${accuracy}%;"></div>
                                     </div>
-                                    <div class="test-percent">${accuracy.toFixed(1)}%</div>
-                                    <div style="color: var(--text-muted); font-size: 11px; min-width: 40px;">(${qStats.total})</div>
                                 </div>
-                            `;
-                        }).join('');
-                        
-                        if (sortedQuestions.length < Object.keys(stats.questions).length) {
-                            questionsHtml += `<div style="padding: 8px; text-align: center; color: var(--text-muted); font-size: 12px;">... და კიდევ ${Object.keys(stats.questions).length - 10} კითხვა</div>`;
-                        }
-                    } else {
-                        // No answers yet
-                        questionsHtml = `
-                            <div style="padding: 20px; text-align: center; color: var(--text-muted);">
-                                ${totalQuestions > 0 ? `${totalQuestions} კითხვა (ჯერ არ არის პასუხები)` : 'კითხვები არ არის'}
+                                <div class="test-percent">${accuracy.toFixed(1)}%</div>
+                                <div style="color: var(--text-muted); font-size: 11px; min-width: 40px;">(${qStats.total})</div>
                             </div>
                         `;
-                    }
+                    }).join('');
                     
-                    moduleDiv.innerHTML = `
-                        <div class="table-header">
-                            <h3 style="color: var(--accent);">${getModuleName(moduleId)}</h3>
-                            <div>
-                                <span style="margin-right: 15px;">📝 ${totalQuestions} კითხვა</span>
-                                <span>📊 ${stats.totalTests} ტესტი</span>
-                            </div>
-                        </div>
-                        <div style="padding: 20px;">
-                            ${questionsHtml}
+                    if (sortedQuestions.length < Object.keys(stats.questions).length) {
+                        questionsHtml += `<div style="padding: 8px; text-align: center; color: var(--text-muted); font-size: 12px;">... და კიდევ ${Object.keys(stats.questions).length - 10} კითხვა</div>`;
+                    }
+                } else {
+                    // No answers yet
+                    questionsHtml = `
+                        <div style="padding: 20px; text-align: center; color: var(--text-muted);">
+                            ${totalQuestions > 0 ? `${totalQuestions} კითხვა (ჯერ არ არის პასუხები)` : 'კითხვები არ არის'}
                         </div>
                     `;
-                    
-                    modulesList.appendChild(moduleDiv);
-                });
-
-                if (sortedModuleIds.length === 0) {
-                    modulesList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">მოდულები არ არის</div>';
                 }
+                
+                moduleDiv.innerHTML = `
+                    <div class="table-header">
+                        <h3 style="color: var(--accent);">${getModuleName(moduleId)}</h3>
+                        <div>
+                            <span style="margin-right: 15px;">📝 ${totalQuestions} კითხვა</span>
+                            <span>📊 ${stats.totalTests} ტესტი</span>
+                        </div>
+                    </div>
+                    <div style="padding: 20px;">
+                        ${questionsHtml}
+                    </div>
+                `;
+                
+                modulesList.appendChild(moduleDiv);
+            });
 
-            } catch (error) {
-                console.error("Error loading statistics:", error);
+            if (sortedModuleIds.length === 0) {
+                modulesList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">მოდულები არ არის</div>';
             }
+
+        } catch (error) {
+            console.error("Error loading statistics:", error);
         }
+    }
 
-        // Load online users
-        async function loadOnlineUsers() {
-            if (!firebaseInitialized || !database) return;
+    // Load online users
+    async function loadOnlineUsers() {
+        if (!firebaseInitialized || !database) return;
 
-            try {
-                const snapshot = await database.ref('chat/onlineUsers').once('value');
-                const onlineUsersData = snapshot.val() || {};
+        try {
+            const snapshot = await database.ref('chat/onlineUsers').once('value');
+            const onlineUsersData = snapshot.val() || {};
 
-                const now = Date.now();
-                const activeUsers = Object.values(onlineUsersData).filter(u => 
-                    u?.lastSeen && (now - u.lastSeen) < 30000
-                );
+            const now = Date.now();
+            const activeUsers = Object.values(onlineUsersData).filter(u => 
+                u?.lastSeen && (now - u.lastSeen) < 30000
+            );
 
-                const onlineList = document.getElementById('onlineUsersList');
-                onlineList.innerHTML = activeUsers.length > 0 ?
-                    activeUsers.map(user => `
-                        <div class="online-item">
-                            <div class="online-user-info">
-                                <span class="online-dot"></span>
-                                <div>
-                                    <div style="font-weight: 500;">${escapeHtml(user.name || 'უცნობი')}</div>
-                                    <div style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
-                                        <svg class="icon" style="width: 12px; height: 12px;" viewBox="0 0 24 24">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <polyline points="12 6 12 12 16 14"/>
-                                        </svg>
-                                        ${new Date(user.lastSeen).toLocaleTimeString('ka-GE')}
-                                    </div>
+            const onlineList = document.getElementById('onlineUsersList');
+            onlineList.innerHTML = activeUsers.length > 0 ?
+                activeUsers.map(user => `
+                    <div class="online-item">
+                        <div class="online-user-info">
+                            <span class="online-dot"></span>
+                            <div>
+                                <div style="font-weight: 500;">${escapeHtml(user.name || 'უცნობი')}</div>
+                                <div style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
+                                    <svg class="icon" style="width: 12px; height: 12px;" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                    ${new Date(user.lastSeen).toLocaleTimeString('ka-GE')}
                                 </div>
                             </div>
                         </div>
-                    `).join('') : 
-                    '<div style="text-align: center; padding: 40px; color: var(--text-muted);">ონლაინ მომხმარებლები არ არიან</div>';
-
-            } catch (error) {
-                console.error("Error loading online users:", error);
-            }
-        }
-
-        // Load chat
-        function loadChat() {
-            if (!firebaseInitialized || !database) return;
-
-            database.ref('chat/messages').limitToLast(50).on('value', (snapshot) => {
-                const messages = snapshot.val() || {};
-                const messagesList = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
-                renderAdminChatMessages(messagesList);
-            });
-        }
-
-        function renderAdminChatMessages(messages) {
-            const chatMessages = document.getElementById('adminChatMessages');
-            if (!chatMessages) return;
-            
-            chatMessages.innerHTML = messages.map(msg => `
-                <div class="chat-message ${msg.sender === 'admin' ? 'admin' : ''}">
-                    <div class="chat-avatar">${msg.sender === 'admin' ? 'A' : (msg.senderName ? msg.senderName[0].toUpperCase() : 'U')}</div>
-                    <div class="chat-bubble">
-                        <div class="chat-sender">${escapeHtml(msg.senderName || msg.sender)}</div>
-                        <div>${escapeHtml(msg.text)}</div>
-                        <div class="chat-time">${new Date(msg.timestamp).toLocaleString('ka-GE')}</div>
                     </div>
+                `).join('') : 
+                '<div style="text-align: center; padding: 40px; color: var(--text-muted);">ონლაინ მომხმარებლები არ არიან</div>';
+
+        } catch (error) {
+            console.error("Error loading online users:", error);
+        }
+    }
+
+    // Load chat
+    function loadChat() {
+        if (!firebaseInitialized || !database) return;
+
+        database.ref('chat/messages').limitToLast(50).on('value', (snapshot) => {
+            const messages = snapshot.val() || {};
+            const messagesList = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
+            renderAdminChatMessages(messagesList);
+        });
+    }
+
+    function renderAdminChatMessages(messages) {
+        const chatMessages = document.getElementById('adminChatMessages');
+        if (!chatMessages) return;
+        
+        chatMessages.innerHTML = messages.map(msg => `
+            <div class="chat-message ${msg.sender === 'admin' ? 'admin' : ''}">
+                <div class="chat-avatar">${msg.sender === 'admin' ? 'A' : (msg.senderName ? msg.senderName[0].toUpperCase() : 'U')}</div>
+                <div class="chat-bubble">
+                    <div class="chat-sender">${escapeHtml(msg.senderName || msg.sender)}</div>
+                    <div>${escapeHtml(msg.text)}</div>
+                    <div class="chat-time">${new Date(msg.timestamp).toLocaleString('ka-GE')}</div>
                 </div>
-            `).join('');
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
+            </div>
+        `).join('');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
 
-        function sendAdminMessage() {
-            const input = document.getElementById('adminChatInput');
-            if (!input) return;
-            
-            const text = input.value.trim();
-            if (!text) return;
+    function sendAdminMessage() {
+        const input = document.getElementById('adminChatInput');
+        if (!input) return;
+        
+        const text = input.value.trim();
+        if (!text) return;
 
-            const message = {
-                sender: 'admin',
-                senderName: 'ადმინისტრატორი',
-                text: text,
-                timestamp: Date.now()
-            };
-
-            database.ref('chat/messages').push(message);
-            input.value = '';
-        }
-
-        window.handleAdminChatKeyPress = function(event) {
-            if (event.key === 'Enter') {
-                sendAdminMessage();
-            }
+        const message = {
+            sender: 'admin',
+            senderName: 'ადმინისტრატორი',
+            text: text,
+            timestamp: Date.now()
         };
 
-        // Init chat
-        function initChat() {
-            if (!firebaseInitialized || !database) return;
-            loadChat();
+        database.ref('chat/messages').push(message);
+        input.value = '';
+    }
+
+    window.handleAdminChatKeyPress = function(event) {
+        if (event.key === 'Enter') {
+            sendAdminMessage();
         }
+    };
 
-        // Helper functions
-        function escapeHtml(text) {
-            if (!text) return '';
-            return String(text)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
+    // Init chat
+    function initChat() {
+        if (!firebaseInitialized || !database) return;
+        loadChat();
+    }
 
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-        }
+    // Helper functions
+    function escapeHtml(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
 
-        window.closeModal = function(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        };
+    function openModal(modalId) {
+        document.getElementById(modalId).classList.add('active');
+    }
 
-        // Date range change
-        if (document.getElementById('activityStartDate')) {
-            document.getElementById('activityStartDate').addEventListener('change', () => {
-                if (currentActivityTab === 'custom') {
-                    loadActivityData();
-                }
-            });
-        }
+    window.closeModal = function(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    };
 
-        if (document.getElementById('activityEndDate')) {
-            document.getElementById('activityEndDate').addEventListener('change', () => {
-                if (currentActivityTab === 'custom') {
-                    loadActivityData();
-                }
-            });
-        }
-
-        // Auto-refresh online users every 10 seconds
-        setInterval(() => {
-            if (document.getElementById('onlineSection')?.classList.contains('active')) {
-                loadOnlineUsers();
+    // Date range change
+    if (document.getElementById('activityStartDate')) {
+        document.getElementById('activityStartDate').addEventListener('change', () => {
+            if (currentActivityTab === 'custom') {
+                loadActivityData();
             }
-            if (document.getElementById('dashboardSection')?.classList.contains('active')) {
-                loadDashboard();
-            }
-        }, 10000);
+        });
+    }
 
-        // Initial load
-        if (firebaseInitialized) {
-            console.log("Admin panel ready");
+    if (document.getElementById('activityEndDate')) {
+        document.getElementById('activityEndDate').addEventListener('change', () => {
+            if (currentActivityTab === 'custom') {
+                loadActivityData();
+            }
+        });
+    }
+
+    // Auto-refresh online users every 10 seconds
+    setInterval(() => {
+        if (document.getElementById('onlineSection')?.classList.contains('active')) {
+            loadOnlineUsers();
         }
-    </script>
+        if (document.getElementById('dashboardSection')?.classList.contains('active')) {
+            loadDashboard();
+        }
+    }, 10000);
+
+    // Initial load
+    if (firebaseInitialized) {
+        console.log("Admin panel ready");
+    }
+</script>
 </body>
 </html>
