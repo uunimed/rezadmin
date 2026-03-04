@@ -5476,7 +5476,10 @@ async function showModuleQuestions(moduleId, moduleName) {
 }
 // დაამატეთ ეს ფუნქცია კოდის ბოლოს
 async function debugModuleAnswers(moduleId) {
-    if (!firebaseInitialized || !database) return;
+    if (!firebaseInitialized || !database) {
+        console.error("Firebase not initialized");
+        return;
+    }
     
     console.log(`=== DEBUGGING MODULE: ${moduleId} ===`);
     
@@ -5484,7 +5487,7 @@ async function debugModuleAnswers(moduleId) {
     const answersSnapshot = await database.ref('answers').once('value');
     const answers = answersSnapshot.val() || {};
     
-    console.log(`Total answers in DB: ${Object.keys(answers).length}`);
+    console.log(`📊 Total answers in DB: ${Object.keys(answers).length}`);
     
     // გავფილტროთ ამ მოდულის პასუხები
     const moduleAnswers = [];
@@ -5494,23 +5497,53 @@ async function debugModuleAnswers(moduleId) {
         }
     });
     
-    console.log(`Answers for module ${moduleId}: ${moduleAnswers.length}`);
+    console.log(`📦 Answers for module "${moduleId}": ${moduleAnswers.length}`);
+    
+    if (moduleAnswers.length === 0) {
+        console.log("❌ No answers found for this module");
+        return;
+    }
     
     // დავბეჭდოთ პირველი 3 პასუხის სრული სტრუქტურა
-    console.log("Sample answers structure:");
+    console.log("📝 Sample answers structure (first 3):");
     moduleAnswers.slice(0, 3).forEach((ans, idx) => {
-        console.log(`Answer ${idx + 1}:`, JSON.stringify(ans, null, 2));
+        console.log(`\n--- Answer ${idx + 1} ---`);
+        console.log("Full object:", ans);
+        console.log("Keys:", Object.keys(ans));
+        console.log("questionId value:", ans.questionId);
+        console.log("questionIndex value:", ans.questionIndex);
+        console.log("questionNumber value:", ans.questionNumber);
+        console.log("id value:", ans.id);
+        console.log("isCorrect value:", ans.isCorrect);
     });
     
     // დავითვალოთ პასუხები questionId-ების მიხედვით
     const questionCounts = {};
     moduleAnswers.forEach(ans => {
-        // ვნახოთ რა ფორმატით ინახება questionId
-        const qId = ans.questionId || ans.questionIndex || ans.questionNumber || ans.id || 'unknown';
+        // ვცადოთ ყველა შესაძლო ვარიანტი
+        const possibleIds = [
+            ans.questionId,
+            ans.questionIndex,
+            ans.questionNumber,
+            ans.id,
+            ans.qid,
+            ans.question_id
+        ].filter(id => id !== undefined && id !== null);
+        
+        const qId = possibleIds[0] || 'unknown';
         questionCounts[qId] = (questionCounts[qId] || 0) + 1;
     });
     
-    console.log("Answers per question:", questionCounts);
+    console.log("\n📊 Answers per question:", questionCounts);
+    
+    // დავითვალოთ სწორი პასუხები
+    let correctCount = 0;
+    moduleAnswers.forEach(ans => {
+        if (ans.isCorrect === true || ans.isCorrect === "true" || ans.isCorrect === 1) {
+            correctCount++;
+        }
+    });
+    console.log(`✅ Correct answers: ${correctCount}/${moduleAnswers.length} (${Math.round(correctCount/moduleAnswers.length*100)}%)`);
     
     return { moduleAnswers, questionCounts };
 }
