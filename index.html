@@ -4670,34 +4670,34 @@ async function loadOnlineUsers() {
         // შევაგროვოთ ყველა ონლაინ მომხმარებელი
         if (onlineUsers && typeof onlineUsers === 'object') {
             Object.entries(onlineUsers).forEach(([key, user]) => {
+                // შევამოწმოთ არის თუ არა მომხმარებელი აქტიური (ბოლო 30 წამი)
                 if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
                     // განვსაზღვროთ ტიპი
                     const isGuest = (user.userId && user.userId.startsWith('guest_')) || 
                                    (user.name && user.name.includes('სტუმარი'));
                     
-                    // მხოლოდ სტუმარი ან რეგისტრირებული
-                    if (isGuest || (user.userId && !user.userId.startsWith('guest_'))) {
-                        // შევინახოთ საწყისი დრო წამზომისთვის
-                        if (!sessionTimers[key]) {
-                            sessionTimers[key] = {
-                                startTime: user.lastSeen,
-                                lastUpdate: now
-                            };
-                        }
-                        
-                        onlineListArray.push({
-                            key: key,
-                            ...user,
-                            type: isGuest ? 'guest' : 'registered',
-                            sessionStart: sessionTimers[key].startTime
-                        });
+                    // შევინახოთ საწყისი დრო წამზომისთვის
+                    if (!sessionTimers[key]) {
+                        sessionTimers[key] = {
+                            startTime: user.lastSeen,
+                            lastUpdate: now
+                        };
                     }
+                    
+                    onlineListArray.push({
+                        key: key,
+                        ...user,
+                        type: isGuest ? 'guest' : 'registered',
+                        sessionStart: sessionTimers[key].startTime
+                    });
                 } else {
                     // წავშალოთ ძველი ტაიმერები
                     delete sessionTimers[key];
                 }
             });
         }
+        
+        console.log(`🟢 ონლაინ მომხმარებლები: ${onlineListArray.length}`, onlineListArray);
         
         // განვაახლოთ სათაურში რაოდენობა
         const onlineUsersCountHeader = document.getElementById('onlineUsersCountHeader');
@@ -4714,7 +4714,7 @@ async function loadOnlineUsers() {
         // დავალაგოთ შესვლის დროის მიხედვით (უახლესი პირველ რიგში)
         onlineListArray.sort((a, b) => b.lastSeen - a.lastSeen);
         
-        // შევქმნათ HTML
+        // გამოვიტანოთ ყველა მომხმარებელი
         renderOnlineUsers(onlineListArray);
         
         // დავიწყოთ წამზომი თუ ჯერ არ მუშაობს
@@ -4885,6 +4885,22 @@ function startOnlineTracking() {
         onlineUsers = snapshot.val() || {};
         const now = Date.now();
         
+        console.log(`🟢 ონლაინ სესიები განახლდა: ${Object.keys(onlineUsers).length} სესია`);
+        
+        // დავითვალოთ უნიკალური მომხმარებლები
+        const uniqueUsers = new Set();
+        Object.values(onlineUsers).forEach(user => {
+            if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
+                if (user.userId && !user.userId.startsWith('guest_')) {
+                    uniqueUsers.add(user.userId);
+                } else if (user.name && !user.name.includes('სტუმარი')) {
+                    uniqueUsers.add(user.name);
+                }
+            }
+        });
+        
+        console.log(`👥 უნიკალური ონლაინ მომხმარებლები: ${uniqueUsers.size}`);
+        
         // გავასუფთაოთ ძველი ტაიმერები
         Object.keys(sessionTimers).forEach(key => {
             if (!onlineUsers[key] || (now - onlineUsers[key].lastSeen) >= 30000) {
@@ -4912,146 +4928,187 @@ function startOnlineTracking() {
             loadDashboard();
         }
         if (document.getElementById('usersSection')?.classList.contains('active')) {
-            loadUsers();
+            loadUsers(); // ეს განაახლებს მომხმარებლების გვერდს
         }
     });
 }
-// ==================== FIX FOR AUTO-REFRESH ====================
 
-// Auto-refresh
-setInterval(() => {
-    if (document.getElementById('onlineSection')?.classList.contains('active')) {
-        loadOnlineUsers();
-    }
-    if (document.getElementById('dashboardSection')?.classList.contains('active')) {
-        loadDashboard();
-    }
-}, 10000);
-
-// ==================== ADD THIS AT THE BOTTOM OF YOUR SCRIPT ====================
-
-// Ensure all functions are defined before initialization
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM loaded, initializing...");
-    
-    const savedTimeout = localStorage.getItem('adminSessionTimeout');
-    if (savedTimeout && document.getElementById('sessionTimeout')) {
-        document.getElementById('sessionTimeout').value = savedTimeout;
+// დებაგის ფუნქცია - აჩვენებს ონლაინ მომხმარებლების დეტალებს
+function debugOnlineUsers() {
+    if (!onlineUsers) {
+        console.log("❌ onlineUsers არ არის განსაზღვრული");
+        return;
     }
     
-    const savedLang = localStorage.getItem('adminLanguage');
-    if (savedLang && document.getElementById('language')) {
-        document.getElementById('language').value = savedLang;
-    }
+    const now = Date.now();
+    console.log("=== ონლაინ მომხმარებლების დეტალები ===");
+    console.log(`სულ სესიები: ${Object.keys(onlineUsers).length}`);
     
-    const savedTheme = localStorage.getItem('adminTheme');
-    if (savedTheme && document.getElementById('theme')) {
-        document.getElementById('theme').value = savedTheme;
-    }
-    
-    const sidebar = document.getElementById('adminSidebar');
-    const savedState = localStorage.getItem('adminSidebarCollapsed');
-    
-    if (savedState === 'true') {
-        sidebar.classList.add('collapsed');
-    }
-});
-
-// Set activity date inputs to default values
-window.addEventListener('load', () => {
-    const startDate = document.getElementById('activityStartDate');
-    const endDate = document.getElementById('activityEndDate');
-    
-    if (startDate && endDate) {
-        const today = new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(today.getDate() - 30);
-        
-        startDate.value = thirtyDaysAgo.toISOString().split('T')[0];
-        endDate.value = today.toISOString().split('T')[0];
-    }
-});
-
-        // Load users
-        async function loadUsers() {
-            if (!firebaseInitialized || !database) return;
-
-            try {
-                const snapshot = await database.ref('users').once('value');
-                const users = snapshot.val() || {};
-                
-                const now = Date.now();
-                const usersList = Object.entries(users).map(([key, data]) => ({
-                    id: key,
-                    username: data.username || key,
-                    password: data.password || '',
-                    registeredAt: data.registeredAt || data.lastUpdated || 0,
-                    lastUpdated: data.lastUpdated || 0,
-                    progress: data.progress || {},
-                    isOnline: Object.values(onlineUsers).some(u => 
-                        (u.userId === key || u.name === key) && 
-                        (now - (u.lastSeen || 0)) < 30000
-                    )
-                }));
-
-                document.getElementById('totalUsers').textContent = usersList.length;
-                renderUsersTable(usersList);
-                setupUserSearch(usersList);
-
-            } catch (error) {
-                console.error("Error loading users:", error);
-            }
-        }
-
-        function renderUsersTable(users) {
-            const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = '';
-
-            users.sort((a, b) => b.isOnline - a.isOnline).forEach(user => {
-                const registrationDate = user.registeredAt ? new Date(user.registeredAt).toLocaleString('ka-GE') : 'უცნობია';
-                const lastLogin = user.lastUpdated ? new Date(user.lastUpdated).toLocaleString('ka-GE') : 'უცნობია';
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>
-                        <strong>${escapeHtml(user.username)}</strong>
-                    </td>
-                    <td>
-                        <div class="user-status">
-                            <span class="status-dot ${user.isOnline ? 'online' : 'offline'}"></span>
-                            ${user.isOnline ? 'ონლაინ' : 'ოფლაინ'}
-                        </div>
-                    </td>
-                    <td>${registrationDate}</td>
-                    <td>${lastLogin}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn view" onclick="viewUserDetails('${user.id}')">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="3"/>
-                                    <path d="M22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10z"/>
-                                </svg>
-                                ნახვა
-                            </button>
-                            <button class="action-btn edit" onclick="editUser('${user.id}')">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                                </svg>
-                                რედ
-                            </button>
-                            <button class="action-btn delete" onclick="confirmDeleteUser('${user.id}')">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <polyline points="3 6 5 6 21 6"/>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                </svg>
-                                წაშლა
-                            </button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
+    const activeSessions = [];
+    Object.entries(onlineUsers).forEach(([key, user]) => {
+        if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
+            activeSessions.push({
+                key: key,
+                userId: user.userId,
+                name: user.name,
+                lastSeen: new Date(user.lastSeen).toLocaleTimeString(),
+                module: user.module || 'მთავარი'
             });
         }
+    });
+    
+    console.log("აქტიური სესიები:", activeSessions);
+    
+    // დავითვალოთ უნიკალური მომხმარებლები
+    const uniqueUsers = new Set();
+    activeSessions.forEach(s => {
+        if (s.userId && !s.userId.startsWith('guest_')) {
+            uniqueUsers.add(s.userId);
+        } else if (s.name && !s.name.includes('სტუმარი')) {
+            uniqueUsers.add(s.name);
+        }
+    });
+    
+    console.log(`უნიკალური ონლაინ მომხმარებლები: ${uniqueUsers.size}`);
+    console.log("უნიკალური მომხმარებლების სია:", Array.from(uniqueUsers));
+    
+    return { activeSessions, uniqueUsers: Array.from(uniqueUsers) };
+}
+
+// გამოიძახეთ კონსოლიდან:
+// debugOnlineUsers()
+
+// Load users
+async function loadUsers() {
+    if (!firebaseInitialized || !database) return;
+
+    try {
+        const snapshot = await database.ref('users').once('value');
+        const users = snapshot.val() || {};
+        
+        const now = Date.now();
+        const usersList = Object.entries(users).map(([key, data]) => {
+            // შევამოწმოთ არის თუ არა ეს მომხმარებელი ონლაინ (ნებისმიერ მოწყობილობაზე)
+            let isOnline = false;
+            
+            // გადავუაროთ ყველა ონლაინ სესიას
+            Object.values(onlineUsers).forEach(u => {
+                // თუ userId ემთხვევა - ეს რეგისტრირებული მომხმარებელია
+                if (u.userId === key) {
+                    if (u.lastSeen && (now - u.lastSeen) < 30000) {
+                        isOnline = true;
+                    }
+                }
+                // თუ name ემთხვევა username-ს - ესეც რეგისტრირებული მომხმარებელია (ძველი ფორმატი)
+                else if (u.name === data.username) {
+                    if (u.lastSeen && (now - u.lastSeen) < 30000) {
+                        isOnline = true;
+                    }
+                }
+            });
+
+            return {
+                id: key,
+                username: data.username || key,
+                password: data.password || '',
+                registeredAt: data.registeredAt || 0,
+                lastUpdated: data.lastUpdated || 0,
+                progress: data.progress || {},
+                isOnline: isOnline
+            };
+        });
+
+        // განვაახლოთ ონლაინ მომხმარებლების რაოდენობა
+        const onlineCount = usersList.filter(u => u.isOnline).length;
+        document.getElementById('onlineUsersCount').textContent = onlineCount;
+        document.getElementById('totalUsers').textContent = usersList.length;
+        
+        renderUsersTable(usersList);
+        setupUserSearch(usersList);
+
+    } catch (error) {
+        console.error("Error loading users:", error);
+    }
+}
+
+function renderUsersTable(users) {
+    const tbody = document.getElementById('usersTableBody');
+    tbody.innerHTML = '';
+
+    users.sort((a, b) => b.isOnline - a.isOnline).forEach(user => {
+        // რეგისტრაციის თარიღი
+        let registrationDate = 'უცნობია';
+        if (user.registeredAt && user.registeredAt > 0) {
+            try {
+                registrationDate = new Date(user.registeredAt).toLocaleString('ka-GE', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                console.error('რეგისტრაციის თარიღის ფორმატირების შეცდომა:', e);
+            }
+        }
+        
+        // ბოლო შესვლის თარიღი
+        let lastLogin = 'უცნობია';
+        if (user.lastUpdated && user.lastUpdated > 0) {
+            try {
+                lastLogin = new Date(user.lastUpdated).toLocaleString('ka-GE', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                console.error('ბოლო შესვლის თარიღის ფორმატირების შეცდომა:', e);
+            }
+        }
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <strong>${escapeHtml(user.username)}</strong>
+            </td>
+            <td>
+                <div class="user-status">
+                    <span class="status-dot ${user.isOnline ? 'online' : 'offline'}"></span>
+                    ${user.isOnline ? 'ონლაინ' : 'ოფლაინ'}
+                </div>
+            </td>
+            <td>${registrationDate}</td>
+            <td>${lastLogin}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-btn view" onclick="viewUserDetails('${user.id}')">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10z"/>
+                        </svg>
+                        ნახვა
+                    </button>
+                    <button class="action-btn edit" onclick="editUser('${user.id}')">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                        </svg>
+                        რედ
+                    </button>
+                    <button class="action-btn delete" onclick="confirmDeleteUser('${user.id}')">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                        წაშლა
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
 
         function setupUserSearch(users) {
             const searchInput = document.getElementById('userSearch');
@@ -5119,120 +5176,116 @@ window.addEventListener('load', () => {
             }
         };
 
-        // View user details
-        window.viewUserDetails = async function(userId) {
-            showLoading();
-            try {
-                const [userSnapshot, questionsSnapshot] = await Promise.all([
-                    database.ref(`users/${userId}`).once('value'),
-                    database.ref('questions').once('value')
-                ]);
+// View user details
+window.viewUserDetails = async function(userId) {
+    showLoading();
+    try {
+        const [userSnapshot, questionsSnapshot] = await Promise.all([
+            database.ref(`users/${userId}`).once('value'),
+            database.ref('questions').once('value')
+        ]);
 
-                const user = userSnapshot.val();
-                const allQuestions = questionsSnapshot.val() || {};
-                
-                if (!user) {
-                    showNotification('მომხმარებელი არ მოიძებნა', true);
-                    return;
+        const user = userSnapshot.val();
+        const allQuestions = questionsSnapshot.val() || {};
+        
+        if (!user) {
+            showNotification('მომხმარებელი არ მოიძებნა', true);
+            return;
+        }
+
+        // შევამოწმოთ არის თუ არა მომხმარებელი ონლაინ
+        const now = Date.now();
+        let isOnline = false;
+        let activeSessions = [];
+        
+        Object.entries(onlineUsers).forEach(([key, u]) => {
+            if (u && u.lastSeen && (now - u.lastSeen) < 30000) {
+                if (u.userId === userId || u.name === user.username) {
+                    isOnline = true;
+                    activeSessions.push({
+                        device: key,
+                        lastSeen: new Date(u.lastSeen).toLocaleTimeString(),
+                        module: u.module || 'მთავარი'
+                    });
                 }
-
-                const modalContent = document.getElementById('userDetailsContent');
-                
-                const modulesWithQuestions = {};
-
-                if (user.progress) {
-                    for (const [moduleName, moduleData] of Object.entries(user.progress)) {
-                        const moduleQuestions = allQuestions[moduleName] || {};
-                        const totalQuestionsInModule = Object.keys(moduleQuestions).length;
-                        
-                        const answeredQuestions = [];
-                        
-                        ['normal', 'exam'].forEach(mode => {
-                            const answers = moduleData[mode]?.answeredQuestions || {};
-                            for (const [qId, answer] of Object.entries(answers)) {
-                                const questionData = moduleQuestions[qId] || { text: qId };
-                                answeredQuestions.push({
-                                    id: qId,
-                                    text: questionData.text || questionData.question || qId,
-                                    isCorrect: answer.isCorrect,
-                                    timestamp: answer.timestamp || 0,
-                                    mode: mode
-                                });
-                            }
-                        });
-
-                        answeredQuestions.sort((a, b) => b.timestamp - a.timestamp);
-
-                        modulesWithQuestions[moduleName] = {
-                            total: totalQuestionsInModule,
-                            answered: answeredQuestions.length,
-                            questions: answeredQuestions
-                        };
-                    }
-                }
-
-                modalContent.innerHTML = `
-                    <div style="margin-bottom: 20px;">
-                        <div style="background: var(--surface-light); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                <div>
-                                    <div style="color: var(--text-muted); font-size: 12px;">მომხმარებელი</div>
-                                    <div style="font-weight: 600;">${escapeHtml(user.username)}</div>
-                                </div>
-                                <div>
-                                    <div style="color: var(--text-muted); font-size: 12px;">პაროლი</div>
-                                    <div style="font-family: monospace;">${escapeHtml(user.password)}</div>
-                                </div>
-                                <div>
-                                    <div style="color: var(--text-muted); font-size: 12px;">რეგისტრაცია</div>
-                                    <div>${user.registeredAt ? new Date(user.registeredAt).toLocaleString('ka-GE') : 'უცნობია'}</div>
-                                </div>
-                                <div>
-                                    <div style="color: var(--text-muted); font-size: 12px;">ბოლო შესვლა</div>
-                                    <div>${user.lastUpdated ? new Date(user.lastUpdated).toLocaleString('ka-GE') : 'უცნობია'}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h4 style="margin: 20px 0 12px;">კითხვები</h4>
-                        
-                        ${Object.entries(modulesWithQuestions).length > 0 ? 
-                            Object.entries(modulesWithQuestions).map(([moduleName, data]) => {
-                                const percentage = data.total > 0 ? Math.round((data.answered / data.total) * 100) : 0;
-                                return `
-                                    <div style="margin-bottom: 30px;">
-                                        <div class="module-stats-header">
-                                            <strong>${getModuleName(moduleName)}</strong>
-                                            <span>${data.answered}/${data.total} (${percentage}%)</span>
-                                        </div>
-                                        <div class="module-progress-bar">
-                                            <div class="module-progress-fill" style="width: ${percentage}%;"></div>
-                                        </div>
-                                        ${data.questions.map(q => `
-                                            <div class="question-row">
-                                                <div class="question-id">#${q.id}</div>
-                                                <div class="question-text-small">${escapeHtml(q.text.substring(0, 100))}${q.text.length > 100 ? '...' : ''}</div>
-                                                <div class="answer-badge ${q.isCorrect ? 'correct' : 'incorrect'}">
-                                                    ${q.isCorrect ? 'სწორი' : 'არასწორი'}
-                                                </div>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                `;
-                            }).join('') 
-                            : '<div style="text-align: center; padding: 40px;">პასუხები არ არის</div>'
-                        }
-                    </div>
-                `;
-
-                openModal('userDetailsModal');
-            } catch (error) {
-                console.error("Error loading user details:", error);
-                showNotification('შეცდომა მომხმარებლის დეტალების ჩატვირთვისას', true);
-            } finally {
-                hideLoading();
             }
-        };
+        });
+
+        const modalContent = document.getElementById('userDetailsContent');
+        
+        // თარიღების ფორმატირება
+        const registeredDate = user.registeredAt ? 
+            new Date(user.registeredAt).toLocaleString('ka-GE', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            }) : 'უცნობია';
+            
+        const lastLoginDate = user.lastUpdated ? 
+            new Date(user.lastUpdated).toLocaleString('ka-GE', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            }) : 'უცნობია';
+
+        modalContent.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <div style="background: var(--surface-light); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <div style="width: 12px; height: 12px; border-radius: 50%; background: ${isOnline ? '#10b981' : '#64748b'};"></div>
+                        <span style="font-weight: 600; color: ${isOnline ? '#10b981' : 'var(--text-muted)'};">${isOnline ? '🟢 ონლაინ' : '⚫ ოფლაინ'}</span>
+                        ${activeSessions.length > 1 ? `<span style="font-size: 12px; color: var(--accent);">(${activeSessions.length} მოწყობილობა)</span>` : ''}
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div>
+                            <div style="color: var(--text-muted); font-size: 12px;">მომხმარებელი</div>
+                            <div style="font-weight: 600;">${escapeHtml(user.username)}</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--text-muted); font-size: 12px;">პაროლი</div>
+                            <div style="font-family: monospace;">${escapeHtml(user.password)}</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--text-muted); font-size: 12px;">📝 რეგისტრაცია (Sign Up)</div>
+                            <div style="font-weight: 500;">${registeredDate}</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--text-muted); font-size: 12px;">🕐 ბოლო შესვლა</div>
+                            <div style="font-weight: 500;">${lastLoginDate}</div>
+                        </div>
+                    </div>
+                    
+                    ${activeSessions.length > 0 ? `
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                            <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">აქტიური სესიები:</div>
+                            ${activeSessions.map(s => `
+                                <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0;">
+                                    <span>🖥️ მოწყობილობა: ${s.device.substring(0, 8)}...</span>
+                                    <span>📚 ${s.module}</span>
+                                    <span>🕐 ${s.lastSeen}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        openModal('userDetailsModal');
+    } catch (error) {
+        console.error("Error loading user details:", error);
+        showNotification('შეცდომა მომხმარებლის დეტალების ჩატვირთვისას', true);
+    } finally {
+        hideLoading();
+    }
+};
 
         // Edit user
         window.editUser = function(userId) {
@@ -5308,6 +5361,26 @@ window.addEventListener('load', () => {
             
             loadActivityData();
         };
+
+async function checkUserData() {
+    if (!firebaseInitialized || !database) return;
+    
+    const snapshot = await database.ref('users').once('value');
+    const users = snapshot.val() || {};
+    
+    console.log("=== USER DATA CHECK ===");
+    Object.entries(users).forEach(([key, user]) => {
+        console.log(`User: ${key}`, {
+            username: user.username,
+            registeredAt: user.registeredAt ? new Date(user.registeredAt).toLocaleString() : 'არ არის',
+            lastUpdated: user.lastUpdated ? new Date(user.lastUpdated).toLocaleString() : 'არ არის',
+            hasProgress: !!user.progress
+        });
+    });
+}
+
+// გამოიძახეთ კონსოლიდან საჭიროების შემთხვევაში
+// checkUserData();
 
         // Load activity data
         async function loadActivityData() {
