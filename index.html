@@ -1139,6 +1139,33 @@
     transition: all 0.3s ease;
 }
 
+/* Delete button style */
+.chat-bubble button {
+    opacity: 0.3;
+    transition: opacity 0.2s;
+}
+
+.chat-bubble button:hover {
+    opacity: 1;
+}
+
+.chat-message:not(.admin) .chat-bubble {
+    background: var(--surface-light);
+    position: relative;
+}
+
+.chat-message:not(.admin) .chat-bubble button {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 4px;
+    padding: 2px;
+}
+
+/* Admin messages - no delete button needed */
+.chat-message.admin .chat-bubble {
+    background: var(--accent);
+    color: white;
+}
+
         /* Module Cards */
         .module-grid {
             display: grid;
@@ -1698,6 +1725,53 @@
 
 .online-pulse circle:last-child {
     animation: onlinePulse 2s infinite;
+}
+
+/* Chat Section with fixed background */
+#chatSection {
+    position: relative;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: calc(100vh - 100px);
+    border-radius: 20px;
+    padding: 20px;
+}
+
+/* Semi-transparent overlay for chat container */
+#chatSection .chat-container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    height: calc(100vh - 140px);
+    position: relative;
+    z-index: 2;
+}
+
+/* Chat Section - Stretched full width with 0.5cm margins */
+#chatSection {
+    background: var(--bg);
+    padding: 20px calc(0.5cm) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+}
+
+#chatSection .chat-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    overflow: hidden;
+    height: calc(100vh - 140px);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* When section is active, stretch it */
+#chatSection.active {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
 }
 
 
@@ -2607,29 +2681,25 @@
     <div class="online-list" id="onlineUsersList"></div>
 </div>
                 
-                <!-- Chat Section -->
-                <div id="chatSection" class="content-section">
-                    <div class="content-header">
-                        <h2 class="content-title">ჩატი</h2>
-                    </div>
-                    
-                    <div class="chat-container">
-                        <div class="chat-messages" id="adminChatMessages"></div>
-                        <div class="chat-input">
-                            <input type="text" id="adminChatInput" placeholder="დაწერეთ შეტყობინება..." onkeypress="handleAdminChatKeyPress(event)">
-                            <button class="chat-send-btn" onclick="sendAdminMessage()">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <line x1="22" y1="2" x2="11" y2="13"/>
-                                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<!-- Chat Section -->
+<div id="chatSection" class="content-section">
+    <div class="content-header">
+        <h2 class="content-title">ჩატი</h2>
+    </div>
+    
+    <div class="chat-container">
+        <div class="chat-messages" id="adminChatMessages"></div>
+        <div class="chat-input">
+            <input type="text" id="adminChatInput" placeholder="დაწერეთ შეტყობინება..." onkeypress="handleAdminChatKeyPress(event)">
+            <button class="chat-send-btn" onclick="sendAdminMessage()">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+            </button>
         </div>
     </div>
-
+</div>
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-card">
@@ -4111,7 +4181,6 @@ function hideRefreshIndicator() {
         indicator.style.display = 'none';
     }
 }
-
 
 
 // Load Dashboard - შევასწოროთ ეს ნაწილიც
@@ -6129,51 +6198,99 @@ async function debugAnswers() {
     
     return answers;
 }
-        // Load chat
-        function loadChat() {
-            if (!firebaseInitialized || !database) return;
+// Load chat
+function loadChat() {
+    if (!firebaseInitialized || !database) return;
 
-            database.ref('chat/messages').limitToLast(50).on('value', (snapshot) => {
-                const messages = snapshot.val() || {};
-                const messagesList = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
-                renderAdminChatMessages(messagesList);
-            });
-        }
+    database.ref('chat/messages').limitToLast(50).on('value', (snapshot) => {
+        const messages = snapshot.val() || {};
+        // შევინახოთ გასაღებებიც
+        const messagesList = Object.entries(messages)
+            .map(([key, value]) => ({ ...value, key }))
+            .sort((a, b) => a.timestamp - b.timestamp);
+        renderAdminChatMessages(messagesList);
+    });
+}
 
-        function renderAdminChatMessages(messages) {
-            const chatMessages = document.getElementById('adminChatMessages');
-            if (!chatMessages) return;
-            
-            chatMessages.innerHTML = messages.map(msg => `
-                <div class="chat-message ${msg.sender === 'admin' ? 'admin' : ''}">
-                    <div class="chat-avatar">${msg.sender === 'admin' ? 'A' : (msg.senderName ? msg.senderName[0].toUpperCase() : 'U')}</div>
-                    <div class="chat-bubble">
-                        <div class="chat-sender">${escapeHtml(msg.senderName || msg.sender)}</div>
-                        <div>${escapeHtml(msg.text)}</div>
-                        <div class="chat-time">${new Date(msg.timestamp).toLocaleString('ka-GE')}</div>
-                    </div>
+function renderAdminChatMessages(messages) {
+    const chatMessages = document.getElementById('adminChatMessages');
+    if (!chatMessages) return;
+    
+    chatMessages.innerHTML = messages.map(msg => {
+        const msgId = msg.key || msg.id || '';
+        const senderName = msg.senderName || msg.author || msg.sender || 'უცნობი';
+        
+        return `
+        <div class="chat-message ${msg.sender === 'admin' ? 'admin' : ''}" data-message-id="${msgId}" style="position: relative;">
+            <div class="chat-avatar">${msg.sender === 'admin' ? 'A' : (senderName ? senderName[0].toUpperCase() : 'U')}</div>
+            <div class="chat-bubble" style="position: relative;">
+                ${msg.sender !== 'admin' ? `
+                <div style="position: absolute; top: 5px; right: 5px; display: flex; gap: 5px;">
+                    <button onclick="deleteChatMessage('${msgId}')" style="background: none; border: none; cursor: pointer; padding: 2px;" title="წაშლა">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                    </button>
                 </div>
-            `).join('');
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+                ` : ''}
+                <div class="chat-sender">${escapeHtml(senderName)} ${msg.sender !== 'admin' ? '' : ''}</div>
+                <div>${escapeHtml(msg.text)}</div>
+                <div class="chat-time">${new Date(msg.timestamp).toLocaleString('ka-GE')}</div>
+            </div>
+        </div>
+    `}).join('');
+    
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// ჩატის შეტყობინების წაშლა
+async function deleteChatMessage(messageId) {
+    if (!firebaseInitialized || !database) {
+        showNotification('Firebase არ არის ხელმისაწვდომი', true);
+        return;
+    }
+
+    showConfirm(
+        'შეტყობინების წაშლა',
+        'დარწმუნებული ხართ, რომ გსურთ ამ შეტყობინების წაშლა?',
+        async () => {
+            try {
+                showLoading();
+                await database.ref(`chat/messages/${messageId}`).remove();
+                hideLoading();
+                showNotification('შეტყობინება წაიშალა', false);
+                
+                // განვაახლოთ ჩატი
+                loadChat();
+            } catch (error) {
+                console.error('Error deleting message:', error);
+                hideLoading();
+                showNotification('შეცდომა შეტყობინების წაშლისას', true);
+            }
         }
+    );
+}
 
-        function sendAdminMessage() {
-            const input = document.getElementById('adminChatInput');
-            if (!input) return;
-            
-            const text = input.value.trim();
-            if (!text) return;
+function sendAdminMessage() {
+    const input = document.getElementById('adminChatInput');
+    if (!input) return;
+    
+    const text = input.value.trim();
+    if (!text) return;
 
-            const message = {
-                sender: 'admin',
-                senderName: 'ადმინისტრატორი',
-                text: text,
-                timestamp: Date.now()
-            };
+    const message = {
+        sender: 'admin',
+        senderName: 'ადმინისტრატორი',
+        text: text,
+        timestamp: Date.now(),
+        isAdmin: true,  // მნიშვნელოვანი! ეს ველი მიუთითებს, რომ შეტყობინება ადმინისგან არის
+        adminBadge: true // დამატებითი ველი ადმინის სტატუსისთვის
+    };
 
-            database.ref('chat/messages').push(message);
-            input.value = '';
-        }
+    database.ref('chat/messages').push(message);
+    input.value = '';
+}
 
         window.handleAdminChatKeyPress = function(event) {
             if (event.key === 'Enter') {
