@@ -5524,18 +5524,18 @@ window.sortModuleQuestions = function(type) {
         });
     } else if (type === 'best') {
         sortedQuestions.sort((a, b) => {
-            if (a.totalAnswers === 0 && b.totalAnswers > 0) return 1;
-            if (b.totalAnswers === 0 && a.totalAnswers > 0) return -1;
+            if (a.totalUsers === 0 && b.totalUsers > 0) return 1;
+            if (b.totalUsers === 0 && a.totalUsers > 0) return -1;
             return b.correctPercent - a.correctPercent;
         });
     } else if (type === 'worst') {
         sortedQuestions.sort((a, b) => {
-            if (a.totalAnswers === 0 && b.totalAnswers > 0) return 1;
-            if (b.totalAnswers === 0 && a.totalAnswers > 0) return -1;
+            if (a.totalUsers === 0 && b.totalUsers > 0) return 1;
+            if (b.totalUsers === 0 && a.totalUsers > 0) return -1;
             return a.correctPercent - b.correctPercent;
         });
     } else if (type === 'most') {
-        sortedQuestions.sort((a, b) => b.totalAnswers - a.totalAnswers);
+        sortedQuestions.sort((a, b) => b.totalUsers - a.totalUsers);
     }
     
     // განვაახლოთ ჩვენება
@@ -5581,7 +5581,9 @@ window.sortModuleQuestions = function(type) {
             </div>
             <div style="color: var(--text-muted); font-size: 14px;">
                 📝 სულ კითხვები: ${window.currentSortedModule.questionCount} | 
-                📊 ჯამური პასუხები: ${sortedQuestions.reduce((sum, q) => sum + q.totalAnswers, 0)}
+                👥 სულ მომხმარებელი: ${sortedQuestions.reduce((sum, q) => sum + q.totalUsers, 0)} | 
+                ✅ სწორი: ${sortedQuestions.reduce((sum, q) => sum + q.correctUsers, 0)} | 
+                ❌ არასწორი: ${sortedQuestions.reduce((sum, q) => sum + q.incorrectUsers, 0)}
             </div>
         </div>
     `;
@@ -5590,7 +5592,7 @@ window.sortModuleQuestions = function(type) {
         const barColor = q.correctPercent > 70 ? 'var(--success)' : 
                         (q.correctPercent < 30 ? 'var(--danger)' : 'var(--warning)');
         
-        const noAnswers = q.totalAnswers === 0;
+        const noAnswers = q.totalUsers === 0;
         
         questionsHtml += `
             <div style="background: ${noAnswers ? 'rgba(0,0,0,0.02)' : 'var(--surface-light)'}; border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); ${noAnswers ? 'opacity: 0.7;' : ''}">
@@ -5603,15 +5605,15 @@ window.sortModuleQuestions = function(type) {
                 
                 <div style="margin-top: 16px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span style="color: var(--text-muted); font-size: 13px;">ამ კითხვას სულ გასცა პასუხი:</span>
+                        <span style="color: var(--text-muted); font-size: 13px;">ამ კითხვაზე უპასუხა:</span>
                         <span style="font-weight: 600; font-size: 14px; color: ${barColor};">
-                            ${noAnswers ? 0 : q.totalAnswers}
+                            ${noAnswers ? 0 : q.totalUsers} მომხმარებელმა
                         </span>
                     </div>
                     
                     ${!noAnswers ? `
                         <div style="position: relative; height: 24px; background: var(--surface); border-radius: 40px; overflow: hidden; margin-bottom: 6px; border: 1px solid var(--border); cursor: help;" 
-                             title="✅ სწორი: ${q.correctAnswers} (${q.correctPercent}%) | ❌ არასწორი: ${q.totalAnswers - q.correctAnswers} (${100 - q.correctPercent}%)">
+                             title="✅ სწორი: ${q.correctUsers} მომხმარებელი (${q.correctPercent}%) | ❌ არასწორი: ${q.incorrectUsers} მომხმარებელი (${100 - q.correctPercent}%)">
                             <div style="background: var(--success); width: ${q.correctPercent}%; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: white; font-size: 12px; font-weight: 600;">
                                 ${q.correctPercent > 10 ? q.correctPercent + '%' : ''}
                             </div>
@@ -5620,12 +5622,19 @@ window.sortModuleQuestions = function(type) {
                         
                         <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted);">
                             <span>0%</span>
-                            <span title="✅ სწორი: ${q.correctAnswers} | ❌ არასწორი: ${q.totalAnswers - q.correctAnswers}">სწორი: ${q.correctPercent}%</span>
+                            <span title="✅ სწორი: ${q.correctUsers} | ❌ არასწორი: ${q.incorrectUsers}">
+                                ✅ ${q.correctUsers} | ❌ ${q.incorrectUsers}
+                            </span>
                             <span>100%</span>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--text-muted);">
+                            <span>სწორი: ${q.correctPercent}% (${q.correctUsers} მომხმარებელი)</span>
+                            <span>არასწორი: ${100 - q.correctPercent}% (${q.incorrectUsers} მომხმარებელი)</span>
                         </div>
                     ` : `
                         <div style="height: 24px; background: var(--surface); border-radius: 40px; margin-bottom: 6px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 13px;">
-                            ჯერ არავის გაუცია პასუხი
+                            ჯერ არავის უპასუხია
                         </div>
                     `}
                 </div>
@@ -5683,8 +5692,9 @@ async function showModuleQuestions(moduleId, moduleName) {
         console.log(`📦 სულ მომხმარებლები: ${Object.keys(users).length}`);
         console.log(`📦 ონლაინ მომხმარებლები: ${Object.keys(onlineUsers).length}`);
         
-        // შევაგროვოთ ყველა პასუხი ამ მოდულისთვის (მომხმარებლები + სტუმრები)
-        const moduleAnswers = [];
+        // === შევქმნათ სტრუქტურა უნიკალური მომხმარებლების დასათვლელად ===
+        // questionStats[questionId] = { correctUsers: Set, incorrectUsers: Set }
+        const questionStats = {};
         
         // 1. რეგისტრირებული მომხმარებლების პასუხები
         Object.entries(users).forEach(([userId, userData]) => {
@@ -5694,30 +5704,36 @@ async function showModuleQuestions(moduleId, moduleName) {
                 // ნორმალური რეჟიმის პასუხები
                 if (moduleProgress.normal && moduleProgress.normal.answeredQuestions) {
                     Object.entries(moduleProgress.normal.answeredQuestions).forEach(([questionId, answerData]) => {
-                        moduleAnswers.push({
-                            userId: userId,
-                            username: userData.username || 'მომხმარებელი',
-                            questionId: questionId,
-                            isCorrect: answerData.isCorrect === true, // მკაცრი შემოწმება
-                            timestamp: answerData.timestamp || 0,
-                            mode: 'normal',
-                            userType: 'registered'
-                        });
+                        if (!questionStats[questionId]) {
+                            questionStats[questionId] = {
+                                correctUsers: new Set(),
+                                incorrectUsers: new Set()
+                            };
+                        }
+                        
+                        if (answerData.isCorrect === true) {
+                            questionStats[questionId].correctUsers.add(userId);
+                        } else {
+                            questionStats[questionId].incorrectUsers.add(userId);
+                        }
                     });
                 }
                 
                 // საგამოცდო რეჟიმის პასუხები
                 if (moduleProgress.exam && moduleProgress.exam.answeredQuestions) {
                     Object.entries(moduleProgress.exam.answeredQuestions).forEach(([questionId, answerData]) => {
-                        moduleAnswers.push({
-                            userId: userId,
-                            username: userData.username || 'მომხმარებელი',
-                            questionId: questionId,
-                            isCorrect: answerData.isCorrect === true, // მკაცრი შემოწმება
-                            timestamp: answerData.timestamp || 0,
-                            mode: 'exam',
-                            userType: 'registered'
-                        });
+                        if (!questionStats[questionId]) {
+                            questionStats[questionId] = {
+                                correctUsers: new Set(),
+                                incorrectUsers: new Set()
+                            };
+                        }
+                        
+                        if (answerData.isCorrect === true) {
+                            questionStats[questionId].correctUsers.add(userId);
+                        } else {
+                            questionStats[questionId].incorrectUsers.add(userId);
+                        }
                     });
                 }
             }
@@ -5731,25 +5747,34 @@ async function showModuleQuestions(moduleId, moduleName) {
                 // ნორმალური რეჟიმის პასუხები
                 if (moduleProgress.normal && moduleProgress.normal.answeredQuestions) {
                     Object.entries(moduleProgress.normal.answeredQuestions).forEach(([questionId, answerData]) => {
-                        moduleAnswers.push({
-                            userId: onlineUser.userId,
-                            username: onlineUser.name || 'სტუმარი',
-                            questionId: questionId,
-                            isCorrect: answerData.isCorrect === true, // მკაცრი შემოწმება
-                            timestamp: answerData.timestamp || 0,
-                            mode: 'normal',
-                            userType: 'guest'
-                        });
+                        if (!questionStats[questionId]) {
+                            questionStats[questionId] = {
+                                correctUsers: new Set(),
+                                incorrectUsers: new Set()
+                            };
+                        }
+                        
+                        if (answerData.isCorrect === true) {
+                            questionStats[questionId].correctUsers.add(onlineUser.userId);
+                        } else {
+                            questionStats[questionId].incorrectUsers.add(onlineUser.userId);
+                        }
                     });
                 }
             }
         });
         
-        console.log(`📦 ${moduleId}: ნაპოვნია ${moduleAnswers.length} პასუხი (რეგისტრირებული + სტუმრები)`);
+        console.log(`📦 ${moduleId}: დამუშავდა ${Object.keys(questionStats).length} კითხვის სტატისტიკა`);
         
-        // დავითვალოთ რამდენი სწორი პასუხია
-        const correctCount = moduleAnswers.filter(a => a.isCorrect === true).length;
-        console.log(`✅ სწორი პასუხები: ${correctCount}/${moduleAnswers.length} (${Math.round(correctCount/moduleAnswers.length*100)}%)`);
+        // დავითვალოთ ჯამური სტატისტიკა
+        let totalCorrectUsers = 0;
+        let totalIncorrectUsers = 0;
+        Object.values(questionStats).forEach(stat => {
+            totalCorrectUsers += stat.correctUsers.size;
+            totalIncorrectUsers += stat.incorrectUsers.size;
+        });
+        console.log(`✅ სწორი პასუხების ჯამი: ${totalCorrectUsers} მომხმარებელი`);
+        console.log(`❌ არასწორი პასუხების ჯამი: ${totalIncorrectUsers} მომხმარებელი`);
         
         // ჩავტვირთოთ CSV ამ მოდულისთვის
         const csvUrl = MODULE_CSV_URLS[moduleId];
@@ -5776,42 +5801,40 @@ async function showModuleQuestions(moduleId, moduleName) {
         });
         
         // შევქმნათ სტატისტიკა ყველა კითხვისთვის
-        const questionStats = [];
+        const questionsArray = [];
         
         for (let i = 1; i <= tests.length; i++) {
             const questionId = i.toString();
             const questionText = questionsText[questionId] || `კითხვა #${questionId}`;
             
-            // გავფილტროთ პასუხები ამ კითხვაზე
-            const questionAnswers = moduleAnswers.filter(a => a.questionId === questionId);
+            // ავიღოთ სტატისტიკა ამ კითხვისთვის
+            const stats = questionStats[questionId] || { correctUsers: new Set(), incorrectUsers: new Set() };
             
-            // დავითვალოთ სწორი და არასწორი პასუხები
-            const totalAnswers = questionAnswers.length;
-            const correctAnswers = questionAnswers.filter(a => a.isCorrect === true).length; // მკაცრი შემოწმება
+            const correctUsers = stats.correctUsers.size;
+            const incorrectUsers = stats.incorrectUsers.size;
+            const totalUsers = correctUsers + incorrectUsers;
             
-            const correctPercent = totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0;
+            const correctPercent = totalUsers > 0 ? Math.round((correctUsers / totalUsers) * 100) : 0;
             
-            console.log(`📊 კითხვა #${questionId}: სულ=${totalAnswers}, სწორი=${correctAnswers} (${correctPercent}%)`);
+            console.log(`📊 კითხვა #${questionId}: სულ=${totalUsers}, სწორი=${correctUsers} (${correctPercent}%), არასწორი=${incorrectUsers}`);
             
-            questionStats.push({
+            questionsArray.push({
                 id: questionId,
                 text: questionText,
-                totalAnswers: totalAnswers,
-                correctAnswers: correctAnswers,
+                totalUsers: totalUsers,
+                correctUsers: correctUsers,
+                incorrectUsers: incorrectUsers,
                 correctPercent: correctPercent
             });
         }
         
-        // შევქმნათ მოდულის სტატისტიკის ობიექტი
-        const moduleStats = {
+        // შევინახოთ მიმდინარე მოდულის კითხვები სორტირებისთვის
+        window.currentSortedModule = JSON.parse(JSON.stringify({
             id: moduleId,
             name: moduleName,
             questionCount: tests.length,
-            questions: questionStats
-        };
-        
-        // შევინახოთ მიმდინარე მოდულის კითხვები სორტირებისთვის
-        window.currentSortedModule = JSON.parse(JSON.stringify(moduleStats));
+            questions: questionsArray
+        }));
         
         // სორტირების ღილაკები
         let questionsHtml = `
@@ -5853,16 +5876,18 @@ async function showModuleQuestions(moduleId, moduleName) {
                     </button>
                 </div>
                 <div style="color: var(--text-muted); font-size: 14px;">
-                    📝 სულ კითხვები: ${moduleStats.questionCount} | 
-                    📊 ჯამური პასუხები: ${moduleStats.questions.reduce((sum, q) => sum + q.totalAnswers, 0)}
+                    📝 სულ კითხვები: ${tests.length} | 
+                    👥 სულ მომხმარებელი: ${questionsArray.reduce((sum, q) => sum + q.totalUsers, 0)} | 
+                    ✅ სწორი: ${questionsArray.reduce((sum, q) => sum + q.correctUsers, 0)} | 
+                    ❌ არასწორი: ${questionsArray.reduce((sum, q) => sum + q.incorrectUsers, 0)}
                 </div>
             </div>
         `;
         
         // თუ საერთოდ არ არის პასუხები
-        const totalAnswersAll = moduleStats.questions.reduce((sum, q) => sum + q.totalAnswers, 0);
+        const totalUsersAll = questionsArray.reduce((sum, q) => sum + q.totalUsers, 0);
         
-        if (totalAnswersAll === 0) {
+        if (totalUsersAll === 0) {
             questionsHtml += `
                 <div style="text-align: center; padding: 60px; background: var(--surface-light); border-radius: 20px;">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="margin: 0 auto 20px;">
@@ -5875,11 +5900,11 @@ async function showModuleQuestions(moduleId, moduleName) {
             `;
         } else {
             // კითხვების სია
-            moduleStats.questions.forEach((q, index) => {
+            questionsArray.forEach((q, index) => {
                 const barColor = q.correctPercent > 70 ? 'var(--success)' : 
                                 (q.correctPercent < 30 ? 'var(--danger)' : 'var(--warning)');
                 
-                const noAnswers = q.totalAnswers === 0;
+                const noAnswers = q.totalUsers === 0;
                 
                 questionsHtml += `
                     <div style="background: ${noAnswers ? 'rgba(0,0,0,0.02)' : 'var(--surface-light)'}; border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); ${noAnswers ? 'opacity: 0.7;' : ''}">
@@ -5892,15 +5917,15 @@ async function showModuleQuestions(moduleId, moduleName) {
                         
                         <div style="margin-top: 16px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                <span style="color: var(--text-muted); font-size: 13px;">ამ კითხვას სულ გასცა პასუხი:</span>
+                                <span style="color: var(--text-muted); font-size: 13px;">ამ კითხვაზე უპასუხა:</span>
                                 <span style="font-weight: 600; font-size: 14px; color: ${barColor};">
-                                    ${noAnswers ? 0 : q.totalAnswers}
+                                    ${noAnswers ? 0 : q.totalUsers} მომხმარებელმა
                                 </span>
                             </div>
                             
                             ${!noAnswers ? `
                                 <div style="position: relative; height: 24px; background: var(--surface); border-radius: 40px; overflow: hidden; margin-bottom: 6px; border: 1px solid var(--border); cursor: help;" 
-                                     title="✅ სწორი: ${q.correctAnswers} (${q.correctPercent}%) | ❌ არასწორი: ${q.totalAnswers - q.correctAnswers} (${100 - q.correctPercent}%)">
+                                     title="✅ სწორი: ${q.correctUsers} მომხმარებელი (${q.correctPercent}%) | ❌ არასწორი: ${q.incorrectUsers} მომხმარებელი (${100 - q.correctPercent}%)">
                                     <div style="background: var(--success); width: ${q.correctPercent}%; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: white; font-size: 12px; font-weight: 600;">
                                         ${q.correctPercent > 10 ? q.correctPercent + '%' : ''}
                                     </div>
@@ -5909,12 +5934,19 @@ async function showModuleQuestions(moduleId, moduleName) {
                                 
                                 <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted);">
                                     <span>0%</span>
-                                    <span title="✅ სწორი: ${q.correctAnswers} | ❌ არასწორი: ${q.totalAnswers - q.correctAnswers}">სწორი: ${q.correctPercent}%</span>
+                                    <span title="✅ სწორი: ${q.correctUsers} | ❌ არასწორი: ${q.incorrectUsers}">
+                                        ✅ ${q.correctUsers} | ❌ ${q.incorrectUsers}
+                                    </span>
                                     <span>100%</span>
+                                </div>
+                                
+                                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--text-muted);">
+                                    <span>სწორი: ${q.correctPercent}% (${q.correctUsers} მომხმარებელი)</span>
+                                    <span>არასწორი: ${100 - q.correctPercent}% (${q.incorrectUsers} მომხმარებელი)</span>
                                 </div>
                             ` : `
                                 <div style="height: 24px; background: var(--surface); border-radius: 40px; margin-bottom: 6px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 13px;">
-                                    ჯერ არავის გაუცია პასუხი
+                                    ჯერ არავის უპასუხია
                                 </div>
                             `}
                         </div>
@@ -6100,11 +6132,21 @@ async function loadStatistics() {
         // გადავუაროთ ყველა მომხმარებელს
         Object.entries(users).forEach(([userId, userData]) => {
             if (userData.progress) {
-                Object.keys(userData.progress).forEach(moduleId => {
-                    if (!uniqueUsersByModule[moduleId]) {
-                        uniqueUsersByModule[moduleId] = new Set();
+                // გადავუაროთ მოდულებს, რომლებზეც მომხმარებელს აქვს პროგრესი
+                Object.entries(userData.progress).forEach(([moduleId, moduleProgress]) => {
+                    // შევამოწმოთ, აქვს თუ არა მომხმარებელს ნამდვილად ნამუშევარი ამ მოდულზე
+                    // (შეამოწმეთ normal ან exam რეჟიმში პასუხების არსებობა)
+                    const hasNormalProgress = moduleProgress.normal?.answeredQuestions && 
+                                              Object.keys(moduleProgress.normal.answeredQuestions).length > 0;
+                    const hasExamProgress = moduleProgress.exam?.answeredQuestions && 
+                                           Object.keys(moduleProgress.exam.answeredQuestions).length > 0;
+                    
+                    if (hasNormalProgress || hasExamProgress) {
+                        if (!uniqueUsersByModule[moduleId]) {
+                            uniqueUsersByModule[moduleId] = new Set();
+                        }
+                        uniqueUsersByModule[moduleId].add(userId);
                     }
-                    uniqueUsersByModule[moduleId].add(userId);
                 });
             }
         });
@@ -6113,6 +6155,8 @@ async function loadStatistics() {
         Object.keys(uniqueUsersByModule).forEach(moduleId => {
             moduleUserCounts[moduleId] = uniqueUsersByModule[moduleId].size;
         });
+
+        console.log("📊 Module user counts:", moduleUserCounts);
 
         // გავფილტროთ მხოლოდ ის მოდულები, რომლებსაც აქვთ კითხვები
         const modulesWithQuestions = allModules.filter(m => moduleCounts[m.id] > 0);
@@ -6197,6 +6241,10 @@ async function loadStatistics() {
         });
 
         // დავამატოთ მთლიანი სტატისტიკის შემაჯამებელი
+        const totalUsers = Object.keys(users).length;
+        const totalQuestions = Object.values(moduleCounts).reduce((a, b) => a + b, 0);
+        const modulesWithActivity = Object.keys(moduleUserCounts).length;
+
         const summaryCard = document.createElement('div');
         summaryCard.style.marginTop = '24px';
         summaryCard.style.padding = '20px';
@@ -6207,17 +6255,19 @@ async function loadStatistics() {
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <span style="color: var(--text-muted);">📊 სულ მოდულები</span>
-                    <span class="total-modules-count" style="font-weight: 700; font-size: 24px; color: var(--accent); margin-left: 12px;">${modulesWithQuestions.length}</span>
-                </div>
-                <div>
-                    <span style="color: var(--text-muted);">👥 აქტიური მომხმარებელი</span>
-                    <span class="total-users-count" style="font-weight: 700; font-size: 24px; color: var(--success); margin-left: 12px;">${Object.keys(users).length}</span>
+                    <span style="font-weight: 700; font-size: 24px; color: var(--accent); margin-left: 12px;">${modulesWithQuestions.length}</span>
                 </div>
                 <div>
                     <span style="color: var(--text-muted);">📝 ჯამური კითხვები</span>
-                    <span class="total-questions-count" style="font-weight: 700; font-size: 24px; color: var(--warning); margin-left: 12px;">${
-                        Object.values(moduleCounts).reduce((a, b) => a + b, 0)
-                    }</span>
+                    <span style="font-weight: 700; font-size: 24px; color: var(--warning); margin-left: 12px;">${totalQuestions}</span>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">👥 აქტიური მომხმარებელი</span>
+                    <span style="font-weight: 700; font-size: 24px; color: var(--success); margin-left: 12px;">${totalUsers}</span>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">🎯 აქტიური მოდულები</span>
+                    <span style="font-weight: 700; font-size: 24px; color: #f59e0b; margin-left: 12px;">${modulesWithActivity}</span>
                 </div>
             </div>
         `;
@@ -6231,6 +6281,8 @@ async function loadStatistics() {
         lastUpdateTime.style.color = 'var(--text-muted)';
         lastUpdateTime.innerHTML = `🔄 ბოლო განახლება: ${new Date().toLocaleTimeString('ka-GE')}`;
         modulesList.appendChild(lastUpdateTime);
+
+        console.log("✅ Statistics loaded successfully with correct user counts");
 
     } catch (error) {
         console.error("Error loading statistics:", error);
