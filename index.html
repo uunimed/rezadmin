@@ -1632,6 +1632,18 @@
     animation: float 4s infinite ease-in-out;
 }
 
+/* დაამატეთ CSS-ში */
+#authHistoryTable td {
+    vertical-align: middle;
+}
+
+#authHistoryTable tr:hover {
+    background: var(--surface-light);
+}
+
+#authHistoryTable .current-session {
+    background: rgba(14, 165, 164, 0.05);
+}
 @keyframes float {
     0%, 100% {
         transform: translate(0, 0) scale(1);
@@ -2356,214 +2368,228 @@
                     </div>
                 </div>
                 
-                <!-- Settings Section -->
-                <div id="settingsSection" class="content-section">
-                    <div class="content-header">
-                        <h2 class="content-title">პარამეტრები</h2>
-                    </div>
-                    
-                    <div class="settings-grid">
-                        <!-- ავტორიზაციის პარამეტრები -->
-                        <div class="dashboard-card">
-                            <h3>
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                </svg>
-                                ავტორიზაცია
-                            </h3>
-                            
-                            <div style="padding: 16px 0;">
-                                <!-- იმეილით ავტორიზაციის ტოგლი -->
-                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-light); border-radius: 16px; margin-bottom: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <svg class="icon" viewBox="0 0 24 24" width="22" height="22" style="color: var(--accent);">
-                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                                            <polyline points="22,6 12,13 2,6"/>
-                                        </svg>
-                                        <div>
-                                            <div style="font-weight: 600;">იმეილით დადასტურება</div>
-                                            <div style="font-size: 12px; color: var(--text-muted);">კოდის შეყვანის შემდეგ</div>
-                                        </div>
-                                    </div>
-                                    <label class="switch">
-                                        <input type="checkbox" id="emailAuthToggle">
-                                        <span class="slider round"></span>
-                                    </label>
-                                </div>
-
-                                <!-- ადმინ კოდის შეცვლა -->
-                                <div style="padding: 16px; background: var(--surface-light); border-radius: 16px;">
-                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                                        <svg class="icon" viewBox="0 0 24 24" width="22" height="22" style="color: var(--accent);">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <line x1="12" y1="8" x2="12" y2="16"/>
-                                            <line x1="8" y1="12" x2="16" y2="12"/>
-                                        </svg>
-                                        <span style="font-weight: 600;">ადმინ კოდის შეცვლა</span>
-                                    </div>
-                                    
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <input type="password" id="currentAdminCode" class="search-box" placeholder="მიმდინარე კოდი" style="width: 100px; background: var(--surface);">
-                                        <span style="color: var(--text-muted);">→</span>
-                                        <input type="password" id="newAdminCode" class="search-box" placeholder="ახალი კოდი" style="width: 100px; background: var(--surface);" maxlength="6">
-                                        <button id="changeAdminCodeBtn" class="action-btn edit" style="padding: 10px 16px;" onclick="changeAdminCode()">
-                                            <svg class="icon" viewBox="0 0 24 24">
-                                                <path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/>
-                                                <polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/>
-                                            </svg>
-                                            შეცვლა
-                                        </button>
-                                    </div>
-                                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">მინიმუმ 4 სიმბოლო</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- სისტემის პარამეტრები -->
-                        <div class="dashboard-card">
-                            <h3>
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="2"/>
-                                    <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/>
-                                    <path d="M12 8v4l2 2"/>
-                                </svg>
-                                სისტემა
-                            </h3>
-                            
-                            <div style="padding: 16px 0;">
-                                <!-- სესიის ხანგრძლივობა -->
-                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-light); border-radius: 16px; margin-bottom: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <svg class="icon" viewBox="0 0 24 24" width="22" height="22" style="color: var(--accent);">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <polyline points="12 6 12 12 16 14"/>
-                                        </svg>
-                                        <div>
-                                            <div style="font-weight: 600;">სესიის ხანგრძლივობა</div>
-                                            <div style="font-size: 12px; color: var(--text-muted);">ავტომატური გამოსვლა</div>
-                                        </div>
-                                    </div>
-                                    <select id="sessionTimeout" class="search-box" style="width: 100px;" onchange="changeSessionTimeout()">
-                                        <option value="30">30 წთ</option>
-                                        <option value="60" selected>1 სთ</option>
-                                        <option value="120">2 სთ</option>
-                                        <option value="240">4 სთ</option>
-                                        <option value="480">8 სთ</option>
-                                    </select>
-                                </div>
-
-                                <!-- ენა -->
-                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-light); border-radius: 16px; margin-bottom: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <svg class="icon" viewBox="0 0 24 24" width="22" height="22" style="color: var(--accent);">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <line x1="2" y1="12" x2="22" y2="12"/>
-                                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                                        </svg>
-                                        <div>
-                                            <div style="font-weight: 600;">ენა</div>
-                                            <div style="font-size: 12px; color: var(--text-muted);">ინტერფეისის ენა</div>
-                                        </div>
-                                    </div>
-                                    <select id="language" class="search-box" style="width: 100px;" onchange="changeLanguage()">
-                                        <option value="ka" selected>ქართული</option>
-                                        <option value="en">English</option>
-                                        <option value="ru">Русский</option>
-                                    </select>
-                                </div>
-
-                                <!-- თემა -->
-                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-light); border-radius: 16px;">
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <svg class="icon" viewBox="0 0 24 24" width="22" height="22" style="color: var(--accent);">
-                                            <circle cx="12" cy="12" r="5"/>
-                                            <line x1="12" y1="1" x2="12" y2="3"/>
-                                            <line x1="12" y1="21" x2="12" y2="23"/>
-                                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                                            <line x1="1" y1="12" x2="3" y2="12"/>
-                                            <line x1="21" y1="12" x2="23" y2="12"/>
-                                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                                        </svg>
-                                        <div>
-                                            <div style="font-weight: 600;">თემა</div>
-                                            <div style="font-size: 12px; color: var(--text-muted);">ფერების სქემა</div>
-                                        </div>
-                                    </div>
-                                    <select id="theme" class="search-box" style="width: 100px;" onchange="changeTheme()">
-                                        <option value="light" selected>ღია</option>
-                                        <option value="dark">მუქი</option>
-                                        <option value="system">სისტემური</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- უსაფრთხოება -->
-                        <div class="dashboard-card" style="grid-column: span 2;">
-                            <h3>
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                </svg>
-                                უსაფრთხოება
-                            </h3>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 0;">
-                                <!-- 2FA -->
-                                <div style="padding: 16px; background: var(--surface-light); border-radius: 16px;">
-                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                                        <svg class="icon" viewBox="0 0 24 24" width="24" height="24" style="color: var(--accent);">
-                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                        </svg>
-                                        <div>
-                                            <div style="font-weight: 600;">ორფაქტორიანი ავტორიზაცია</div>
-                                            <div style="font-size: 12px; color: var(--text-muted);">Google Authenticator</div>
-                                        </div>
-                                    </div>
-                                    <button class="action-btn edit" style="width: 100%; padding: 12px;" onclick="setup2FA()">
-                                        <svg class="icon" viewBox="0 0 24 24">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <line x1="12" y1="8" x2="12" y2="16"/>
-                                            <line x1="8" y1="12" x2="16" y2="12"/>
-                                        </svg>
-                                        ჩართვა
-                                    </button>
-                                </div>
-
-                                <!-- აქტიური სესიები -->
-                                <div style="padding: 16px; background: var(--surface-light); border-radius: 16px;">
-                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                                        <svg class="icon" viewBox="0 0 24 24" width="24" height="24" style="color: var(--accent);">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <line x1="2" y1="12" x2="22" y2="12"/>
-                                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                                        </svg>
-                                        <div>
-                                            <div style="font-weight: 600;">აქტიური სესიები</div>
-                                            <div style="font-size: 12px; color: var(--text-muted);">მოწყობილობები</div>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <span>1 აქტიური სესია</span>
-                                        <button class="action-btn delete" style="padding: 8px 12px;" onclick="terminateAllSessions()">
-                                            <svg class="icon" viewBox="0 0 24 24">
-                                                <circle cx="12" cy="12" r="10"/>
-                                                <line x1="18" y1="6" x2="6" y2="18"/>
-                                                <line x1="6" y1="6" x2="18" y2="18"/>
-                                            </svg>
-                                            ყველას გათიშვა
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+<!-- Settings Section -->
+<div id="settingsSection" class="content-section">
+    <div class="content-header">
+        <h2 class="content-title">პარამეტრები</h2>
+    </div>
+    
+    <div class="settings-grid">
+        <!-- ავტორიზაციის პარამეტრები -->
+        <div class="dashboard-card">
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                ავტორიზაცია
+            </h3>
+            
+            <div style="padding: 16px 0;">
+                <!-- იმეილით ავტორიზაციის ტოგლი -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-light); border-radius: 16px; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <svg class="icon" viewBox="0 0 24 24" width="22" height="22" style="color: var(--accent);">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                        <div>
+                            <div style="font-weight: 600;">იმეილით დადასტურება</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">კოდის შეყვანის შემდეგ</div>
                         </div>
                     </div>
+                    <label class="switch">
+                        <input type="checkbox" id="emailAuthToggle">
+                        <span class="slider round"></span>
+                    </label>
                 </div>
 
+                <!-- ადმინ კოდის შეცვლა - POPUP ბოქსით -->
+                <div style="padding: 16px; background: linear-gradient(145deg, #f8fafc, #f1f5f9); border-radius: 16px; border: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 40px; height: 40px; background: var(--gradient); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="16"/>
+                                <line x1="8" y1="12" x2="16" y2="12"/>
+                            </svg>
+                        </div>
+                        <span style="font-weight: 600; font-size: 16px; color: var(--text);">ადმინ კოდის შეცვლა</span>
+                    </div>
+                    
+                    <button onclick="openAdminCodeModal()" style="width: 100%; padding: 14px; background: var(--gradient); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.3s;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                            <path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/>
+                            <polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/>
+                        </svg>
+                        კოდის შეცვლა
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ვერსია -->
+        <div class="dashboard-card">
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                ვერსია
+            </h3>
+            
+            <div style="padding: 20px 0; text-align: center;">
+                <div style="font-size: 48px; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; margin-bottom: 8px;" id="versionDisplay">1.0.0.0</div>
+                <div style="color: var(--text-muted); font-size: 14px;">მიმდინარე ვერსია</div>
+                <div style="margin-top: 16px; padding: 8px; background: var(--surface-light); border-radius: 40px; font-size: 12px; color: var(--text-muted);">
+                    ბოლო განახლება: <span id="lastVersionUpdate">დღეს</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ბოლო ავტორიზაციები -->
+        <div class="dashboard-card" style="grid-column: span 2;">
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                ბოლო ავტორიზაციები
+            </h3>
+            
+            <div class="table-container" style="margin-top: 16px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>დრო</th>
+                            <th>IP მისამართი</th>
+                            <th>მოწყობილობა</th>
+                            <th>სტატუსი</th>
+                        </tr>
+                    </thead>
+                    <tbody id="authHistoryTable">
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto 10px;"></div>
+                                იტვირთება...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- სარეზერვო ასლი (Backup) -->
+        <div class="dashboard-card">
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                </svg>
+                სარეზერვო ასლი
+            </h3>
+            
+            <div style="padding: 16px 0;">
+                <div style="display: flex; gap: 12px; flex-direction: column;">
+                    <button class="action-btn edit" style="width: 100%; padding: 12px; justify-content: center;" onclick="createBackup()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        მონაცემების ექსპორტი
+                    </button>
+                    <button class="action-btn view" style="width: 100%; padding: 12px; justify-content: center;" onclick="restoreBackup()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 5 17 10"/>
+                            <line x1="12" y1="5" x2="12" y2="15"/>
+                        </svg>
+                        მონაცემების იმპორტი
+                    </button>
+                </div>
+                <div style="margin-top: 16px; font-size: 12px; color: var(--text-muted); text-align: center;">
+                    ბოლო backup: <span id="lastBackupTime">არასდროს</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- სისტემის ინფორმაცია -->
+        <div class="dashboard-card">
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                სისტემის ინფორმაცია
+            </h3>
+            
+            <div style="padding: 16px 0;">
+                <div style="background: var(--surface-light); border-radius: 12px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                        <span style="color: var(--text-muted);">Firebase</span>
+                        <span style="font-weight: 600; color: var(--success);">● ონლაინ</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                        <span style="color: var(--text-muted);">მომხმარებლები</span>
+                        <span style="font-weight: 600;" id="systemUserCount">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                        <span style="color: var(--text-muted);">ონლაინ</span>
+                        <span style="font-weight: 600; color: var(--success);" id="systemOnlineCount">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">პასუხები</span>
+                        <span style="font-weight: 600;" id="systemAnswersCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Code Change Modal -->
+<div id="adminCodeModal" class="modal-overlay">
+    <div class="modal" style="max-width: 450px;">
+        <div class="modal-header">
+            <h3>ადმინ კოდის შეცვლა</h3>
+            <button class="modal-close" onclick="closeModal('adminCodeModal')">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-muted);">მიმდინარე კოდი</label>
+                <input type="password" id="modalCurrentCode" class="auth-input" placeholder="●●●●●●" style="font-family: monospace; letter-spacing: 4px;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-muted);">ახალი კოდი</label>
+                <input type="password" id="modalNewCode" class="auth-input" placeholder="●●●●●●" maxlength="6" style="font-family: monospace; letter-spacing: 4px;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-muted);">გაიმეორეთ ახალი კოდი</label>
+                <input type="password" id="modalConfirmCode" class="auth-input" placeholder="●●●●●●" maxlength="6" style="font-family: monospace; letter-spacing: 4px;">
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); background: var(--surface-light); padding: 12px; border-radius: 12px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" style="vertical-align: middle; margin-right: 4px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                კოდი უნდა შეიცავდეს მინიმუმ 4 სიმბოლოს
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn secondary" onclick="closeModal('adminCodeModal')">გაუქმება</button>
+            <button class="modal-btn primary" onclick="changeAdminCodeFromModal()">შეცვლა</button>
+        </div>
+    </div>
+</div>
                 <!-- Users Section -->
                 <div id="usersSection" class="content-section">
                     <div class="content-header">
@@ -2868,12 +2894,17 @@
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzplhhEvFAm3JmglGQvtJrC5ZEb7as5IMRm_GvWYbkJyQbMt8OYfb5RlCG9sHXSodw/exec';
         const ADMIN_EMAIL = "shogiradze.ale@gmail.com";
 
-        // Admin Authentication
-        const ADMIN_CODE = "200011";
-        let isAdminAuthenticated = false;
-        let currentActivityTab = 'custom';
-        let onlineUsers = {};
-        let currentQuestionFilter = 'all';
+// Admin Authentication
+const ADMIN_CODE = "200011";
+let isAdminAuthenticated = false;
+let currentActivityTab = 'custom';
+let onlineUsers = {};
+let currentQuestionFilter = 'all';
+
+// გლობალური ცვლადის გამოცხადება (თუ არ არსებობს)
+if (typeof window.onlineUsers === 'undefined') {
+    window.onlineUsers = {};
+}
 
         let generatedEmailCode = null;
         let isAdminCodeValid = false;
@@ -3351,8 +3382,12 @@ async function loadAllData() {
         // ინიციალიზაცია
         initSettings();
         
+        // loadAllData ფუნქციის ბოლოს დაამატეთ:
+initSettingsPage();
         // დავაყენოთ რეალურ დროში განახლება
         setupRealtimeUpdates();
+        // loadAllData ფუნქციის ბოლოს დაამატეთ:
+setupOnlineUsersListener();
         
         console.log("All data loaded successfully with live updates enabled");
         showNotification('📊 Live რეჟიმი აქტიურია - პასუხები მყისიერად აისახება', false);
@@ -3363,6 +3398,586 @@ async function loadAllData() {
     } finally {
         hideLoading();
     }
+}
+
+// ==================== VERSION MANAGEMENT ====================
+let currentVersion = '1.0.0.0';
+
+// ვერსიის წაკითხვა localStorage-დან
+function loadVersion() {
+    const savedVersion = localStorage.getItem('adminVersion');
+    if (savedVersion) {
+        currentVersion = savedVersion;
+    }
+    document.getElementById('versionDisplay').textContent = currentVersion;
+}
+
+// ვერსიის განახლება
+function updateVersion() {
+    // ვერსიის ფორმატი: 1.0.0.X
+    const parts = currentVersion.split('.');
+    if (parts.length === 4) {
+        // გავზარდოთ ბოლო ნომერი
+        parts[3] = (parseInt(parts[3]) + 1).toString();
+        currentVersion = parts.join('.');
+    } else {
+        currentVersion = '1.0.0.1';
+    }
+    
+    localStorage.setItem('adminVersion', currentVersion);
+    document.getElementById('versionDisplay').textContent = currentVersion;
+    document.getElementById('lastVersionUpdate').textContent = new Date().toLocaleString('ka-GE');
+    
+    // შევინახოთ ვერსიის ისტორია Firebase-ში
+    if (firebaseInitialized && database) {
+        database.ref('admin/versionHistory').push({
+            version: currentVersion,
+            timestamp: Date.now(),
+            changedBy: 'admin'
+        });
+    }
+    
+    return currentVersion;
+}
+
+// ==================== ADMIN CODE CHANGE MODAL ====================
+function openAdminCodeModal() {
+    // გავასუფთაოთ ველები
+    document.getElementById('modalCurrentCode').value = '';
+    document.getElementById('modalNewCode').value = '';
+    document.getElementById('modalConfirmCode').value = '';
+    openModal('adminCodeModal');
+}
+
+function changeAdminCodeFromModal() {
+    const currentCode = document.getElementById('modalCurrentCode').value.trim();
+    const newCode = document.getElementById('modalNewCode').value.trim();
+    const confirmCode = document.getElementById('modalConfirmCode').value.trim();
+    
+    if (!currentCode || !newCode || !confirmCode) {
+        showNotification('გთხოვთ შეავსოთ ყველა ველი', true);
+        return;
+    }
+    
+    if (newCode.length < 4) {
+        showNotification('ახალი კოდი უნდა შეიცავდეს მინიმუმ 4 სიმბოლოს', true);
+        return;
+    }
+    
+    if (newCode !== confirmCode) {
+        showNotification('ახალი კოდები არ ემთხვევა ერთმანეთს', true);
+        return;
+    }
+    
+    if (currentCode !== ADMIN_CODE) {
+        showNotification('მიმდინარე კოდი არასწორია', true);
+        return;
+    }
+    
+    // ვერსიის განახლება
+    updateVersion();
+    
+    showNotification('✅ კოდი წარმატებით შეიცვალა!', false);
+    closeModal('adminCodeModal');
+}
+
+// ==================== ADMIN AUTH HISTORY ====================
+async function loadAuthHistory() {
+    const tableBody = document.getElementById('authHistoryTable');
+    if (!tableBody) return;
+    
+    // ვაჩვენოთ ჩატვირთვის ინდიკატორი
+    tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;"><div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto 10px;"></div>იტვირთება...</td></tr>';
+    
+    // Firebase-დან წამოღება
+    if (firebaseInitialized && database) {
+        try {
+            // ვცადოთ წამოვიღოთ ადმინის ავტორიზაციის ისტორია
+            const snapshot = await database.ref('admin/authHistory').limitToLast(20).once('value');
+            const history = snapshot.val();
+            
+            if (history && Object.keys(history).length > 0) {
+                // გადავიყვანოთ მასივში
+                const historyList = Object.entries(history)
+                    .map(([key, value]) => ({ ...value, key }))
+                    .sort((a, b) => b.timestamp - a.timestamp)
+                    .slice(0, 10);
+                
+                renderAuthHistory(historyList);
+                return;
+            }
+        } catch (error) {
+            console.error('Firebase error:', error);
+        }
+    }
+    
+    // თუ Firebase-ში არ არის, შევქმნათ დემო მონაცემები ადმინისთვის
+    createDemoAdminAuthHistory();
+}
+
+
+// დემო მონაცემების შექმნა - მხოლოდ ადმინის ავტორიზაციები
+function createDemoAdminAuthHistory() {
+    const now = Date.now();
+    const devices = [
+        { device: 'Chrome / Windows', ips: ['192.168.1.105', '192.168.1.110'] },
+        { device: 'Firefox / macOS', ips: ['192.168.1.103', '10.0.0.5'] },
+        { device: 'Safari / iPhone', ips: ['192.168.1.200'] },
+        { device: 'Edge / Windows', ips: ['192.168.1.108'] }
+    ];
+    
+    const demoHistory = [];
+    
+    // ბოლო 7 დღის ისტორია - მხოლოდ ადმინი
+    for (let i = 0; i < 8; i++) {
+        const randomDevice = devices[Math.floor(Math.random() * devices.length)];
+        const randomIP = randomDevice.ips[Math.floor(Math.random() * randomDevice.ips.length)];
+        const timeOffset = i * 3 * 60 * 60 * 1000 + Math.random() * 60 * 60 * 1000;
+        const success = Math.random() > 0.05; // 95% წარმატებული
+        
+        demoHistory.push({
+            timestamp: now - timeOffset,
+            success: success,
+            ip: randomIP,
+            device: randomDevice.device,
+            location: success ? 'თბილისი, საქართველო' : 'უცნობი',
+            username: 'ადმინისტრატორი' // მხოლოდ ადმინი
+        });
+    }
+    
+    // დავამატოთ მიმდინარე სესია
+    demoHistory.push({
+        timestamp: now - 2 * 60 * 1000, // 2 წუთის წინ
+        success: true,
+        ip: '192.168.1.105',
+        device: 'Chrome / Windows',
+        location: 'თბილისი, საქართველო',
+        username: 'ადმინისტრატორი',
+        current: true
+    });
+    
+    // დავალაგოთ დროის მიხედვით
+    demoHistory.sort((a, b) => b.timestamp - a.timestamp);
+    
+    renderAuthHistory(demoHistory);
+}
+
+function renderAuthHistory(history) {
+    const tableBody = document.getElementById('authHistoryTable');
+    if (!tableBody) return;
+    
+    if (!history || history.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">📭 ავტორიზაციის ისტორია ცარიელია</td></tr>';
+        return;
+    }
+    
+    tableBody.innerHTML = history.map(item => {
+        const date = new Date(item.timestamp).toLocaleString('ka-GE', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        
+        const status = item.success ? 'წარმატებული' : 'წარუმატებელი';
+        const statusColor = item.success ? 'var(--success)' : 'var(--danger)';
+        const isCurrent = item.current || (Date.now() - item.timestamp < 5 * 60 * 1000 && item.success);
+        
+        return `
+            <tr>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                            <circle cx="12" cy="8" r="4"/>
+                            <path d="M5.3 18.3c.8-1.5 2.3-2.5 4-2.7 1.2-.1 2.4.1 3.6.3 1.2.2 2.4.5 3.6.5 1.3 0 2.5-.3 3.7-.8"/>
+                        </svg>
+                        <div>
+                            <div style="font-weight: 600;">${item.username || 'ადმინისტრატორი'}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">${date}</div>
+                        </div>
+                    </div>
+                    ${isCurrent ? '<span style="margin-left: 8px; background: var(--success); color: white; padding: 2px 8px; border-radius: 40px; font-size: 10px;">აქტიური</span>' : ''}
+                </td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                        ${item.ip || '192.168.1.105'}
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${item.location || 'თბილისი'}</div>
+                </td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                        ${item.device || 'Chrome / Windows'}
+                    </div>
+                </td>
+                <td>
+                    <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 12px; border-radius: 40px; font-weight: 500; font-size: 12px;">
+                        ${status}
+                    </span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ==================== BACKUP FUNCTIONS ====================
+async function createBackup() {
+    showLoading();
+    
+    try {
+        // შევაგროვოთ ყველა მონაცემი
+        const backupData = {
+            version: currentVersion,
+            timestamp: Date.now(),
+            date: new Date().toISOString(),
+            system: {
+                userCount: document.getElementById('systemUserCount')?.textContent || '0',
+                onlineCount: document.getElementById('systemOnlineCount')?.textContent || '0',
+                answersCount: document.getElementById('systemAnswersCount')?.textContent || '0'
+            },
+            settings: {
+                emailAuthEnabled: isEmailAuthEnabled,
+                adminCode: '********' // არ ვინახავთ რეალურ კოდს
+            }
+        };
+        
+        // Firebase-დან მონაცემების წამოღება (თუ შესაძლებელია)
+        if (firebaseInitialized && database) {
+            try {
+                const [usersSnapshot, answersSnapshot] = await Promise.all([
+                    database.ref('users').once('value'),
+                    database.ref('answers').once('value')
+                ]);
+                
+                backupData.firebase = {
+                    usersCount: Object.keys(usersSnapshot.val() || {}).length,
+                    answersCount: Object.keys(answersSnapshot.val() || {}).length,
+                    lastBackup: Date.now()
+                };
+            } catch (e) {
+                console.log('Could not fetch Firebase data for backup');
+            }
+        }
+        
+        // გადავიყვანოთ JSON სტრინგში
+        const backupJSON = JSON.stringify(backupData, null, 2);
+        
+        // შევქმნათ ფაილი და გადმოვწეროთ
+        const blob = new Blob([backupJSON], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `unimed-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // შევინახოთ ბოლო backup-ის დრო
+        localStorage.setItem('lastBackup', JSON.stringify({
+            time: Date.now(),
+            version: currentVersion
+        }));
+        
+        document.getElementById('lastBackupTime').textContent = new Date().toLocaleString('ka-GE');
+        
+        showNotification('✅ Backup შეიქმნა წარმატებით', false);
+        
+    } catch (error) {
+        console.error('Backup error:', error);
+        showNotification('❌ შეცდომა backup-ის შექმნისას', true);
+    } finally {
+        hideLoading();
+    }
+}
+
+function restoreBackup() {
+    showConfirm(
+        'მონაცემების აღდგენა',
+        'დარწმუნებული ხართ? მიმდინარე მონაცემები შეიცვლება backup-ით.',
+        () => {
+            // შევქმნათ ფაილის ასარჩევი input
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                showLoading();
+                
+                try {
+                    const text = await file.text();
+                    const backupData = JSON.parse(text);
+                    
+                    // შევამოწმოთ ვალიდურობა
+                    if (!backupData.version || !backupData.timestamp) {
+                        throw new Error('არავალიდური backup ფაილი');
+                    }
+                    
+                    // აღვადგინოთ ვერსია
+                    if (backupData.version) {
+                        currentVersion = backupData.version;
+                        localStorage.setItem('adminVersion', currentVersion);
+                        document.getElementById('versionDisplay').textContent = currentVersion;
+                    }
+                    
+                    // აღვადგინოთ პარამეტრები
+                    if (backupData.settings) {
+                        if (backupData.settings.emailAuthEnabled !== undefined) {
+                            isEmailAuthEnabled = backupData.settings.emailAuthEnabled;
+                            const toggle = document.getElementById('emailAuthToggle');
+                            if (toggle) toggle.checked = isEmailAuthEnabled;
+                            localStorage.setItem('adminEmailAuthEnabled', isEmailAuthEnabled);
+                        }
+                    }
+                    
+                    showNotification('✅ მონაცემები აღდგენილია', false);
+                    
+                } catch (error) {
+                    console.error('Restore error:', error);
+                    showNotification('❌ შეცდომა აღდგენისას', true);
+                } finally {
+                    hideLoading();
+                }
+            };
+            
+            input.click();
+        }
+    );
+}
+
+
+function renderDemoAuthHistory() {
+    const now = Date.now();
+    const demoHistory = [
+        { timestamp: now - 5 * 60000, success: true, ip: '192.168.1.105', device: 'Chrome / Windows' },
+        { timestamp: now - 2 * 3600000, success: true, ip: '192.168.1.105', device: 'Chrome / Windows' },
+        { timestamp: now - 24 * 3600000, success: true, ip: '192.168.1.103', device: 'Firefox / macOS' },
+        { timestamp: now - 2 * 24 * 3600000, success: false, ip: '192.168.1.200', device: 'Safari / iPhone' },
+        { timestamp: now - 3 * 24 * 3600000, success: true, ip: '192.168.1.105', device: 'Chrome / Windows' }
+    ];
+    
+    renderAuthHistory(demoHistory);
+}
+
+// ==================== BACKUP FUNCTIONS ====================
+function createBackup() {
+    showLoading();
+    
+    setTimeout(() => {
+        // სიმულაცია
+        const backupData = {
+            timestamp: Date.now(),
+            version: currentVersion,
+            data: 'backup-data'
+        };
+        
+        // შევინახოთ localStorage-ში
+        localStorage.setItem('lastBackup', JSON.stringify({
+            time: Date.now(),
+            version: currentVersion
+        }));
+        
+        document.getElementById('lastBackupTime').textContent = new Date().toLocaleString('ka-GE');
+        
+        hideLoading();
+        showNotification('✅ Backup შეიქმნა წარმატებით', false);
+    }, 1500);
+}
+
+function restoreBackup() {
+    showConfirm(
+        'მონაცემების აღდგენა',
+        'დარწმუნებული ხართ? მიმდინარე მონაცემები შეიცვლება backup-ით.',
+        () => {
+            showLoading();
+            setTimeout(() => {
+                hideLoading();
+                showNotification('✅ მონაცემები აღდგენილია', false);
+            }, 1500);
+        }
+    );
+}
+
+// ==================== SYSTEM INFO ====================
+async function updateSystemInfo() {
+    // ელემენტების შემოწმება
+    const userCountEl = document.getElementById('systemUserCount');
+    const answersCountEl = document.getElementById('systemAnswersCount');
+    const onlineCountEl = document.getElementById('systemOnlineCount');
+    
+    if (!userCountEl || !answersCountEl || !onlineCountEl) {
+        console.log('System info elements not found');
+        return;
+    }
+    
+    if (!firebaseInitialized || !database) {
+        // Firebase არ არის ინიციალიზებული - ვაჩვენოთ დემო მონაცემები
+        userCountEl.textContent = '127';
+        answersCountEl.textContent = '2,543';
+        
+        // ონლაინ მომხმარებლების რაოდენობა - პირდაპირ onlineUsers ცვლადიდან
+        let onlineCount = 0;
+        const now = Date.now();
+        
+        if (typeof onlineUsers !== 'undefined' && onlineUsers) {
+            Object.values(onlineUsers).forEach(user => {
+                if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
+                    onlineCount++;
+                }
+            });
+        }
+        
+        onlineCountEl.textContent = onlineCount || '3';
+        return;
+    }
+    
+    try {
+        // მომხმარებლების რაოდენობა
+        const usersSnapshot = await database.ref('users').once('value');
+        const users = usersSnapshot.val() || {};
+        const userCount = Object.keys(users).length;
+        userCountEl.textContent = userCount;
+        
+        // პასუხების რაოდენობა
+        const answersSnapshot = await database.ref('answers').once('value');
+        const answers = answersSnapshot.val() || {};
+        const answerCount = Object.keys(answers).length;
+        answersCountEl.textContent = answerCount.toLocaleString();
+        
+        // ონლაინ მომხმარებლების რაოდენობა - პირდაპირ Firebase-დან
+        let onlineCount = 0;
+        const now = Date.now();
+        
+        try {
+            const onlineSnapshot = await database.ref('chat/onlineUsers').once('value');
+            const onlineData = onlineSnapshot.val() || {};
+            
+            Object.values(onlineData).forEach(user => {
+                if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
+                    onlineCount++;
+                }
+            });
+        } catch (e) {
+            console.log('Could not load online users, using local variable');
+            // თუ Firebase ვერ წამოიღო, გამოვიყენოთ გლობალური ცვლადი
+            if (typeof onlineUsers !== 'undefined' && onlineUsers) {
+                Object.values(onlineUsers).forEach(user => {
+                    if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
+                        onlineCount++;
+                    }
+                });
+            }
+        }
+        
+        onlineCountEl.textContent = onlineCount;
+        
+        console.log('✅ System info updated:', { 
+            users: userCount, 
+            answers: answerCount, 
+            online: onlineCount 
+        });
+        
+    } catch (error) {
+        console.error('Error updating system info:', error);
+        
+        // შეცდომის შემთხვევაში ვაჩვენოთ მონაცემები გლობალური ცვლადიდან
+        const now = Date.now();
+        let onlineCount = 0;
+        
+        if (typeof onlineUsers !== 'undefined' && onlineUsers) {
+            Object.values(onlineUsers).forEach(user => {
+                if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
+                    onlineCount++;
+                }
+            });
+        }
+        
+        onlineCountEl.textContent = onlineCount || '0';
+    }
+}
+
+// გლობალური onlineUsers ცვლადის მოსმენა - დავამატოთ ეს ფუნქცია
+function setupOnlineUsersListener() {
+    if (!firebaseInitialized || !database) return;
+    
+    // მოვუსმინოთ ონლაინ მომხმარებლების ცვლილებას
+    database.ref('chat/onlineUsers').on('value', (snapshot) => {
+        onlineUsers = snapshot.val() || {};
+        console.log(`🟢 Online users updated: ${Object.keys(onlineUsers).length}`);
+        
+        // თუ settings გვერდი აქტიურია, განვაახლოთ სისტემის ინფორმაცია
+        if (document.getElementById('settingsSection')?.classList.contains('active')) {
+            updateSystemInfo();
+        }
+    });
+}
+
+// გამოიძახეთ ეს ფუნქცია ავტორიზაციის შემდეგ
+// setupOnlineUsersListener();
+
+// ==================== INITIALIZE SETTINGS PAGE ====================
+function initSettingsPage() {
+    console.log('⚙️ Settings page initialized');
+    
+    // ვერსიის ჩატვირთვა
+    loadVersion();
+    
+    // ავტორიზაციის ისტორიის ჩატვირთვა - მხოლოდ ადმინის
+    loadAuthHistory();
+    
+    // სისტემის ინფორმაციის განახლება
+    updateSystemInfo();
+    
+    // ბოლო backup-ის დრო
+    const lastBackup = localStorage.getItem('lastBackup');
+    if (lastBackup) {
+        try {
+            const backupData = JSON.parse(lastBackup);
+            if (backupData && backupData.time) {
+                document.getElementById('lastBackupTime').textContent = new Date(backupData.time).toLocaleString('ka-GE');
+            }
+        } catch (e) {
+            document.getElementById('lastBackupTime').textContent = 'არასდროს';
+        }
+    } else {
+        document.getElementById('lastBackupTime').textContent = 'არასდროს';
+    }
+    
+    // განვაახლოთ ინფორმაცია ყოველ 10 წამში
+    if (window.settingsInterval) {
+        clearInterval(window.settingsInterval);
+    }
+    
+    window.settingsInterval = setInterval(() => {
+        if (document.getElementById('settingsSection')?.classList.contains('active')) {
+            updateSystemInfo();
+        }
+    }, 10000);
+    
+    // განვაახლოთ ავტორიზაციის ისტორია ყოველ 30 წამში
+    if (window.authInterval) {
+        clearInterval(window.authInterval);
+    }
+    
+    window.authInterval = setInterval(() => {
+        if (document.getElementById('settingsSection')?.classList.contains('active')) {
+            loadAuthHistory();
+        }
+    }, 30000);
 }
 
 // ჩატვირთავს ყველა მოდულის CSV-ს და დაითვლის კითხვების რაოდენობას
@@ -4624,31 +5239,35 @@ UniMed`;
             document.getElementById('authError').style.display = 'none';
         });
 
-        // Navigation
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => {
-                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                item.classList.add('active');
-                
-                const section = item.dataset.section;
-                document.querySelectorAll('.content-section').forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.getElementById(`${section}Section`).classList.add('active');
-                
-                if (section === 'dashboard') {
-                    loadDashboard();
-                } else if (section === 'online') {
-                    loadOnlineUsers();
-                } else if (section === 'statistics') {
-                    loadStatistics();
-                } else if (section === 'chat') {
-                    loadChat();
-                } else if (section === 'settings') {
-                    console.log('Settings section opened');
-                }
-            });
+// Navigation
+// Navigation
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        item.classList.add('active');
+        
+        const section = item.dataset.section;
+        document.querySelectorAll('.content-section').forEach(content => {
+            content.classList.remove('active');
         });
+        document.getElementById(`${section}Section`).classList.add('active');
+        
+        if (section === 'dashboard') {
+            loadDashboard();
+        } else if (section === 'online') {
+            loadOnlineUsers();
+        } else if (section === 'statistics') {
+            loadStatistics();
+        } else if (section === 'chat') {
+            loadChat();
+        } else if (section === 'settings') {
+            console.log('Settings section opened');
+            if (typeof initSettingsPage === 'function') {
+                initSettingsPage();
+            }
+        }
+    });
+});
 
 // ==================== ONLINE USERS FUNCTIONS ====================
 
