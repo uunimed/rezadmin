@@ -5685,7 +5685,7 @@ function setupOnlineUsersListener() {
             const isGuest = (mainSession.userId && mainSession.userId.startsWith('guest_')) || 
                            (mainSession.name && mainSession.name.includes('სტუმარი'));
             
-            // 👇 FIXED: Get sessionStart - FIRST from existing map to preserve original time
+            // 👇 CRITICAL FIX: Get sessionStart with proper priority
             let sessionStart;
             
             // Check if we already have this user in the map with a sessionStart
@@ -5696,23 +5696,32 @@ function setupOnlineUsersListener() {
                 sessionStart = existingUser.sessionStart;
                 console.log(`📌 User ${userId} keeping original session start: ${new Date(sessionStart).toLocaleTimeString()}`);
             } else {
-                // No existing record - this is a new user
-                // Try to get sessionStart from Firebase, in priority order:
-                // 1. sessionStart field (explicitly set)
-                // 2. firstSeen field (when they first appeared)
-                // 3. earliest lastSeen among all their sessions
+                // No existing record - this is a new user for the admin panel
+                // Priority order for sessionStart:
+                // 1. sessionStart field (explicitly set by user HTML)
+                // 2. firstSeen field
+                // 3. earliest lastSeen (but only if it's significantly older than now)
+                
                 if (mainSession.sessionStart) {
+                    // User HTML properly set this
                     sessionStart = mainSession.sessionStart;
                     console.log(`📌 New user ${userId} using sessionStart from Firebase: ${new Date(sessionStart).toLocaleTimeString()}`);
                 } else if (mainSession.firstSeen) {
                     sessionStart = mainSession.firstSeen;
                     console.log(`📌 New user ${userId} using firstSeen: ${new Date(sessionStart).toLocaleTimeString()}`);
+                    
+                    // Save this as sessionStart for future
+                    database.ref(`chat/onlineUsers/${sessionKey}/sessionStart`).set(sessionStart);
                 } else {
-                    // Find the earliest lastSeen among all sessions
-                    const earliestSession = sessions.reduce((earliest, current) => 
-                        (current.lastSeen < earliest.lastSeen) ? current : earliest, sessions[0]);
-                    sessionStart = earliestSession.lastSeen;
-                    console.log(`📌 New user ${userId} using earliest lastSeen: ${new Date(sessionStart).toLocaleTimeString()}`);
+                    // If we have to use lastSeen, use the OLDEST lastSeen among all sessions
+                    // This is better than using the most recent one
+                    const oldestSession = sessions.reduce((oldest, current) => 
+                        (current.lastSeen < oldest.lastSeen) ? current : oldest, sessions[0]);
+                    sessionStart = oldestSession.lastSeen;
+                    console.log(`📌 New user ${userId} using oldest lastSeen: ${new Date(sessionStart).toLocaleTimeString()}`);
+                    
+                    // Save this as sessionStart for future
+                    database.ref(`chat/onlineUsers/${sessionKey}/sessionStart`).set(sessionStart);
                 }
             }
             
@@ -5806,7 +5815,9 @@ function setupOnlineUsersListener() {
         console.log("Current online users with session start:");
         onlineUsersMap.forEach((user, key) => {
             const sessionDuration = Math.floor((now - user.sessionStart) / 1000);
-            console.log(`- ${user.name}: started ${new Date(user.sessionStart).toLocaleTimeString()} (${Math.floor(sessionDuration/60)} minutes ago)`);
+            const hours = Math.floor(sessionDuration / 3600);
+            const minutes = Math.floor((sessionDuration % 3600) / 60);
+            console.log(`- ${user.name}: started ${new Date(user.sessionStart).toLocaleTimeString()} (${hours}h ${minutes}m ago)`);
         });
     });
 }
