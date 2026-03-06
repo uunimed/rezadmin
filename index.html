@@ -5278,19 +5278,37 @@ async function completeCurrentSession() {
     }
 }
 
-// დაამატე ეს ფუნქცია
-function displayCurrentCode() {
-    const codeDisplay = document.getElementById('currentCodeDisplay');
-    if (codeDisplay) {
-        // აჩვენე პირველი და ბოლო ციფრი, დანარჩენი ვარსკვლავებით
-        const firstChar = ADMIN_CODE[0];
-        const lastChar = ADMIN_CODE[ADMIN_CODE.length - 1];
-        const stars = '*'.repeat(ADMIN_CODE.length - 2);
-        codeDisplay.textContent = `${firstChar}${stars}${lastChar}`;
-    }
+// Add this new function to load fresh data
+function loadOnlineUsersFresh() {
+    if (!firebaseInitialized || !database) return;
+    
+    database.ref('chat/onlineUsers').once('value', (snapshot) => {
+        const users = snapshot.val() || {};
+        const now = Date.now();
+        const TIMEOUT = 60000;
+        
+        onlineUsersMap.clear();
+        
+        Object.entries(users).forEach(([key, user]) => {
+            if (user && user.lastSeen && (now - user.lastSeen) < TIMEOUT) {
+                const isGuest = (user.userId && user.userId.startsWith('guest_')) || 
+                               (user.name && user.name.includes('სტუმარი'));
+                
+                onlineUsersMap.set(key, {
+                    key: key,
+                    ...user,
+                    type: isGuest ? 'guest' : 'registered',
+                    sessionStart: user.sessionStart || now,
+                    module: user.module || user.currentModule || null
+                });
+            }
+        });
+        
+        renderAllOnlineUsers();
+        updateOnlineCounter();
+    });
 }
 
-// გამოიძახე ეს ფუნქცია initSettingsPage()-ში
 
 async function loadOnlineUsers() {
     // ეს ფუნქცია აღარ არის საჭირო, რადგან realtime updates უკვე მუშაობს
@@ -5511,67 +5529,84 @@ let lastOnlineUsersJSON = ''; // წინა მდგომარეობი�
 let updateTimeout = null; // debounce-ისთვის
 let onlineUsersMap = new Map(); // მიმდინარე ონლაინ მომხმარებლების რუკა
 
+// Replace your existing startOnlineTracking function with this:
 function startOnlineTracking() {
     if (!firebaseInitialized || !database) return;
     
-    console.log("🟢 Starting online tracking with fresh sessions only");
+    console.log("🟢 Starting online tracking - resetting all sessions");
     
-    // Don't try to preserve old sessions - always use current data
+    // First, get current online users
     database.ref('chat/onlineUsers').once('value', (snapshot) => {
         const users = snapshot.val() || {};
         const now = Date.now();
+        const updates = {};
+        
+        // Reset ALL session start times to current time
+        Object.keys(users).forEach(key => {
+            const user = users[key];
+            // Only reset active users (last seen within last 60 seconds)
+            if (user && user.lastSeen && (now - user.lastSeen) < 60000) {
+                updates[`chat/onlineUsers/${key}/sessionStart`] = now;
+                updates[`chat/onlineUsers/${key}/firstSeen`] = now;
+                console.log(`🔄 Resetting session for ${user.name || key} to start at ${new Date(now).toLocaleTimeString()}`);
+            }
+        });
+        
+        // Apply updates if any
+        if (Object.keys(updates).length > 0) {
+            database.ref().update(updates).then(() => {
+                console.log(`✅ Reset ${Object.keys(updates).length} sessions on page refresh`);
+                // Now load fresh data
+                loadOnlineUsersFresh();
+            });
+        } else {
+            loadOnlineUsersFresh();
+        }
+    });
+    
+    // Set up listeners with fresh data
+    setupOnlineUsersListener();
+    startHeartbeatMonitor();
+}
+
+function setupOnlineUsersListener() {
+    if (!firebaseInitialized || !database) return;
+    
+    console.log("🟢 Setting up online users listener with fresh timestamps");
+    
+    database.ref('chat/onlineUsers').on('value', (snapshot) => {
+        const newOnlineUsers = snapshot.val() || {};
+        const now = Date.now();
         const TIMEOUT = 60000;
         
-        onlineUsersMap.clear();
+        const newMap = new Map();
         
-        // Create array of active users
-        const activeUsers = [];
-        
-        Object.entries(users).forEach(([key, user]) => {
+        Object.entries(newOnlineUsers).forEach(([sessionKey, user]) => {
             if (user && user.lastSeen && (now - user.lastSeen) < TIMEOUT) {
                 const isGuest = (user.userId && user.userId.startsWith('guest_')) || 
                                (user.name && user.name.includes('სტუმარი'));
                 
-                // Use sessionStart directly from Firebase
-                // This will be fresh from the user's current session
-                const sessionStart = user.sessionStart || user.lastSeen;
-                
-                activeUsers.push({
-                    key: key,
-                    ...user,
+                // CRITICAL: Don't preserve old timestamps on refresh
+                // The sessionStart from Firebase is always the current one
+                newMap.set(sessionKey, {
+                    key: sessionKey,
+                    userId: user.userId || sessionKey,
+                    name: user.name || 'უცნობი',
                     type: isGuest ? 'guest' : 'registered',
-                    sessionStart: sessionStart,
+                    sessionStart: user.sessionStart || user.lastSeen || now,
                     module: user.module || user.currentModule || null,
-                    status: 'active'
+                    lastSeen: user.lastSeen
                 });
             }
         });
         
-        // Sort by sessionStart (newest first)
-        activeUsers.sort((a, b) => b.sessionStart - a.sessionStart);
+        // Update the map
+        onlineUsersMap = newMap;
+        renderAllOnlineUsers();
+        updateOnlineCounter();
         
-        // Add to map
-        activeUsers.forEach(user => {
-            onlineUsersMap.set(user.key, user);
-        });
-        
-        // Render with newest first
-        if (document.getElementById('onlineSection')?.classList.contains('active')) {
-            renderAllOnlineUsers();
-        }
-        
-        console.log(`🟢 Initial load: ${activeUsers.length} active users`);
-        activeUsers.forEach(u => {
-            const duration = Math.floor((now - u.sessionStart) / 1000);
-            console.log(`- ${u.name}: ${duration}s online`);
-        });
+        console.log(`🟢 Online users updated: ${onlineUsersMap.size} users`);
     });
-    
-    // Set up listeners
-    setupOnlineUsersListener();
-    
-    // Start heartbeat monitor
-    startHeartbeatMonitor();
 }
 
 function startHeartbeatMonitor() {
@@ -5618,116 +5653,6 @@ function startHeartbeatMonitor() {
             }
         });
     }, 5000); // Check every 5 seconds
-}
-
-function setupOnlineUsersListener() {
-    if (!firebaseInitialized || !database) return;
-    
-    console.log("🟢 Setting up online users listener with immediate removal");
-    
-    database.ref('chat/onlineUsers').on('value', (snapshot) => {
-        const newOnlineUsers = snapshot.val() || {};
-        const now = Date.now();
-        const TIMEOUT = 15000; // 15 seconds timeout
-        
-        const newMap = new Map();
-        const userSessions = new Map();
-        
-        // First, group all sessions by user ID
-        Object.entries(newOnlineUsers).forEach(([sessionKey, user]) => {
-            // Only include users seen in the last 15 seconds
-            if (user && user.lastSeen && (now - user.lastSeen) < TIMEOUT) {
-                let userId = user.userId;
-                if (!userId) {
-                    if (user.name && user.name.includes('სტუმარი')) {
-                        userId = user.name;
-                    } else {
-                        userId = sessionKey;
-                    }
-                }
-                
-                if (!userSessions.has(userId)) {
-                    userSessions.set(userId, []);
-                }
-                userSessions.get(userId).push({ sessionKey, ...user });
-            }
-        });
-        
-        // Create one entry per unique user
-        userSessions.forEach((sessions, userId) => {
-            sessions.sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
-            const mainSession = sessions[0];
-            
-            const isGuest = (mainSession.userId && mainSession.userId.startsWith('guest_')) || 
-                           (mainSession.name && mainSession.name.includes('სტუმარი'));
-            
-            // 🔴 CRITICAL FIX: Always use sessionStart directly from Firebase
-            // This will be the fresh timestamp from the user's current session
-            let sessionStart = mainSession.sessionStart || mainSession.lastSeen;
-            
-            // Get module information
-            let moduleInfo = mainSession.module || mainSession.currentModule || mainSession.selectedModule || null;
-            
-            newMap.set(userId, {
-                key: mainSession.sessionKey,
-                userId: userId,
-                name: mainSession.name || 'უცნობი',
-                type: isGuest ? 'guest' : 'registered',
-                sessionStart: sessionStart, // This is the fresh timestamp
-                module: moduleInfo,
-                lastSeen: mainSession.lastSeen
-            });
-        });
-        
-        // Update the map
-        const oldKeys = new Set(onlineUsersMap.keys());
-        const newKeys = new Set(newMap.keys());
-        
-        // Removed users
-        oldKeys.forEach(key => {
-            if (!newKeys.has(key)) {
-                console.log(`🔴 User ${key} removed - offline`);
-                removeOnlineUser(key);
-            }
-        });
-        
-        // Added or updated users
-        newKeys.forEach(key => {
-            const newUser = newMap.get(key);
-            
-            if (!oldKeys.has(key)) {
-                // New user - timer will show 0 seconds
-                addOnlineUserToTop(newUser);
-                console.log(`🟢 New user ${key} with session start: ${new Date(newUser.sessionStart).toLocaleTimeString()}`);
-            } else {
-                // Updated user
-                const oldUser = onlineUsersMap.get(key);
-                
-                // If sessionStart changed significantly (new session), update UI
-                if (Math.abs((oldUser.sessionStart || 0) - (newUser.sessionStart || 0)) > 5000) {
-                    console.log(`🔄 User ${key} started new session at: ${new Date(newUser.sessionStart).toLocaleTimeString()}`);
-                }
-                
-                updateOnlineUser(newUser);
-            }
-        });
-        
-        onlineUsersMap = newMap;
-        updateOnlineCounter();
-        
-        console.log(`🟢 Online users updated: ${onlineUsersMap.size} unique users`);
-        
-        // Log all users and their session start times
-        console.log("Current online users with session times:");
-        onlineUsersMap.forEach((user, key) => {
-            const sessionDuration = Math.floor((now - user.sessionStart) / 1000);
-            console.log(`- ${user.name}: started ${new Date(user.sessionStart).toLocaleTimeString()} (${sessionDuration}s ago)`);
-        });
-        
-        renderAllOnlineUsers();
-    }, (error) => {
-        console.error("Error in online users listener:", error);
-    });
 }
 
 // Replace your existing addOnlineUserToTop function with this:
