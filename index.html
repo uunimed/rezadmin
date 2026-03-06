@@ -1739,30 +1739,9 @@
     animation: onlinePulse 2s infinite;
 }
 
-/* Chat Section with fixed background */
-#chatSection {
-    position: relative;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: calc(100vh - 100px);
-    border-radius: 20px;
-    padding: 20px;
-}
-
-/* Semi-transparent overlay for chat container */
-#chatSection .chat-container {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    height: calc(100vh - 140px);
-    position: relative;
-    z-index: 2;
-}
-
-/* Chat Section - Stretched full width with 0.5cm margins */
 #chatSection {
     background: var(--bg);
-    padding: 20px calc(0.5cm) !important;
+    padding: 20px 0.5cm 20px 0cm; /* ზედა, მარჯვენა, ქვედა, მარცხენა */
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box;
@@ -1786,7 +1765,93 @@
     width: 100% !important;
 }
 
+/* Auth History Table Container with Scroll */
+.auth-history-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--surface-light);
+}
 
+.auth-history-container::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.auth-history-container::-webkit-scrollbar-track {
+    background: var(--surface-light);
+    border-radius: 10px;
+}
+
+.auth-history-container::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.auth-history-container::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-dark);
+}
+
+/* Auth History Table Styles */
+#authHistoryTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#authHistoryTable thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--surface-light);
+}
+
+#authHistoryTable th {
+    padding: 16px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border);
+    background: var(--surface-light);
+    white-space: nowrap;
+}
+
+#authHistoryTable td {
+    padding: 16px 20px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    vertical-align: middle;
+}
+
+#authHistoryTable tr:hover td {
+    background: var(--surface-light);
+}
+
+/* სტატუსის ბეიჯი */
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 40px;
+    font-weight: 500;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* პატარა ეკრანებისთვის */
+@media (max-width: 768px) {
+    .auth-history-container {
+        max-height: 300px;
+    }
+    
+    #authHistoryTable th,
+    #authHistoryTable td {
+        padding: 12px 10px;
+        font-size: 12px;
+    }
+}
     </style>
 </head>
 <body>
@@ -2394,8 +2459,7 @@
                             <polyline points="22,6 12,13 2,6"/>
                         </svg>
                         <div>
-                            <div style="font-weight: 600;">იმეილით დადასტურება</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">კოდის შეყვანის შემდეგ</div>
+                            <div style="font-weight: 600;">E-mail-ის დადასტურება</div>
                         </div>
                     </div>
                     <label class="switch">
@@ -2414,7 +2478,7 @@
                                 <line x1="8" y1="12" x2="16" y2="12"/>
                             </svg>
                         </div>
-                        <span style="font-weight: 600; font-size: 16px; color: var(--text);">ადმინ კოდის შეცვლა</span>
+                        <span style="font-weight: 600; font-size: 16px; color: var(--text);">ავტორიზაციის კოდის შეცვლა</span>
                     </div>
                     
                     <button onclick="openAdminCodeModal()" style="width: 100%; padding: 14px; background: var(--gradient); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.3s;">
@@ -2459,26 +2523,26 @@
                 ბოლო ავტორიზაციები
             </h3>
             
-            <div class="table-container" style="margin-top: 16px;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>დრო</th>
-                            <th>IP მისამართი</th>
-                            <th>მოწყობილობა</th>
-                            <th>სტატუსი</th>
-                        </tr>
-                    </thead>
-                    <tbody id="authHistoryTable">
-                        <tr>
-                            <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">
-                                <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto 10px;"></div>
-                                იტვირთება...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+<div class="auth-history-container">
+    <table id="authHistoryTable">
+        <thead>
+            <tr>
+                <th>დრო</th>
+                <th>IP მისამართი</th>
+                <th>მოწყობილობა</th>
+                <th>სტატუსი</th>
+            </tr>
+        </thead>
+        <tbody id="authHistoryTableBody">
+            <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                    <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto 10px;"></div>
+                    იტვირთება...
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
         </div>
 
         <!-- სარეზერვო ასლი (Backup) -->
@@ -2530,7 +2594,7 @@
                 <div style="background: var(--surface-light); border-radius: 12px; padding: 16px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
                         <span style="color: var(--text-muted);">Firebase</span>
-                        <span style="font-weight: 600; color: var(--success);">● ონლაინ</span>
+                        <span style="font-weight: 600; color: var(--success);">აქტიურია</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
                         <span style="color: var(--text-muted);">მომხმარებლები</span>
@@ -2554,7 +2618,7 @@
 <div id="adminCodeModal" class="modal-overlay">
     <div class="modal" style="max-width: 450px;">
         <div class="modal-header">
-            <h3>ადმინ კოდის შეცვლა</h3>
+            <h3>კოდის შეცვლა</h3>
             <button class="modal-close" onclick="closeModal('adminCodeModal')">
                 <svg class="icon" viewBox="0 0 24 24">
                     <line x1="18" y1="6" x2="6" y2="18"/>
@@ -2565,15 +2629,15 @@
         <div class="modal-body">
             <div style="margin-bottom: 20px;">
                 <label style="display: block; margin-bottom: 8px; color: var(--text-muted);">მიმდინარე კოდი</label>
-                <input type="password" id="modalCurrentCode" class="auth-input" placeholder="●●●●●●" style="font-family: monospace; letter-spacing: 4px;">
+                <input type="password" id="modalCurrentCode" class="auth-input" placeholder="" style="font-family: monospace; letter-spacing: 4px;">
             </div>
             <div style="margin-bottom: 20px;">
                 <label style="display: block; margin-bottom: 8px; color: var(--text-muted);">ახალი კოდი</label>
-                <input type="password" id="modalNewCode" class="auth-input" placeholder="●●●●●●" maxlength="6" style="font-family: monospace; letter-spacing: 4px;">
+                <input type="password" id="modalNewCode" class="auth-input" placeholder="" maxlength="6" style="font-family: monospace; letter-spacing: 4px;">
             </div>
             <div style="margin-bottom: 20px;">
                 <label style="display: block; margin-bottom: 8px; color: var(--text-muted);">გაიმეორეთ ახალი კოდი</label>
-                <input type="password" id="modalConfirmCode" class="auth-input" placeholder="●●●●●●" maxlength="6" style="font-family: monospace; letter-spacing: 4px;">
+                <input type="password" id="modalConfirmCode" class="auth-input" placeholder="" maxlength="6" style="font-family: monospace; letter-spacing: 4px;">
             </div>
             <div style="font-size: 12px; color: var(--text-muted); background: var(--surface-light); padding: 12px; border-radius: 12px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" style="vertical-align: middle; margin-right: 4px;">
@@ -2895,7 +2959,7 @@
         const ADMIN_EMAIL = "shogiradze.ale@gmail.com";
 
 // Admin Authentication
-const ADMIN_CODE = "200011";
+let ADMIN_CODE = "200011";
 let isAdminAuthenticated = false;
 let currentActivityTab = 'custom';
 let onlineUsers = {};
@@ -3106,7 +3170,7 @@ function getModuleName(module) {
                 toggle.addEventListener('change', (e) => {
                     isEmailAuthEnabled = e.target.checked;
                     localStorage.setItem(EMAIL_AUTH_KEY, isEmailAuthEnabled);
-                    showNotification(isEmailAuthEnabled ? 'იმეილით ავტორიზაცია ჩართულია' : 'იმეილით ავტორიზაცია გამორთულია', false);
+                    showNotification(isEmailAuthEnabled ? 'E-mail ავტორიზაცია ჩართულია' : 'E-mail ავტორიზაცია გამორთულია', false);
                 });
             }
         }
@@ -3474,45 +3538,63 @@ function changeAdminCodeFromModal() {
         return;
     }
     
+    // შევინახოთ ახალი კოდი localStorage-ში
+    localStorage.setItem('adminCode', newCode);
+    
+    // განვაახლოთ ADMIN_CODE ცვლადი
+    ADMIN_CODE = newCode;
+    
     // ვერსიის განახლება
     updateVersion();
     
-    showNotification('✅ კოდი წარმატებით შეიცვალა!', false);
+    showNotification('კოდი წარმატებით შეიცვალა!', false);
     closeModal('adminCodeModal');
+    
+    // გავასუფთაოთ ველები
+    document.getElementById('modalCurrentCode').value = '';
+    document.getElementById('modalNewCode').value = '';
+    document.getElementById('modalConfirmCode').value = '';
 }
 
 // ==================== ADMIN AUTH HISTORY ====================
 async function loadAuthHistory() {
-    const tableBody = document.getElementById('authHistoryTable');
-    if (!tableBody) return;
+const tableBody = document.getElementById('authHistoryTableBody');
+if (!tableBody) return;
     
     // ვაჩვენოთ ჩატვირთვის ინდიკატორი
     tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;"><div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto 10px;"></div>იტვირთება...</td></tr>';
     
-    // Firebase-დან წამოღება
-    if (firebaseInitialized && database) {
-        try {
-            // ვცადოთ წამოვიღოთ ადმინის ავტორიზაციის ისტორია
-            const snapshot = await database.ref('admin/authHistory').limitToLast(20).once('value');
-            const history = snapshot.val();
-            
-            if (history && Object.keys(history).length > 0) {
-                // გადავიყვანოთ მასივში
-                const historyList = Object.entries(history)
-                    .map(([key, value]) => ({ ...value, key }))
-                    .sort((a, b) => b.timestamp - a.timestamp)
-                    .slice(0, 10);
-                
-                renderAuthHistory(historyList);
-                return;
-            }
-        } catch (error) {
-            console.error('Firebase error:', error);
-        }
+    if (!firebaseInitialized || !database) {
+        tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">📭 Firebase არ არის ხელმისაწვდომი</td></tr>';
+        return;
     }
     
-    // თუ Firebase-ში არ არის, შევქმნათ დემო მონაცემები ადმინისთვის
-    createDemoAdminAuthHistory();
+    try {
+        // წამოვიღოთ ბოლო 50 ავტორიზაცია Firebase-დან
+        const snapshot = await database.ref('admin/authHistory')
+            .orderByChild('timestamp')
+            .limitToLast(50)
+            .once('value');
+        
+        const history = snapshot.val();
+        
+        if (!history || Object.keys(history).length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">📭 ავტორიზაციის ისტორია ცარიელია</td></tr>';
+            return;
+        }
+
+        // გადავიყვანოთ ობიექტი მასივში და დავალაგოთ დროის მიხედვით (უახლესი პირველ რიგში)
+        const historyList = Object.entries(history)
+            .map(([key, value]) => ({ key, ...value }))
+            .sort((a, b) => b.timestamp - a.timestamp)
+            .slice(0, 20); // ვაჩვენოთ მხოლოდ ბოლო 20
+
+        renderAuthHistory(historyList);
+
+    } catch (error) {
+        console.error('❌ Error loading auth history from Firebase:', error);
+        tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger); padding: 30px;">❌ შეცდომა ისტორიის ჩატვირთვისას</td></tr>';
+    }
 }
 
 
@@ -3563,13 +3645,15 @@ function createDemoAdminAuthHistory() {
 }
 
 function renderAuthHistory(history) {
-    const tableBody = document.getElementById('authHistoryTable');
-    if (!tableBody) return;
+const tableBody = document.getElementById('authHistoryTableBody');
+if (!tableBody) return;
     
     if (!history || history.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">📭 ავტორიზაციის ისტორია ცარიელია</td></tr>';
         return;
     }
+    
+    const now = Date.now();
     
     tableBody.innerHTML = history.map(item => {
         const date = new Date(item.timestamp).toLocaleString('ka-GE', {
@@ -3581,9 +3665,29 @@ function renderAuthHistory(history) {
             second: '2-digit'
         });
         
-        const status = item.success ? 'წარმატებული' : 'წარუმატებელი';
-        const statusColor = item.success ? 'var(--success)' : 'var(--danger)';
-        const isCurrent = item.current || (Date.now() - item.timestamp < 5 * 60 * 1000 && item.success);
+        // სტატუსის განსაზღვრა
+        let status = 'წარუმატებელი';
+        let statusColor = 'var(--danger)';
+        let statusBg = 'rgba(220, 38, 38, 0.1)';
+        
+if (item.success === true) {
+    // თუ სესია უკვე დასრულებულია (logout-ით)
+    if (item.completed === true) {
+        status = 'დასრულებული';
+        statusColor = 'var(--text-muted)';
+        statusBg = 'rgba(100, 116, 139, 0.1)';
+    }
+    // თუ არ არის დასრულებული და ბოლო 5 წუთშია - აქტიური
+    else if (now - item.timestamp < 5 * 60 * 1000) {
+        status = 'აქტიური';
+        statusColor = 'var(--success)';
+        statusBg = 'rgba(22, 163, 74, 0.1)';
+    } else {
+        status = 'დასრულებული';
+        statusColor = 'var(--text-muted)';
+        statusBg = 'rgba(100, 116, 139, 0.1)';
+    }
+}
         
         return `
             <tr>
@@ -3594,11 +3698,10 @@ function renderAuthHistory(history) {
                             <path d="M5.3 18.3c.8-1.5 2.3-2.5 4-2.7 1.2-.1 2.4.1 3.6.3 1.2.2 2.4.5 3.6.5 1.3 0 2.5-.3 3.7-.8"/>
                         </svg>
                         <div>
-                            <div style="font-weight: 600;">${item.username || 'ადმინისტრატორი'}</div>
+                            <div style="font-weight: 600;">${escapeHtml(item.username || 'ადმინისტრატორი')}</div>
                             <div style="font-size: 11px; color: var(--text-muted);">${date}</div>
                         </div>
                     </div>
-                    ${isCurrent ? '<span style="margin-left: 8px; background: var(--success); color: white; padding: 2px 8px; border-radius: 40px; font-size: 10px;">აქტიური</span>' : ''}
                 </td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 4px;">
@@ -3607,9 +3710,8 @@ function renderAuthHistory(history) {
                             <line x1="2" y1="12" x2="22" y2="12"/>
                             <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                         </svg>
-                        ${item.ip || '192.168.1.105'}
+                        ${escapeHtml(item.ip || '192.168.1.105')}
                     </div>
-                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${item.location || 'თბილისი'}</div>
                 </td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 4px;">
@@ -3618,13 +3720,14 @@ function renderAuthHistory(history) {
                             <line x1="8" y1="21" x2="16" y2="21"/>
                             <line x1="12" y1="17" x2="12" y2="21"/>
                         </svg>
-                        ${item.device || 'Chrome / Windows'}
+                        ${escapeHtml(item.device || 'Chrome / Windows')}
                     </div>
                 </td>
                 <td>
-                    <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 12px; border-radius: 40px; font-weight: 500; font-size: 12px;">
-                        ${status}
-                    </span>
+<span class="status-badge" style="background: ${statusBg}; color: ${statusColor};">
+    ${status}
+</span>
+                    ${item.reason ? `<div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">${escapeHtml(item.reason)}</div>` : ''}
                 </td>
             </tr>
         `;
@@ -4056,6 +4159,51 @@ async function disconnectUser(userKey) {
         }
     );
 }
+
+// ==================== ADMIN AUTH HISTORY ====================
+async function saveAdminAuthHistory(username, success, reason = '') {
+    if (!firebaseSyncEnabled || !database) return;
+    
+    // IP-ს მისაღებად შეგვიძლია გამოვიყენოთ პუბლიკური API
+    let ip = 'უცნობია';
+    try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        ip = ipData.ip;
+    } catch (e) {
+        console.log('IP fetch failed');
+    }
+
+    // მოწყობილობის ინფორმაცია
+    const deviceInfo = navigator.userAgent;
+    let device = 'უცნობია';
+    if (deviceInfo.includes('Windows')) device = 'Windows';
+    else if (deviceInfo.includes('Mac')) device = 'macOS';
+    else if (deviceInfo.includes('iPhone')) device = 'iPhone';
+    else if (deviceInfo.includes('Android')) device = 'Android';
+    else if (deviceInfo.includes('Linux')) device = 'Linux';
+    
+    const browser = deviceInfo.includes('Chrome') ? 'Chrome' :
+                    deviceInfo.includes('Firefox') ? 'Firefox' :
+                    deviceInfo.includes('Safari') ? 'Safari' : 'სხვა';
+
+    const historyEntry = {
+        timestamp: Date.now(),
+        success: success,
+        ip: ip,
+        device: `${browser} / ${device}`,
+        username: username || 'უცნობი',
+        reason: reason
+    };
+
+    try {
+        await database.ref('admin/authHistory').push(historyEntry);
+        console.log('✅ Auth history saved for admin');
+    } catch (error) {
+        console.error('❌ Error saving auth history:', error);
+    }
+}
+
 // Load modules stats - TOP 5 MOST ACTIVE MODULES
 async function loadModulesStats() {
     if (!firebaseInitialized || !database) return;
@@ -5018,40 +5166,45 @@ if (onlineUsers && typeof onlineUsers === 'object') {
             );
         }
 
-        // Load saved settings on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTimeout = localStorage.getItem('adminSessionTimeout');
-            if (savedTimeout && document.getElementById('sessionTimeout')) {
-                document.getElementById('sessionTimeout').value = savedTimeout;
-            }
-            
-            const savedLang = localStorage.getItem('adminLanguage');
-            if (savedLang && document.getElementById('language')) {
-                document.getElementById('language').value = savedLang;
-            }
-            
-            const savedTheme = localStorage.getItem('adminTheme');
-            if (savedTheme && document.getElementById('theme')) {
-                document.getElementById('theme').value = savedTheme;
-            }
-        });
+// Load saved settings on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTimeout = localStorage.getItem('adminSessionTimeout');
+    if (savedTimeout && document.getElementById('sessionTimeout')) {
+        document.getElementById('sessionTimeout').value = savedTimeout;
+    }
+    
+    const savedLang = localStorage.getItem('adminLanguage');
+    if (savedLang && document.getElementById('language')) {
+        document.getElementById('language').value = savedLang;
+    }
+    
+    const savedTheme = localStorage.getItem('adminTheme');
+    if (savedTheme && document.getElementById('theme')) {
+        document.getElementById('theme').value = savedTheme;
+    }
+    
+    // დაამატე ეს ხაზები - შენახული კოდის წაკითხვა
+    const savedAdminCode = localStorage.getItem('adminCode');
+    if (savedAdminCode) {
+        ADMIN_CODE = savedAdminCode;
+    }
+});
 
-        // Admin code handling
-        document.getElementById('adminCodeBtn').addEventListener('click', async () => {
-            const code = document.getElementById('adminCode').value.trim();
+document.getElementById('adminCodeBtn').addEventListener('click', async () => {
+    const code = document.getElementById('adminCode').value.trim();
+    
+    if (code === ADMIN_CODE) {
+        if (isEmailAuthEnabled) {
+            showLoading();
+            isAdminCodeValid = true;
             
-            if (code === ADMIN_CODE) {
-                if (isEmailAuthEnabled) {
-                    showLoading();
-                    isAdminCodeValid = true;
-                    
-                    generatedEmailCode = Math.floor(100000 + Math.random() * 900000).toString();
-                    codeExpirationTime = Date.now() + 60000;
-                    
-                    startCodeTimer();
-                    
-                    const subject = "UniMed · ადმინისტრატორის კოდი";
-                    const message = `თქვენ მოითხოვეთ ავტორიზაცია ადმინისტრატორის პანელზე. 
+            generatedEmailCode = Math.floor(100000 + Math.random() * 900000).toString();
+            codeExpirationTime = Date.now() + 60000;
+            
+            startCodeTimer();
+            
+            const subject = "UniMed · ადმინისტრატორის კოდი";
+            const message = `თქვენ მოითხოვეთ ავტორიზაცია ადმინისტრატორის პანელზე. 
 იმისათვის, რომ დადასტურდეს თქვენი ავთენტურობა, შეიტანეთ კოდი:
 
 ${generatedEmailCode}
@@ -5060,92 +5213,106 @@ ${generatedEmailCode}
 
 UniMed`;
                     
-                    const emailSent = await sendEmailViaScript(ADMIN_EMAIL, subject, message);
-                    
-                    hideLoading();
-                    
-                    if (emailSent) {
-                        document.getElementById('initialCodeStep').style.display = 'none';
-                        document.getElementById('emailCodeStep').style.display = 'block';
-                        document.getElementById('emailCode').focus();
-                        showNotification('კოდი გაიგზავნა ელ.ფოსტაზე (მოქმედებს 1 წუთი)', false);
-                    } else {
-                        showNotification('ელ.ფოსტის გაგზავნა ვერ მოხერხდა', true);
-                    }
-                } else {
-                    const oldNotifications = document.querySelectorAll('.notification');
-                    oldNotifications.forEach(n => n.remove());
-                    
-                    isAdminAuthenticated = true;
-                    document.getElementById('authOverlay').style.display = 'none';
-                    document.getElementById('adminPanel').style.display = 'block';
-                    
-                    showNotification('წარმატებული ავტორიზაცია', false);
-                    
-                    loadAllData();
-                    startOnlineTracking();
-                    initChat();
-                    
-                    // დაიწყეთ წამზომი
-startSessionTimerIfNeeded();
-
-                    if (countdownInterval) {
-                        clearInterval(countdownInterval);
-                    }
-                }
+            const emailSent = await sendEmailViaScript(ADMIN_EMAIL, subject, message);
+            
+            hideLoading();
+            
+            if (emailSent) {
+                document.getElementById('initialCodeStep').style.display = 'none';
+                document.getElementById('emailCodeStep').style.display = 'block';
+                document.getElementById('emailCode').focus();
+                showNotification('კოდი გაიგზავნა ელ.ფოსტაზე (მოქმედებს 1 წუთი)', false);
             } else {
-                showNotification('არასწორი ადმინ კოდი', true);
+                showNotification('ელ.ფოსტის გაგზავნა ვერ მოხერხდა', true);
             }
-        });
+        } else {
+            const oldNotifications = document.querySelectorAll('.notification');
+            oldNotifications.forEach(n => n.remove());
+            
+            // 👇 დაამატე ეს ხაზი - წარმატებული შესვლა
+            saveAdminAuthHistory(true, 'code', 'წარმატებული შესვლა');
+            
+            isAdminAuthenticated = true;
+            document.getElementById('authOverlay').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            
+            showNotification('წარმატებული ავტორიზაცია', false);
+            
+            loadAllData();
+            startOnlineTracking();
+            initChat();
+            
+            startSessionTimerIfNeeded();
 
-        document.getElementById('verifyEmailCodeBtn').addEventListener('click', () => {
-            const emailCode = document.getElementById('emailCode').value.trim();
-            
-            if (!emailCode || emailCode.length !== 6) {
-                showNotification('შეიტანეთ კოდი', true);
-                return;
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
             }
-            
-            if (codeExpirationTime && Date.now() > codeExpirationTime) {
-                showNotification('გაგზავნეთ კოდი ხელახლა', true);
-                return;
-            }
-            
-            if (emailCode === generatedEmailCode) {
-                const oldNotifications = document.querySelectorAll('.notification');
-                oldNotifications.forEach(n => n.remove());
-                
-                isAdminAuthenticated = true;
-                document.getElementById('authOverlay').style.display = 'none';
-                document.getElementById('adminPanel').style.display = 'block';
-                
-                showNotification('წარმატებული ავტორიზაცია', false);
-                
-                loadAllData();
-                startOnlineTracking();
-                initChat();
-                
-                if (countdownInterval) {
-                    clearInterval(countdownInterval);
-                }
-                
-                generatedEmailCode = null;
-                isAdminCodeValid = false;
-                codeExpirationTime = null;
-                
-                const timerElement = document.getElementById('codeTimer');
-                if (timerElement) {
-                    timerElement.remove();
-                }
-                
-            } else {
-                document.getElementById('emailCode').classList.add('invalid');
-                showNotification('კოდი არასწორია', true);
-                
-                setTimeout(() => {
-                    document.getElementById('emailCode').classList.remove('invalid');
-                }, 2000);
-            }
+        }
+    } else {
+        // 👇 დაამატე ეს ხაზი - წარუმატებელი შესვლა
+        saveAdminAuthHistory(false, 'code', 'არასწორი კოდი');
+        showNotification('არასწორი ადმინ კოდი', true);
+    }
+});
+
+document.getElementById('verifyEmailCodeBtn').addEventListener('click', () => {
+    const emailCode = document.getElementById('emailCode').value.trim();
+    
+    if (!emailCode || emailCode.length !== 6) {
+        // 👇 დაამატე
+        saveAdminAuthHistory(false, 'email', 'კოდი არ არის შეყვანილი');
+        showNotification('შეიტანეთ კოდი', true);
+        return;
+    }
+    
+    if (codeExpirationTime && Date.now() > codeExpirationTime) {
+        // 👇 დაამატე
+        saveAdminAuthHistory(false, 'email', 'ვადაგასული კოდი');
+        showNotification('გაგზავნეთ კოდი ხელახლა', true);
+        return;
+    }
+    
+    if (emailCode === generatedEmailCode) {
+        // 👇 დაამატე - წარმატება
+        saveAdminAuthHistory(true, 'email', 'წარმატებული შესვლა');
+        
+        const oldNotifications = document.querySelectorAll('.notification');
+        oldNotifications.forEach(n => n.remove());
+        
+        isAdminAuthenticated = true;
+        document.getElementById('authOverlay').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        
+        showNotification('წარმატებული ავტორიზაცია', false);
+        
+        loadAllData();
+        startOnlineTracking();
+        initChat();
+        
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+        
+        generatedEmailCode = null;
+        isAdminCodeValid = false;
+        codeExpirationTime = null;
+        
+        const timerElement = document.getElementById('codeTimer');
+        if (timerElement) {
+            timerElement.remove();
+        }
+        
+    } else {
+        // 👇 დაამატე - წარუმატებლობა
+        saveAdminAuthHistory(false, 'email', 'არასწორი კოდი');
+        
+        document.getElementById('emailCode').classList.add('invalid');
+        showNotification('კოდი არასწორია', true);
+        
+        setTimeout(() => {
+            document.getElementById('emailCode').classList.remove('invalid');
+        }, 2000);
+    }
         });
 
         document.getElementById('resendEmailCodeBtn').addEventListener('click', async () => {
@@ -5224,20 +5391,26 @@ UniMed`;
             }
         });
 
-        // Logout
-        document.getElementById('adminLogoutBtn').addEventListener('click', () => {
-            isAdminAuthenticated = false;
-            isAdminCodeValid = false;
-            generatedEmailCode = null;
-            document.getElementById('adminPanel').style.display = 'none';
-            document.getElementById('authOverlay').style.display = 'flex';
-            
-            document.getElementById('emailCodeStep').style.display = 'none';
-            document.getElementById('initialCodeStep').style.display = 'block';
-            document.getElementById('adminCode').value = '';
-            document.getElementById('emailCode').value = '';
-            document.getElementById('authError').style.display = 'none';
-        });
+// Logout
+document.getElementById('adminLogoutBtn').addEventListener('click', async () => {
+    // ჯერ დავასრულოთ მიმდინარე სესია
+    await completeCurrentSession();
+    
+    // შემდეგ დავამატოთ ახალი ჩანაწერი (სურვილისამებრ)
+    // saveAdminAuthHistory(true, 'logout', 'სესიის დასრულება');
+    
+    isAdminAuthenticated = false;
+    isAdminCodeValid = false;
+    generatedEmailCode = null;
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('authOverlay').style.display = 'flex';
+    
+    document.getElementById('emailCodeStep').style.display = 'none';
+    document.getElementById('initialCodeStep').style.display = 'block';
+    document.getElementById('adminCode').value = '';
+    document.getElementById('emailCode').value = '';
+    document.getElementById('authError').style.display = 'none';
+});
 
 // Navigation
 // Navigation
@@ -5269,11 +5442,63 @@ document.querySelectorAll('.nav-item').forEach(item => {
     });
 });
 
+
 // ==================== ONLINE USERS FUNCTIONS ====================
 
 // გლობალური ცვლადები წამზომისთვის
 let sessionTimers = {};
 let timerInterval = null;
+
+// ==================== COMPLETE CURRENT SESSION ====================
+async function completeCurrentSession() {
+    if (!firebaseInitialized || !database) return;
+    
+    try {
+        const now = Date.now();
+        const fiveMinutesAgo = now - 5 * 60 * 1000;
+        
+        // მოვძებნოთ ყველა აქტიური სესია (ბოლო 5 წუთის)
+        const snapshot = await database.ref('admin/authHistory')
+            .orderByChild('timestamp')
+            .startAt(fiveMinutesAgo)
+            .once('value');
+        
+        const histories = snapshot.val();
+        if (!histories) return;
+        
+        // განვაახლოთ თითოეული აქტიური სესია
+        const updates = {};
+        Object.entries(histories).forEach(([key, value]) => {
+            if (value.success === true && value.username === 'ადმინისტრატორი') {
+                // მოვნიშნოთ როგორც დასრულებული
+                updates[`admin/authHistory/${key}/completed`] = true;
+                updates[`admin/authHistory/${key}/completedAt`] = now;
+            }
+        });
+        
+        if (Object.keys(updates).length > 0) {
+            await database.ref().update(updates);
+            console.log(`✅ ${Object.keys(updates).length} active sessions marked as completed`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error completing current session:', error);
+    }
+}
+
+// დაამატე ეს ფუნქცია
+function displayCurrentCode() {
+    const codeDisplay = document.getElementById('currentCodeDisplay');
+    if (codeDisplay) {
+        // აჩვენე პირველი და ბოლო ციფრი, დანარჩენი ვარსკვლავებით
+        const firstChar = ADMIN_CODE[0];
+        const lastChar = ADMIN_CODE[ADMIN_CODE.length - 1];
+        const stars = '*'.repeat(ADMIN_CODE.length - 2);
+        codeDisplay.textContent = `${firstChar}${stars}${lastChar}`;
+    }
+}
+
+// გამოიძახე ეს ფუნქცია initSettingsPage()-ში
 
 // ონლაინ მომხმარებლების ჩატვირთვა და ჩვენება
 async function loadOnlineUsers() {
@@ -5362,6 +5587,51 @@ async function loadOnlineUsers() {
                 sidebar.classList.add('collapsed');
             }
         });
+
+// ==================== ADMIN AUTH HISTORY FUNCTIONS ====================
+async function saveAdminAuthHistory(success, method = 'code', reason = '') {
+    if (!firebaseInitialized || !database) return;
+    
+    // IP-ს მიღება
+    let ip = 'უცნობია';
+    try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        ip = ipData.ip;
+    } catch (e) {
+        console.log('IP fetch failed');
+    }
+
+    // მოწყობილობის ინფორმაცია
+    const deviceInfo = navigator.userAgent;
+    let device = 'უცნობი';
+    if (deviceInfo.includes('Windows')) device = 'Windows';
+    else if (deviceInfo.includes('Mac')) device = 'macOS';
+    else if (deviceInfo.includes('iPhone')) device = 'iPhone';
+    else if (deviceInfo.includes('Android')) device = 'Android';
+    else if (deviceInfo.includes('Linux')) device = 'Linux';
+    
+    const browser = deviceInfo.includes('Chrome') ? 'Chrome' :
+                    deviceInfo.includes('Firefox') ? 'Firefox' :
+                    deviceInfo.includes('Safari') ? 'Safari' : 'სხვა';
+
+    const historyEntry = {
+        timestamp: Date.now(),
+        success: success,
+        ip: ip,
+        device: `${browser} / ${device}`,
+        username: 'ადმინისტრატორი',
+        method: method,
+        reason: reason
+    };
+
+    try {
+        await database.ref('admin/authHistory').push(historyEntry);
+        console.log('✅ Admin auth history saved');
+    } catch (error) {
+        console.error('❌ Error saving admin auth history:', error);
+    }
+}
 
 // ონლაინ მომხმარებლების რენდერი
 function renderOnlineUsers(users) {
