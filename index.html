@@ -937,8 +937,15 @@
     }
 }
 
+/* Add to your existing CSS */
 .online-item {
-    animation: slideIn 0.3s ease;
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+#onlineUsersList {
+    min-height: 200px; /* Prevents layout shift */
 }
 
 
@@ -1851,6 +1858,44 @@
         padding: 12px 10px;
         font-size: 12px;
     }
+}
+/* Add to your CSS */
+@keyframes newUserPulse {
+    0% {
+        background-color: rgba(16, 185, 129, 0.1);
+        transform: translateY(-2px);
+    }
+    100% {
+        background-color: transparent;
+        transform: translateY(0);
+    }
+}
+
+.online-item.new-user {
+    animation: newUserPulse 2s ease-out;
+}
+
+/* Add to your CSS */
+.online-item.away {
+    opacity: 0.7;
+    filter: grayscale(50%);
+    transition: all 0.3s ease;
+}
+
+.online-item.away:hover {
+    opacity: 1;
+    filter: grayscale(0%);
+}
+
+.session-timer-warning {
+    color: var(--warning) !important;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
 }
     </style>
 </head>
@@ -2767,7 +2812,6 @@
     <div class="online-list" id="onlineUsersList" style="display: flex; flex-direction: column; gap: 12px;"></div>
 </div>
     
-    <div class="online-list" id="onlineUsersList"></div>
 </div>
                 
 <!-- Chat Section -->
@@ -2942,16 +2986,34 @@
         let database = null;
         let firebaseInitialized = false;
 
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            database = firebase.database();
-            firebaseInitialized = true;
-            console.log("Firebase initialized successfully");
-        } catch (error) {
-            console.error("Firebase initialization failed:", error);
+// Firebase-ის ინიციალიზაციის გაძლიერება
+try {
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    database = firebase.database();
+    firebaseInitialized = true;
+    console.log("Firebase initialized successfully");
+    
+    // დავრწმუნდეთ, რომ კავშირი მუშაობს
+    database.ref('.info/connected').on('value', (snap) => {
+        if (snap.val() === true) {
+            console.log("✅ Firebase connected to Realtime Database");
+        } else {
+            console.warn("⚠️ Firebase disconnected from Realtime Database");
         }
+    });
+} catch (error) {
+    console.error("Firebase initialization failed:", error);
+    firebaseInitialized = false;
+}
+    // ===== ADD THESE CONSTANTS HERE =====
+    // Online user timeout settings
+    const ONLINE_TIMEOUT = 60000; // Increase to 60 seconds (from 30 seconds)
+    const HEARTBEAT_INTERVAL = 15000; // 15 seconds heartbeat
+    const CLEANUP_INTERVAL = 30000; // 30 seconds cleanup
+    const WARNING_THRESHOLD = 45000; // 45 seconds - show warning
+    // ===== END OF ADDED CONSTANTS =====
 
         // Google Apps Script Web App URL
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzplhhEvFAm3JmglGQvtJrC5ZEb7as5IMRm_GvWYbkJyQbMt8OYfb5RlCG9sHXSodw/exec';
@@ -3875,44 +3937,7 @@ function renderDemoAuthHistory() {
     renderAuthHistory(demoHistory);
 }
 
-// ==================== BACKUP FUNCTIONS ====================
-function createBackup() {
-    showLoading();
-    
-    setTimeout(() => {
-        // სიმულაცია
-        const backupData = {
-            timestamp: Date.now(),
-            version: currentVersion,
-            data: 'backup-data'
-        };
-        
-        // შევინახოთ localStorage-ში
-        localStorage.setItem('lastBackup', JSON.stringify({
-            time: Date.now(),
-            version: currentVersion
-        }));
-        
-        document.getElementById('lastBackupTime').textContent = new Date().toLocaleString('ka-GE');
-        
-        hideLoading();
-        showNotification('✅ Backup შეიქმნა წარმატებით', false);
-    }, 1500);
-}
 
-function restoreBackup() {
-    showConfirm(
-        'მონაცემების აღდგენა',
-        'დარწმუნებული ხართ? მიმდინარე მონაცემები შეიცვლება backup-ით.',
-        () => {
-            showLoading();
-            setTimeout(() => {
-                hideLoading();
-                showNotification('✅ მონაცემები აღდგენილია', false);
-            }, 1500);
-        }
-    );
-}
 
 // ==================== SYSTEM INFO ====================
 async function updateSystemInfo() {
@@ -4012,24 +4037,196 @@ async function updateSystemInfo() {
     }
 }
 
-// გლობალური onlineUsers ცვლადის მოსმენა - დავამატოთ ეს ფუნქცია
 function setupOnlineUsersListener() {
     if (!firebaseInitialized || !database) return;
     
-    // მოვუსმინოთ ონლაინ მომხმარებლების ცვლილებას
+    console.log("🟢 Setting up optimized online users listener with immediate removal on logout");
+    
     database.ref('chat/onlineUsers').on('value', (snapshot) => {
-        onlineUsers = snapshot.val() || {};
-        console.log(`🟢 Online users updated: ${Object.keys(onlineUsers).length}`);
+        const newOnlineUsers = snapshot.val() || {};
+        const now = Date.now();
+        const TIMEOUT = 60000; // 60 seconds timeout
         
-        // თუ settings გვერდი აქტიურია, განვაახლოთ სისტემის ინფორმაცია
-        if (document.getElementById('settingsSection')?.classList.contains('active')) {
-            updateSystemInfo();
-        }
+        // Update onlineUsers variable
+        onlineUsers = newOnlineUsers;
+        
+        const newMap = new Map();
+        const userSessions = new Map(); // Group by user ID
+        
+        // First, group all sessions by user ID
+        Object.entries(newOnlineUsers).forEach(([sessionKey, user]) => {
+            // 👇 IMPORTANT: Only check if user exists, don't filter by lastSeen yet
+            // This ensures we catch all users, even those who just logged out
+            if (user && user.lastSeen) {
+                // Determine user ID (use userId or create one from name for guests)
+                let userId = user.userId;
+                if (!userId) {
+                    // For guests without userId, create a consistent ID based on name
+                    if (user.name && user.name.includes('სტუმარი')) {
+                        userId = user.name; // Use name as ID for guests
+                    } else {
+                        userId = sessionKey; // Fallback to session key
+                    }
+                }
+                
+                if (!userSessions.has(userId)) {
+                    userSessions.set(userId, []);
+                }
+                userSessions.get(userId).push({ sessionKey, ...user });
+            }
+        });
+        
+        // Now create one entry per unique user (use the most recent session)
+        userSessions.forEach((sessions, userId) => {
+            // Sort sessions by lastSeen (most recent first)
+            sessions.sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
+            
+            // Use the most recent session as the main representation
+            const mainSession = sessions[0];
+            const sessionKey = mainSession.sessionKey;
+            
+            // 👇 IMPORTANT: Check if this user is actually online (lastSeen within timeout)
+            const isActuallyOnline = (now - mainSession.lastSeen) < TIMEOUT;
+            
+            if (!isActuallyOnline) {
+                // Skip this user - they're offline
+                console.log(`🔴 User ${userId} is offline (last seen: ${new Date(mainSession.lastSeen).toLocaleTimeString()})`);
+                return;
+            }
+            
+            const isGuest = (mainSession.userId && mainSession.userId.startsWith('guest_')) || 
+                           (mainSession.name && mainSession.name.includes('სტუმარი'));
+            
+            // CRITICAL: Preserve existing sessionStart from the map if available
+            const existingUser = onlineUsersMap.get(userId);
+            let sessionStart;
+            
+            if (existingUser?.sessionStart) {
+                // Keep existing session start
+                sessionStart = existingUser.sessionStart;
+            } else if (mainSession.sessionStart) {
+                sessionStart = mainSession.sessionStart;
+            } else if (mainSession.firstSeen) {
+                sessionStart = mainSession.firstSeen;
+            } else {
+                sessionStart = mainSession.lastSeen;
+            }
+            
+            // IMPORTANT: Get module information from multiple possible sources
+            let moduleInfo = null;
+            
+            // Check all possible module fields in the user object
+            if (mainSession.module && mainSession.module !== 'undefined' && mainSession.module !== 'null') {
+                moduleInfo = mainSession.module;
+            } else if (mainSession.currentModule && mainSession.currentModule !== 'undefined' && mainSession.currentModule !== 'null') {
+                moduleInfo = mainSession.currentModule;
+            } else if (mainSession.selectedModule && mainSession.selectedModule !== 'undefined' && mainSession.selectedModule !== 'null') {
+                moduleInfo = mainSession.selectedModule;
+            } else if (mainSession.activeModule && mainSession.activeModule !== 'undefined' && mainSession.activeModule !== 'null') {
+                moduleInfo = mainSession.activeModule;
+            } else if (existingUser?.module) {
+                // Keep existing module if we had it before
+                moduleInfo = existingUser.module;
+            }
+            
+            // If we still don't have module info, check if this user has progress data
+            if (!moduleInfo && mainSession.progress) {
+                const modulesWithProgress = Object.keys(mainSession.progress);
+                if (modulesWithProgress.length > 0) {
+                    moduleInfo = modulesWithProgress[0];
+                }
+            }
+            
+            // Store with userId as key to prevent duplicates
+            newMap.set(userId, {
+                key: sessionKey, // Keep the session key for reference
+                userId: userId,
+                name: mainSession.name || 'უცნობი',
+                type: isGuest ? 'guest' : 'registered',
+                sessionStart: sessionStart,
+                module: moduleInfo,
+                currentModule: mainSession.currentModule || moduleInfo,
+                lastModule: mainSession.lastModule,
+                selectedModule: mainSession.selectedModule,
+                progress: mainSession.progress || {},
+                lastSeen: mainSession.lastSeen,
+                // Store all session keys for debugging
+                sessions: sessions.map(s => s.sessionKey)
+            });
+        });
+        
+        // Compare old and new states
+        const oldKeys = new Set(onlineUsersMap.keys());
+        const newKeys = new Set(newMap.keys());
+        
+        // 👇 IMMEDIATELY REMOVE USERS WHO ARE NO LONGER ONLINE
+        oldKeys.forEach(key => {
+            if (!newKeys.has(key)) {
+                const oldUser = onlineUsersMap.get(key);
+                console.log(`🔴 User ${key} (${oldUser?.name}) removed immediately - logged out`);
+                
+                // Force remove with animation
+                const element = document.getElementById(`online-user-${key}`);
+                if (element) {
+                    element.style.opacity = '0';
+                    element.style.transform = 'translateY(-20px)';
+                    element.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    
+                    setTimeout(() => {
+                        if (element.parentNode) {
+                            element.parentNode.removeChild(element);
+                            
+                            // Show offline notification
+                            if (document.getElementById('onlineSection')?.classList.contains('active')) {
+                                showMiniNotification(`${oldUser?.name || 'მომხმარებელი'} გავიდა სისტემიდან`, 'offline');
+                            }
+                        }
+                    }, 300);
+                }
+                
+                // Remove from map
+                onlineUsersMap.delete(key);
+            }
+        });
+        
+        // Added or updated users
+        newKeys.forEach(key => {
+            const newUser = newMap.get(key);
+            
+            if (!oldKeys.has(key)) {
+                // New user
+                console.log(`🟢 New user added: ${newUser.name}`);
+                addOnlineUserToTop(newUser);
+            } else {
+                // Updated user
+                const oldUser = onlineUsersMap.get(key);
+                
+                // Check if important data changed
+                if (oldUser.module !== newUser.module || 
+                    oldUser.name !== newUser.name ||
+                    Math.abs((oldUser.sessionStart || 0) - (newUser.sessionStart || 0)) > 1000) {
+                    updateOnlineUser(newUser);
+                }
+            }
+        });
+        
+        // Update main data
+        onlineUsersMap = newMap;
+        
+        // Update counter
+        updateOnlineCounter();
+        
+        console.log(`🟢 Online users updated: ${onlineUsersMap.size} unique users`);
+        
+        // Log all users and their modules for debugging
+        console.log("Current online users:");
+        onlineUsersMap.forEach((user, key) => {
+            console.log(`- ${user.name}: lastSeen ${new Date(user.lastSeen).toLocaleTimeString()}`);
+        });
+    }, (error) => {
+        console.error("Error in online users listener:", error);
     });
 }
-
-// გამოიძახეთ ეს ფუნქცია ავტორიზაციის შემდეგ
-// setupOnlineUsersListener();
 
 // ==================== INITIALIZE SETTINGS PAGE ====================
 function initSettingsPage() {
@@ -4157,50 +4354,6 @@ async function disconnectUser(userKey) {
             }
         }
     );
-}
-
-// ==================== ADMIN AUTH HISTORY ====================
-async function saveAdminAuthHistory(username, success, reason = '') {
-    if (!firebaseSyncEnabled || !database) return;
-    
-    // IP-ს მისაღებად შეგვიძლია გამოვიყენოთ პუბლიკური API
-    let ip = 'უცნობია';
-    try {
-        const ipResponse = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipResponse.json();
-        ip = ipData.ip;
-    } catch (e) {
-        console.log('IP fetch failed');
-    }
-
-    // მოწყობილობის ინფორმაცია
-    const deviceInfo = navigator.userAgent;
-    let device = 'უცნობია';
-    if (deviceInfo.includes('Windows')) device = 'Windows';
-    else if (deviceInfo.includes('Mac')) device = 'macOS';
-    else if (deviceInfo.includes('iPhone')) device = 'iPhone';
-    else if (deviceInfo.includes('Android')) device = 'Android';
-    else if (deviceInfo.includes('Linux')) device = 'Linux';
-    
-    const browser = deviceInfo.includes('Chrome') ? 'Chrome' :
-                    deviceInfo.includes('Firefox') ? 'Firefox' :
-                    deviceInfo.includes('Safari') ? 'Safari' : 'სხვა';
-
-    const historyEntry = {
-        timestamp: Date.now(),
-        success: success,
-        ip: ip,
-        device: `${browser} / ${device}`,
-        username: username || 'უცნობი',
-        reason: reason
-    };
-
-    try {
-        await database.ref('admin/authHistory').push(historyEntry);
-        console.log('✅ Auth history saved for admin');
-    } catch (error) {
-        console.error('❌ Error saving auth history:', error);
-    }
 }
 
 // Load modules stats - TOP 5 MOST ACTIVE MODULES
@@ -4752,175 +4905,6 @@ function stripLeadingSymbol(str) {
     return cleaned;
 }
 
-// დაამატეთ ეს ფუნქცია სესიის დროის გასაახლებლად
-function startSessionTimer() {
-    setInterval(() => {
-        if (document.getElementById('onlineSection')?.classList.contains('active')) {
-            loadOnlineUsers(); // განაახლებს ყველა მომხმარებლის დროს
-        }
-    }, 1000); // ყოველ წამში
-}
-
-// გამოიძახეთ ავტორიზაციის შემდეგ
-startSessionTimer();
-
-// Show module details modal - WITH FULL STATISTICS
-function showModuleDetails(module) {
-    document.getElementById('moduleDetailsTitle').textContent = `${module.name} - დეტალური სტატისტიკა`;
-    
-    // მოდალური ფანჯრის შიგთავსის შექმნა სრული სტატისტიკით
-    const modalContent = document.getElementById('moduleDetailsContent');
-    
-    // გამოვთვალოთ პროცენტები
-    const completedPercent = module.totalUsers > 0 ? Math.round((module.completed / module.totalUsers) * 100) : 0;
-    const examPassedPercent = module.examParticipants > 0 ? Math.round((module.examPassed / module.examParticipants) * 100) : 0;
-    const examFailedPercent = module.examParticipants > 0 ? Math.round(((module.examParticipants - module.examPassed) / module.examParticipants) * 100) : 0;
-    
-    modalContent.innerHTML = `
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
-            <!-- Total Tests Card -->
-            <div style="background: linear-gradient(135deg, #0ea5a4, #0891b2); border-radius: 20px; padding: 24px; color: white;">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                        <polyline points="2 17 12 22 22 17"/>
-                        <polyline points="2 12 12 17 22 12"/>
-                    </svg>
-                    <span style="font-size: 16px; font-weight: 500; opacity: 0.9;">ტესტების რაოდენობა</span>
-                </div>
-                <div style="font-size: 48px; font-weight: 700;">${module.count}</div>
-            </div>
-            
-            <!-- Total Users Card -->
-            <div style="background: linear-gradient(135deg, #6366f1, #4f46e5); border-radius: 20px; padding: 24px; color: white;">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                    </svg>
-                    <span style="font-size: 16px; font-weight: 500; opacity: 0.9;">მომხმარებლები, ვინც იმუშავა ამ ტესტზე</span>
-                </div>
-                <div style="font-size: 48px; font-weight: 700;">${module.totalUsers}</div>
-                ${module.activeUsers > 0 ? `<div style="margin-top: 8px; font-size: 14px; opacity: 0.9;">🟢 ${module.activeUsers} აქტიური (24სთ)</div>` : ''}
-            </div>
-        </div>
-
-        <!-- Statistics Grid -->
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 30px;">
-            <div style="background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border);">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-muted);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                    <span style="font-size: 14px;">ამ ტესტზე იმუშავა მომხმარებლებმა:</span>
-                </div>
-                <div style="font-size: 32px; font-weight: 700; color: var(--accent);">${module.totalUsers}</div>
-            </div>
-
-            <div style="background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border);">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-muted);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                        <polyline points="22 4 12 14.01 9 11.01"/>
-                    </svg>
-                    <span style="font-size: 14px;">სრულად დაასრულა ტესტი:</span>
-                </div>
-                <div style="font-size: 32px; font-weight: 700; color: var(--success);">${module.completed || 0}</div>
-                <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">დამწყებთა ${completedPercent}%</div>
-            </div>
-
-            <div style="background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border);">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-muted);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 6 12 12 16 14"/>
-                    </svg>
-                    <span style="font-size: 14px;">საშუალო ქულა</span>
-                </div>
-                <div style="font-size: 32px; font-weight: 700; color: var(--warning);">${module.avgScore || 0}%</div>
-            </div>
-        </div>
-
-        <!-- Exam Statistics -->
-        <div style="background: linear-gradient(145deg, var(--surface), var(--surface-light)); border-radius: 20px; padding: 24px; margin-bottom: 30px;">
-            <h4 style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; color: var(--text);">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                    <path d="M12 2v4M12 22v-4M4 12H2h2M20 12h2-2M5.64 5.64l-1.41 1.41 1.41-1.41M18.36 18.36l1.41-1.41-1.41 1.41M5.64 18.36l-1.41-1.41 1.41 1.41"/>
-                    <circle cx="12" cy="12" r="4"/>
-                </svg>
-                საგამოცდო რეჟიმის სტატისტიკა
-            </h4>
-            
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                <div>
-                    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">ეს ტესტი დაწერა მომხმარებლებმა</div>
-                    <div style="font-size: 28px; font-weight: 700; color: var(--accent);">${module.examParticipants || 0}</div>
-                </div>
-                <div>
-                    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">ჩააბარა (≥150)</div>
-                    <div style="font-size: 28px; font-weight: 700; color: var(--success);">${module.examPassed || 0}</div>
-                    <div style="font-size: 12px; color: var(--text-muted);">${examPassedPercent}%</div>
-                </div>
-                <div>
-                    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">ჩაიჭრა (&lt;150)</div>
-                    <div style="font-size: 28px; font-weight: 700; color: var(--danger);">${module.examFailed || 0}</div>
-                    <div style="font-size: 12px; color: var(--text-muted);">${examFailedPercent}%</div>
-                </div>
-            </div>
-
-            <!-- Score Distribution -->
-            <div style="margin-top: 24px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="font-size: 13px; color: var(--text-muted);">ქულების საშუალო განაწილება</span>
-                    <span style="font-size: 13px; font-weight: 600;">0-200</span>
-                </div>
-                <div style="height: 8px; background: var(--surface-light); border-radius: 4px; overflow: hidden; display: flex;">
-                    <div style="background: var(--danger); height: 100%; width: ${module.scoreLow || 0}%;"></div>
-                    <div style="background: var(--warning); height: 100%; width: ${module.scoreMid || 0}%;"></div>
-                    <div style="background: var(--success); height: 100%; width: ${module.scoreHigh || 0}%;"></div>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-muted);">
-                    <span>0-99</span>
-                    <span>100-149</span>
-                    <span>150-200</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Top Users List -->
-        <div>
-            <h4 style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
-                ტოპ 5 მომხმარებელი
-            </h4>
-            <div id="topUsersList" style="display: flex; flex-direction: column; gap: 8px;">
-                ${module.examScores && module.examScores.length > 0 ? 
-                    module.examScores.map((user, index) => `
-                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-light); border-radius: 12px;">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <span style="width: 28px; height: 28px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">${index + 1}</span>
-                                <div>
-                                    <div style="font-weight: 500;">${escapeHtml(user.username)}</div>
-                                    <div style="font-size: 10px; color: var(--text-muted);">ID: ${user.userId.substring(0, 6)}...</div>
-                                </div>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="font-weight: 700; color: ${user.passed ? 'var(--success)' : 'var(--danger)'};">${user.score} ქულა</div>
-                                <div style="font-size: 10px; color: var(--text-muted);">${user.passed ? 'ჩაბარებული' : 'ჩაჭრილი'}</div>
-                            </div>
-                        </div>
-                    `).join('') 
-                    : '<div style="text-align: center; padding: 20px; color: var(--text-muted);">ჯერ არ არის საგამოცდო შედეგები</div>'
-                }
-            </div>
-        </div>
-    `;
-    
-    openModal('moduleDetailsModal');
-}
 
 function showRefreshIndicator() {
     const indicator = document.getElementById('statisticsRefreshIndicator');
@@ -5499,73 +5483,10 @@ function displayCurrentCode() {
 
 // გამოიძახე ეს ფუნქცია initSettingsPage()-ში
 
-// ონლაინ მომხმარებლების ჩატვირთვა და ჩვენება
 async function loadOnlineUsers() {
-    if (!firebaseInitialized || !database) return;
-    
-    try {
-        const onlineList = document.getElementById('onlineUsersList');
-        if (!onlineList) return;
-        
-        const now = Date.now();
-        const onlineListArray = [];
-        
-        // შევაგროვოთ ყველა ონლაინ მომხმარებელი
-        if (onlineUsers && typeof onlineUsers === 'object') {
-            Object.entries(onlineUsers).forEach(([key, user]) => {
-                // შევამოწმოთ არის თუ არა მომხმარებელი აქტიური (ბოლო 30 წამი)
-                if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
-                    // განვსაზღვროთ ტიპი
-                    const isGuest = (user.userId && user.userId.startsWith('guest_')) || 
-                                   (user.name && user.name.includes('სტუმარი'));
-                    
-                    // შევინახოთ საწყისი დრო წამზომისთვის
-                    if (!sessionTimers[key]) {
-                        sessionTimers[key] = {
-                            startTime: user.lastSeen,
-                            lastUpdate: now
-                        };
-                    }
-                    
-                    onlineListArray.push({
-                        key: key,
-                        ...user,
-                        type: isGuest ? 'guest' : 'registered',
-                        sessionStart: sessionTimers[key].startTime
-                    });
-                } else {
-                    // წავშალოთ ძველი ტაიმერები
-                    delete sessionTimers[key];
-                }
-            });
-        }
-        
-        console.log(`🟢 ონლაინ მომხმარებლები: ${onlineListArray.length}`, onlineListArray);
-        
-        // განვაახლოთ სათაურში რაოდენობა
-        const onlineUsersCountHeader = document.getElementById('onlineUsersCountHeader');
-        if (onlineUsersCountHeader) {
-            onlineUsersCountHeader.textContent = onlineListArray.length;
-        }
-        
-        // თუ არავინაა ონლაინ
-        if (onlineListArray.length === 0) {
-            onlineList.innerHTML = '<div style="text-align: center; padding: 60px; color: var(--text-muted);"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg><div style="margin-top: 20px; font-size: 16px;">🟢 ონლაინ მომხმარებლები არ არიან</div></div>';
-            return;
-        }
-        
-        // დავალაგოთ შესვლის დროის მიხედვით (უახლესი პირველ რიგში)
-        onlineListArray.sort((a, b) => b.lastSeen - a.lastSeen);
-        
-        // გამოვიტანოთ ყველა მომხმარებელი
-        renderOnlineUsers(onlineListArray);
-        
-        // დავიწყოთ წამზომი თუ ჯერ არ მუშაობს
-        startSessionTimerIfNeeded();
-        
-    } catch (error) {
-        console.error("Error loading online users:", error);
-    }
+    // ეს ფუნქცია აღარ არის საჭირო, რადგან realtime updates უკვე მუშაობს
+    // მაგრამ თუ გვინდა ხელით განახლება, შეგვიძლია გამოვიყენოთ
+    renderAllOnlineUsers();
 }
 
         // Sidebar collapse
@@ -5632,7 +5553,8 @@ async function saveAdminAuthHistory(success, method = 'code', reason = '') {
     }
 }
 
-// ონლაინ მომხმარებლების რენდერი
+
+// წამზომის ფუნქცია - ითვლის მხოლოდ sessionStart-დან
 function renderOnlineUsers(users) {
     const onlineList = document.getElementById('onlineUsersList');
     if (!onlineList) return;
@@ -5640,7 +5562,7 @@ function renderOnlineUsers(users) {
     const now = Date.now();
     
     onlineList.innerHTML = users.map(user => {
-        // გამოვთვალოთ გასული დრო წამებში
+        // გამოვთვალოთ გასული დრო მომხმარებლის შესვლის მომენტიდან
         const sessionSeconds = Math.floor((now - (user.sessionStart || user.lastSeen)) / 1000);
         const hours = Math.floor(sessionSeconds / 3600);
         const minutes = Math.floor((sessionSeconds % 3600) / 60);
@@ -5656,69 +5578,52 @@ function renderOnlineUsers(users) {
             sessionStr = `${seconds}წმ`;
         }
         
-        // მოდულის სახელი
-        const moduleName = user.module ? getModuleName(user.module) : 'მთავარი';
-        
-        // ავატარის ინიციალები
-        const initials = user.name ? user.name.charAt(0).toUpperCase() : '?';
+        const moduleId = user.module;
+        const moduleName = getModuleName(moduleId);
         
         return `
-        <div class="online-item" data-user-key="${user.key}" style="margin-bottom: 12px; background: linear-gradient(145deg, var(--surface), var(--surface-light)); border-radius: 20px; padding: 16px; border: 1px solid ${user.type === 'registered' ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div class="online-item" data-user-key="${user.key}" style="margin-bottom: 12px;">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <!-- ავატარი SVG ით -->
                 <div style="position: relative;">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="${user.type === 'registered' ? '#10b981' : '#f59e0b'}" stroke-width="1.5">
                         <circle cx="12" cy="8" r="4"/>
                         <path d="M5.3 18.3c.8-1.5 2.3-2.5 4-2.7 1.2-.1 2.4.1 3.6.3 1.2.2 2.4.5 3.6.5 1.3 0 2.5-.3 3.7-.8"/>
                     </svg>
-                    <div style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: #10b981; border-radius: 50%; border: 2px solid var(--surface); animation: pulse 2s infinite;"></div>
+                    <div style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: #10b981; border-radius: 50%; border: 2px solid var(--surface);"></div>
                 </div>
                 
-                <!-- ინფორმაცია -->
                 <div style="flex: 1;">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                         <span style="font-weight: 600; font-size: 16px; color: var(--text);">${escapeHtml(user.name || 'უცნობი')}</span>
-                        <span style="font-size: 11px; background: ${user.type === 'registered' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'}; color: ${user.type === 'registered' ? '#10b981' : '#f59e0b'}; padding: 4px 10px; border-radius: 40px; font-weight: 500;">
-                            ${user.type === 'registered' ? '👤 რეგისტრირებული' : '👥 სტუმარი'}
+                        <span style="font-size: 11px; background: ${user.type === 'registered' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'}; color: ${user.type === 'registered' ? '#10b981' : '#f59e0b'}; padding: 4px 10px; border-radius: 40px;">
+                            ${user.type === 'registered' ? 'რეგისტრირებული' : 'სტუმარი'}
                         </span>
                     </div>
                     
                     <div style="display: flex; gap: 24px; margin-top: 8px; flex-wrap: wrap;">
-                        <!-- მოდული -->
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
                                 <polygon points="12 2 2 7 12 12 22 7 12 2"/>
                                 <polyline points="2 17 12 22 22 17"/>
                                 <polyline points="2 12 12 17 22 12"/>
                             </svg>
-                            <span style="font-size: 13px; color: var(--text);">📚 ${moduleName}</span>
+                            <span style="font-size: 13px; color: var(--text);">${moduleName}</span>
                         </div>
                         
-                        <!-- შესვლის დრო -->
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"/>
                                 <polyline points="12 6 12 12 16 14"/>
                             </svg>
-                            <span style="font-size: 13px; color: var(--text-muted);">🕐 ${new Date(user.lastSeen).toLocaleTimeString('ka-GE')}</span>
+                            <span style="font-size: 13px; color: var(--text-muted);">🕐 ${new Date(user.sessionStart || user.lastSeen).toLocaleTimeString('ka-GE')}</span>
                         </div>
-<div style="margin-top: 8px; display: flex; gap: 8px;">
-    <button class="action-btn delete" onclick="disconnectUser('${user.key}')" style="padding: 6px 12px; font-size: 12px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-        გათიშვა
-    </button>
-</div>
-                        <!-- სესიის ხანგრძლივობა (წამზომი) -->
+                        
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"/>
                                 <polyline points="12 6 12 12 16 14"/>
                             </svg>
-                            <span class="session-timer-${user.key}" style="font-size: 13px; font-weight: 600; color: var(--accent); font-family: monospace;">⏱️ ${sessionStr}</span>
+                            <span class="session-timer-${user.key}" style="font-size: 13px; font-weight: 600; color: var(--accent); font-family: monospace;">${sessionStr}</span>
                         </div>
                     </div>
                 </div>
@@ -5726,99 +5631,858 @@ function renderOnlineUsers(users) {
         </div>
     `}).join('');
 }
-
-// წამზომის ტაიმერი
+// Update the timer interval function
 function startSessionTimerIfNeeded() {
     if (timerInterval) return;
     
     timerInterval = setInterval(() => {
-        // განვაახლოთ მხოლოდ თუ ონლაინ სექცია აქტიურია
         if (document.getElementById('onlineSection')?.classList.contains('active')) {
-            const onlineItems = document.querySelectorAll('#onlineUsersList .online-item');
+            const now = Date.now();
             
-            onlineItems.forEach(item => {
-                const userKey = item.dataset.userKey;
-                if (!userKey || !sessionTimers[userKey]) return;
-                
-                const now = Date.now();
-                const sessionSeconds = Math.floor((now - sessionTimers[userKey].startTime) / 1000);
-                
-                const hours = Math.floor(sessionSeconds / 3600);
-                const minutes = Math.floor((sessionSeconds % 3600) / 60);
-                const seconds = sessionSeconds % 60;
-                
-                let sessionStr;
-                if (hours > 0) {
-                    sessionStr = `${hours}ს ${minutes.toString().padStart(2, '0')}წთ`;
-                } else if (minutes > 0) {
-                    sessionStr = `${minutes}წთ ${seconds.toString().padStart(2, '0')}წმ`;
-                } else {
-                    sessionStr = `${seconds}წმ`;
-                }
-                
-                const timerElement = item.querySelector(`.session-timer-${userKey}`);
-                if (timerElement) {
-                    timerElement.textContent = `⏱️ ${sessionStr}`;
+            onlineUsersMap.forEach((user, userKey) => {
+                if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
+                    // Calculate seconds from sessionStart (original login time)
+                    const sessionSeconds = Math.floor((now - user.sessionStart) / 1000);
+                    
+                    // Format the time
+                    const hours = Math.floor(sessionSeconds / 3600);
+                    const minutes = Math.floor((sessionSeconds % 3600) / 60);
+                    const seconds = sessionSeconds % 60;
+                    
+                    let sessionStr;
+                    if (hours > 0) {
+                        sessionStr = `${hours}ს ${minutes.toString().padStart(2, '0')}წთ ${seconds.toString().padStart(2, '0')}წმ`;
+                    } else if (minutes > 0) {
+                        sessionStr = `${minutes}წთ ${seconds.toString().padStart(2, '0')}წმ`;
+                    } else {
+                        sessionStr = `${seconds}წმ`;
+                        
+                        // For the first few seconds, make it pulse to show it's counting
+                        if (seconds < 5) {
+                            const timerElement = document.querySelector(`.session-timer-${userKey}`);
+                            if (timerElement) {
+                                timerElement.style.animation = 'timerPulse 1s infinite';
+                            }
+                        }
+                    }
+                    
+                    // Determine timer color based on duration
+                    let timerColor = 'var(--accent)';
+                    if (sessionSeconds > 7200) { // > 2 hours
+                        timerColor = 'var(--danger)';
+                    } else if (sessionSeconds > 3600) { // > 1 hour
+                        timerColor = 'var(--warning)';
+                    }
+                    
+// In startSessionTimerIfNeeded function, update this part:
+const timerElement = document.querySelector(`.session-timer-${user.userId}`);
+if (timerElement) {
+    timerElement.textContent = sessionStr;
+    timerElement.style.color = timerColor;
+    
+    // Remove pulse animation after 5 seconds
+    if (sessionSeconds >= 5) {
+        timerElement.style.animation = 'none';
+    }
+}
                 }
             });
         }
-    }, 1000); // ყოველ წამში
+    }, 1000); // Update every second
 }
 
-// შევცვალოთ startOnlineTracking ფუნქციაც
+// Add this CSS for the pulse animation
+// Put this in your <style> section
+const pulseAnimationCSS = `
+@keyframes timerPulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.session-timer-new {
+    animation: timerPulse 1s infinite;
+}
+`;
+
+// Add it to the page
+const style = document.createElement('style');
+style.textContent = pulseAnimationCSS;
+document.head.appendChild(style);
+
+// გლობალური ცვლადები
+let lastOnlineUsersJSON = ''; // წინა მდგომარეობის შესანახად
+let updateTimeout = null; // debounce-ისთვის
+let onlineUsersMap = new Map(); // მიმდინარე ონლაინ მომხმარებლების რუკა
+
 function startOnlineTracking() {
     if (!firebaseInitialized || !database) return;
     
-    database.ref('chat/onlineUsers').on('value', (snapshot) => {
-        onlineUsers = snapshot.val() || {};
+    console.log("🟢 Starting optimized online tracking with 60s timeout");
+    
+    // Initial load with longer timeout
+    database.ref('chat/onlineUsers').once('value', (snapshot) => {
+        const users = snapshot.val() || {};
         const now = Date.now();
+        const TIMEOUT = 60000;
         
-        console.log(`🟢 ონლაინ სესიები განახლდა: ${Object.keys(onlineUsers).length} სესია`);
+        onlineUsersMap.clear();
         
-        // დავითვალოთ უნიკალური მომხმარებლები
-        const uniqueUsers = new Set();
-        Object.values(onlineUsers).forEach(user => {
-            if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
-                if (user.userId && !user.userId.startsWith('guest_')) {
-                    uniqueUsers.add(user.userId);
-                } else if (user.name && !user.name.includes('სტუმარი')) {
-                    uniqueUsers.add(user.name);
+        // Create array of active users
+        const activeUsers = [];
+        
+        Object.entries(users).forEach(([key, user]) => {
+            if (user && user.lastSeen && (now - user.lastSeen) < TIMEOUT) {
+                const isGuest = (user.userId && user.userId.startsWith('guest_')) || 
+                               (user.name && user.name.includes('სტუმარი'));
+                
+                let sessionStart;
+                if (user.sessionStart) {
+                    sessionStart = user.sessionStart;
+                } else if (user.firstSeen) {
+                    sessionStart = user.firstSeen;
+                } else {
+                    sessionStart = user.lastSeen;
+                    database.ref(`chat/onlineUsers/${key}/sessionStart`).set(user.lastSeen);
                 }
+                
+                activeUsers.push({
+                    key: key,
+                    ...user,
+                    type: isGuest ? 'guest' : 'registered',
+                    sessionStart: sessionStart,
+                    module: user.module || user.currentModule || null,
+                    status: 'active'
+                });
             }
         });
         
-        console.log(`👥 უნიკალური ონლაინ მომხმარებლები: ${uniqueUsers.size}`);
+        // Sort by sessionStart (NEWEST FIRST - descending order)
+        // This puts new users at the top
+        activeUsers.sort((a, b) => b.sessionStart - a.sessionStart);
         
-        // გავასუფთაოთ ძველი ტაიმერები
-        Object.keys(sessionTimers).forEach(key => {
-            if (!onlineUsers[key] || (now - onlineUsers[key].lastSeen) >= 30000) {
-                delete sessionTimers[key];
-            }
+        // Add to map
+        activeUsers.forEach(user => {
+            onlineUsersMap.set(user.key, user);
         });
         
-        // დავამატოთ ახალი ტაიმერები
-        Object.entries(onlineUsers).forEach(([key, user]) => {
-            if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
-                if (!sessionTimers[key]) {
-                    sessionTimers[key] = {
-                        startTime: user.lastSeen,
-                        lastUpdate: now
-                    };
-                }
-            }
-        });
-        
-        // განვაახლოთ UI
+        // Render with newest first
         if (document.getElementById('onlineSection')?.classList.contains('active')) {
-            loadOnlineUsers();
+            renderAllOnlineUsers();
         }
-        if (document.getElementById('dashboardSection')?.classList.contains('active')) {
-            loadDashboard();
+        
+        console.log(`🟢 Initial load: ${activeUsers.length} active users (sorted newest first)`);
+    });
+    
+    // Set up listeners
+    setupOnlineUsersListener();
+    
+    // Start heartbeat monitor
+    startHeartbeatMonitor();
+}
+
+function startHeartbeatMonitor() {
+    if (!firebaseInitialized || !database) return;
+    
+    console.log("💓 Starting heartbeat monitor");
+    
+    // Check every 15 seconds for users that might be away
+    setInterval(() => {
+        const now = Date.now();
+        const TIMEOUT = 60000;
+        const WARNING_THRESHOLD = 45000; // 45 seconds - show warning
+        
+        onlineUsersMap.forEach((user, userKey) => {
+            if (user && user.lastSeen) {
+                const timeSinceLastSeen = now - user.lastSeen;
+                
+                if (timeSinceLastSeen > WARNING_THRESHOLD && timeSinceLastSeen < TIMEOUT) {
+                    // User might be away - update status
+                    user.status = 'away';
+                    
+                    // Update UI to show warning
+                    const element = document.getElementById(`online-user-${userKey}`);
+                    if (element) {
+                        const timerElement = element.querySelector(`.session-timer-${userKey}`);
+                        if (timerElement) {
+                            timerElement.style.color = 'var(--warning)';
+                            timerElement.title = 'მომხმარებელი შესაძლოა შორს არის';
+                        }
+                    }
+                } else if (timeSinceLastSeen < WARNING_THRESHOLD) {
+                    user.status = 'active';
+                    
+                    // Reset UI
+                    const element = document.getElementById(`online-user-${userKey}`);
+                    if (element) {
+                        const timerElement = element.querySelector(`.session-timer-${userKey}`);
+                        if (timerElement) {
+                            timerElement.style.color = 'var(--accent)';
+                            timerElement.title = '';
+                        }
+                    }
+                }
+            }
+        });
+    }, 5000); // Check every 5 seconds
+}
+
+function setupOnlineUsersListener() {
+    if (!firebaseInitialized || !database) return;
+    
+    console.log("🟢 Setting up optimized online users listener with 60s timeout");
+    
+    database.ref('chat/onlineUsers').on('value', (snapshot) => {
+        const newOnlineUsers = snapshot.val() || {};
+        const now = Date.now();
+        const TIMEOUT = 60000; // 60 seconds timeout
+        
+        // Update onlineUsers variable
+        onlineUsers = newOnlineUsers;
+        
+        const newMap = new Map();
+        const userSessions = new Map(); // Group by user ID
+        
+        // First, group all sessions by user ID
+        Object.entries(newOnlineUsers).forEach(([sessionKey, user]) => {
+            if (user && user.lastSeen && (now - user.lastSeen) < TIMEOUT) {
+                // Determine user ID (use userId or create one from name for guests)
+                let userId = user.userId;
+                if (!userId) {
+                    // For guests without userId, create a consistent ID based on name
+                    if (user.name && user.name.includes('სტუმარი')) {
+                        userId = user.name; // Use name as ID for guests
+                    } else {
+                        userId = sessionKey; // Fallback to session key
+                    }
+                }
+                
+                if (!userSessions.has(userId)) {
+                    userSessions.set(userId, []);
+                }
+                userSessions.get(userId).push({ sessionKey, ...user });
+            }
+        });
+        
+        // Now create one entry per unique user (use the most recent session)
+        userSessions.forEach((sessions, userId) => {
+            // Sort sessions by lastSeen (most recent first)
+            sessions.sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
+            
+            // Use the most recent session as the main representation
+            const mainSession = sessions[0];
+            const sessionKey = mainSession.sessionKey;
+            
+            const isGuest = (mainSession.userId && mainSession.userId.startsWith('guest_')) || 
+                           (mainSession.name && mainSession.name.includes('სტუმარი'));
+            
+            // CRITICAL: Preserve existing sessionStart from the map if available
+            const existingUser = onlineUsersMap.get(userId);
+            let sessionStart;
+            
+            if (existingUser?.sessionStart) {
+                // Keep existing session start
+                sessionStart = existingUser.sessionStart;
+            } else if (mainSession.sessionStart) {
+                sessionStart = mainSession.sessionStart;
+            } else if (mainSession.firstSeen) {
+                sessionStart = mainSession.firstSeen;
+            } else {
+                sessionStart = mainSession.lastSeen;
+            }
+            
+            // IMPORTANT: Get module information from multiple possible sources
+            let moduleInfo = null;
+            
+            // Check all possible module fields in the user object
+            if (mainSession.module && mainSession.module !== 'undefined' && mainSession.module !== 'null') {
+                moduleInfo = mainSession.module;
+            } else if (mainSession.currentModule && mainSession.currentModule !== 'undefined' && mainSession.currentModule !== 'null') {
+                moduleInfo = mainSession.currentModule;
+            } else if (mainSession.selectedModule && mainSession.selectedModule !== 'undefined' && mainSession.selectedModule !== 'null') {
+                moduleInfo = mainSession.selectedModule;
+            } else if (mainSession.activeModule && mainSession.activeModule !== 'undefined' && mainSession.activeModule !== 'null') {
+                moduleInfo = mainSession.activeModule;
+            } else if (existingUser?.module) {
+                // Keep existing module if we had it before
+                moduleInfo = existingUser.module;
+            }
+            
+            // If we still don't have module info, check if this user has progress data
+            if (!moduleInfo && mainSession.progress) {
+                const modulesWithProgress = Object.keys(mainSession.progress);
+                if (modulesWithProgress.length > 0) {
+                    moduleInfo = modulesWithProgress[0];
+                }
+            }
+            
+            // Store with userId as key to prevent duplicates
+            newMap.set(userId, {
+                key: sessionKey, // Keep the session key for reference
+                userId: userId,
+                name: mainSession.name || 'უცნობი',
+                type: isGuest ? 'guest' : 'registered',
+                sessionStart: sessionStart,
+                module: moduleInfo,
+                currentModule: mainSession.currentModule || moduleInfo,
+                lastModule: mainSession.lastModule,
+                selectedModule: mainSession.selectedModule,
+                progress: mainSession.progress || {},
+                lastSeen: mainSession.lastSeen,
+                // Store all session keys for debugging
+                sessions: sessions.map(s => s.sessionKey)
+            });
+        });
+        
+        // Compare old and new states
+        const oldKeys = new Set(onlineUsersMap.keys());
+        const newKeys = new Set(newMap.keys());
+        
+        // Removed users
+        oldKeys.forEach(key => {
+            if (!newKeys.has(key)) {
+                const oldUser = onlineUsersMap.get(key);
+                console.log(`🔴 User ${key} removed - offline`);
+                removeOnlineUser(key);
+            }
+        });
+        
+        // Added or updated users
+        newKeys.forEach(key => {
+            const newUser = newMap.get(key);
+            
+            if (!oldKeys.has(key)) {
+                // New user
+                addOnlineUserToTop(newUser);
+            } else {
+                // Updated user
+                const oldUser = onlineUsersMap.get(key);
+                
+                // Check if important data changed
+                if (oldUser.module !== newUser.module || 
+                    oldUser.name !== newUser.name ||
+                    Math.abs((oldUser.sessionStart || 0) - (newUser.sessionStart || 0)) > 1000) {
+                    updateOnlineUser(newUser);
+                }
+            }
+        });
+        
+        // Update main data
+        onlineUsersMap = newMap;
+        
+        // Update counter
+        updateOnlineCounter();
+        
+        console.log(`🟢 Online users updated: ${onlineUsersMap.size} unique users (grouped by user ID)`);
+        
+        // Log all users and their modules for debugging
+        console.log("Current online users with modules:");
+        onlineUsersMap.forEach((user, key) => {
+            console.log(`- ${user.name}: module = ${user.module || 'მთავარი'} (${user.sessions?.length || 1} sessions)`);
+        });
+    });
+}
+
+// Replace your existing addOnlineUserToTop function with this:
+function addOnlineUserToTop(user) {
+    const onlineList = document.getElementById('onlineUsersList');
+    if (!onlineList) return;
+    
+    // Check if user already exists using userId
+    const existingElement = document.getElementById(`online-user-${user.userId}`);
+    if (existingElement) {
+        // If exists, remove it first (will be re-added at top)
+        existingElement.remove();
+    }
+    
+    // Create new element
+    const newElement = document.createElement('div');
+    newElement.id = `online-user-${user.userId}`;
+    newElement.innerHTML = createOnlineUserHTML(user);
+    
+    // Style for animation
+    newElement.style.opacity = '0';
+    newElement.style.transform = 'translateY(-20px)';
+    newElement.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    
+    // Add the new-user class for visual feedback
+    const onlineItem = newElement.querySelector('.online-item');
+    if (onlineItem) {
+        onlineItem.classList.add('new-user');
+    }
+    
+    // Remove the class after animation completes
+    setTimeout(() => {
+        const item = newElement.querySelector('.online-item');
+        if (item) {
+            item.classList.remove('new-user');
         }
-        if (document.getElementById('usersSection')?.classList.contains('active')) {
-            loadUsers(); // ეს განაახლებს მომხმარებლების გვერდს
+    }, 2000);
+    
+    // Insert at the TOP (as first child)
+    if (onlineList.firstChild) {
+        onlineList.insertBefore(newElement, onlineList.firstChild);
+    } else {
+        onlineList.appendChild(newElement);
+    }
+    
+    // Trigger animation
+    setTimeout(() => {
+        newElement.style.opacity = '1';
+        newElement.style.transform = 'translateY(0)';
+    }, 10);
+    
+    // Update counter
+    updateOnlineCounter();
+    
+    console.log(`🟢 New user added to top: ${user.name || 'unknown'} (${user.sessions?.length || 1} sessions)`);
+}
+
+// Simplified removeOnlineUser function
+function removeOnlineUser(userId) {
+    const element = document.getElementById(`online-user-${userId}`);
+    
+    if (element) {
+        // Remove with animation
+        element.style.opacity = '0';
+        element.style.transform = 'translateY(-20px)';
+        element.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        
+        setTimeout(() => {
+            if (element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+        }, 300);
+    }
+    
+    // Remove from map
+    if (onlineUsersMap.has(userId)) {
+        onlineUsersMap.delete(userId);
+    }
+    
+    // Update counter
+    updateOnlineCounter();
+}
+
+function renderAllOnlineUsers() {
+    const onlineList = document.getElementById('onlineUsersList');
+    if (!onlineList) return;
+    
+    // Get all users and sort by sessionStart (newest first)
+    const users = Array.from(onlineUsersMap.values());
+    users.sort((a, b) => b.sessionStart - a.sessionStart);
+    
+    onlineList.innerHTML = users.map(user => {
+        return `<div id="online-user-${user.userId}">${createOnlineUserHTML(user)}</div>`;
+    }).join('');
+    
+    updateOnlineCounter();
+    startSessionTimerIfNeeded();
+}
+
+function createOnlineUserHTML(user) {
+    const now = Date.now();
+    // Calculate seconds from session start (original login time)
+    const sessionSeconds = Math.floor((now - user.sessionStart) / 1000);
+    const hours = Math.floor(sessionSeconds / 3600);
+    const minutes = Math.floor((sessionSeconds % 3600) / 60);
+    const seconds = sessionSeconds % 60;
+    
+    let sessionStr;
+    if (hours > 0) {
+        sessionStr = `${hours}ს ${minutes.toString().padStart(2, '0')}წთ ${seconds.toString().padStart(2, '0')}წმ`;
+    } else if (minutes > 0) {
+        sessionStr = `${minutes}წთ ${seconds.toString().padStart(2, '0')}წმ`;
+    } else {
+        sessionStr = `${seconds}წმ`;
+    }
+    
+    // Determine timer color based on duration
+    let timerColor = 'var(--accent)';
+    let timerClass = '';
+    if (sessionSeconds > 7200) {
+        timerColor = 'var(--danger)';
+    } else if (sessionSeconds > 3600) {
+        timerColor = 'var(--warning)';
+    } else if (sessionSeconds < 5) {
+        timerClass = 'session-timer-new';
+    }
+    
+    // ===== FIX: Get module name - IMPROVED LOGIC =====
+    // Check multiple possible locations for module information
+    let moduleDisplay = 'მთავარი'; // Default to "მთავარი"
+    let moduleFound = false;
+    let moduleId = null;
+    
+    // Debug log
+    console.log(`User ${user.name || 'unknown'} data:`, {
+        module: user.module,
+        currentModule: user.currentModule,
+        selectedModule: user.selectedModule,
+        activeModule: user.activeModule,
+        lastModule: user.lastModule
+    });
+    
+    // 1. First check direct module property (most reliable)
+    if (user.module && user.module !== 'undefined' && user.module !== 'unknown' && user.module !== 'null') {
+        moduleId = user.module;
+        moduleDisplay = getModuleName(user.module);
+        moduleFound = true;
+        console.log(`✅ User ${user.name} module from user.module: ${user.module} -> ${moduleDisplay}`);
+    }
+    // 2. Then check currentModule
+    else if (user.currentModule && user.currentModule !== 'undefined' && user.currentModule !== 'unknown' && user.currentModule !== 'null') {
+        moduleId = user.currentModule;
+        moduleDisplay = getModuleName(user.currentModule);
+        moduleFound = true;
+        console.log(`✅ User ${user.name} module from user.currentModule: ${user.currentModule} -> ${moduleDisplay}`);
+    }
+    // 3. Check selectedModule
+    else if (user.selectedModule && user.selectedModule !== 'undefined' && user.selectedModule !== 'unknown' && user.selectedModule !== 'null') {
+        moduleId = user.selectedModule;
+        moduleDisplay = getModuleName(user.selectedModule);
+        moduleFound = true;
+        console.log(`✅ User ${user.name} module from user.selectedModule: ${user.selectedModule} -> ${moduleDisplay}`);
+    }
+    // 4. Check activeModule
+    else if (user.activeModule && user.activeModule !== 'undefined' && user.activeModule !== 'unknown' && user.activeModule !== 'null') {
+        moduleId = user.activeModule;
+        moduleDisplay = getModuleName(user.activeModule);
+        moduleFound = true;
+        console.log(`✅ User ${user.name} module from user.activeModule: ${user.activeModule} -> ${moduleDisplay}`);
+    }
+    // 5. Check lastModule
+    else if (user.lastModule && user.lastModule !== 'undefined' && user.lastModule !== 'unknown' && user.lastModule !== 'null') {
+        moduleId = user.lastModule;
+        moduleDisplay = getModuleName(user.lastModule);
+        moduleFound = true;
+        console.log(`✅ User ${user.name} module from user.lastModule: ${user.lastModule} -> ${moduleDisplay}`);
+    }
+    // 6. Check if there's module data in progress
+    else if (user.progress) {
+        const modulesWithProgress = Object.keys(user.progress || {});
+        if (modulesWithProgress.length > 0) {
+            // Get the most recent module
+            moduleId = modulesWithProgress[0];
+            moduleDisplay = getModuleName(moduleId);
+            moduleFound = true;
+            console.log(`✅ User ${user.name} module from progress: ${moduleId} -> ${moduleDisplay}`);
+        }
+    }
+    
+    // If still not found, try to get from any available module data in the user object
+    if (!moduleFound) {
+        for (const key in user) {
+            if (key.toLowerCase().includes('module') && user[key] && 
+                user[key] !== 'undefined' && user[key] !== 'unknown' && user[key] !== 'null') {
+                moduleId = user[key];
+                moduleDisplay = getModuleName(user[key]);
+                moduleFound = true;
+                console.log(`✅ User ${user.name} module from ${key}: ${user[key]} -> ${moduleDisplay}`);
+                break;
+            }
+        }
+    }
+    
+    // If no module found, check if this is a registered user with data in Firebase
+    if (!moduleFound && user.userId && !user.userId.startsWith('guest_')) {
+        // We'll try to fetch user data asynchronously, but for now show "მთავარი"
+        // This will be updated when the user data loads
+        console.log(`⚠️ No module found for registered user ${user.name}, will try to load from database`);
+    }
+    
+    // Format login time
+    const loginTime = new Date(user.sessionStart).toLocaleTimeString('ka-GE', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    
+    // Add visual indicator if module is not "მთავარი"
+    const moduleIndicator = moduleFound && moduleDisplay !== 'მთავარი' ? '' : '';
+    const moduleColor = moduleFound && moduleDisplay !== 'მთავარი' ? 'var(--accent)' : 'var(--text-muted)';
+    
+    return `
+        <div class="online-item" style="margin-bottom: 12px;" data-user-id="${user.key}" data-module="${moduleId || ''}">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="position: relative;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="${user.type === 'registered' ? '#10b981' : '#f59e0b'}" stroke-width="1.5">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M5.3 18.3c.8-1.5 2.3-2.5 4-2.7 1.2-.1 2.4.1 3.6.3 1.2.2 2.4.5 3.6.5 1.3 0 2.5-.3 3.7-.8"/>
+                    </svg>
+                    <div style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: #10b981; border-radius: 50%; border: 2px solid var(--surface);"></div>
+                </div>
+                
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+                        <span style="font-weight: 600; font-size: 16px; color: var(--text);">${escapeHtml(user.name || 'უცნობი')}</span>
+                        <span style="font-size: 11px; background: ${user.type === 'registered' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'}; color: ${user.type === 'registered' ? '#10b981' : '#f59e0b'}; padding: 4px 10px; border-radius: 40px;">
+                            ${user.type === 'registered' ? 'რეგისტრირებული' : 'სტუმარი'}
+                        </span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 24px; margin-top: 8px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 6px;" title="მიმდინარე მოდული">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${moduleColor}" stroke-width="2">
+                                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                                <polyline points="2 17 12 22 22 17"/>
+                                <polyline points="2 12 12 17 22 12"/>
+                            </svg>
+                            <span style="font-size: 13px; color: ${moduleColor}; font-weight: ${moduleFound && moduleDisplay !== 'მთავარი' ? '600' : '400'};">
+                                ${moduleIndicator} ${moduleDisplay}
+                            </span>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 6px;" title="შესვლის დრო">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            <span style="font-size: 13px; color: var(--text-muted);">${loginTime}</span>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 6px;" title="ონლაინ დრო">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${timerColor}" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+<span class="session-timer-${user.userId} ${timerClass}" style="font-size: 13px; font-weight: 600; color: ${timerColor}; font-family: monospace;">${sessionStr}</span>
+</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Add this function to fetch user data from Firebase
+async function fetchUserModuleData(userId, userName) {
+    if (!firebaseInitialized || !database) return;
+    
+    try {
+        const snapshot = await database.ref(`users/${userId}`).once('value');
+        const userData = snapshot.val();
+        
+        if (userData && userData.progress) {
+            // Find the most recently active module
+            const modules = Object.keys(userData.progress);
+            if (modules.length > 0) {
+                // Find which module has the most recent activity
+                let mostRecentModule = null;
+                let mostRecentTime = 0;
+                
+                modules.forEach(moduleId => {
+                    const moduleProgress = userData.progress[moduleId];
+                    if (moduleProgress.lastUpdated && moduleProgress.lastUpdated > mostRecentTime) {
+                        mostRecentTime = moduleProgress.lastUpdated;
+                        mostRecentModule = moduleId;
+                    }
+                });
+                
+                if (mostRecentModule) {
+                    console.log(`📊 Found recent module for user ${userName}: ${mostRecentModule}`);
+                    
+                    // Update the online user entry in Firebase
+                    database.ref(`chat/onlineUsers`).once('value', (snapshot) => {
+                        const onlineUsers = snapshot.val() || {};
+                        Object.entries(onlineUsers).forEach(([key, user]) => {
+                            if (user.userId === userId || user.name === userName) {
+                                database.ref(`chat/onlineUsers/${key}/module`).set(mostRecentModule);
+                                database.ref(`chat/onlineUsers/${key}/currentModule`).set(mostRecentModule);
+                            }
+                        });
+                    });
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching user module data:', error);
+    }
+}
+
+// Add this function to debug module data in Firebase
+function debugOnlineUsersModules() {
+    if (!firebaseInitialized || !database) return;
+    
+    database.ref('chat/onlineUsers').once('value', (snapshot) => {
+        const onlineUsers = snapshot.val() || {};
+        
+        console.log("=== ONLINE USERS MODULE DEBUG ===");
+        console.log(`Total online sessions: ${Object.keys(onlineUsers).length}`);
+        
+        Object.entries(onlineUsers).forEach(([key, user]) => {
+            console.log(`\nUser: ${user.name || 'unknown'} (${key})`);
+            console.log(`- userId: ${user.userId || 'none'}`);
+            console.log(`- module: ${user.module || 'not set'}`);
+            console.log(`- currentModule: ${user.currentModule || 'not set'}`);
+            console.log(`- selectedModule: ${user.selectedModule || 'not set'}`);
+            console.log(`- activeModule: ${user.activeModule || 'not set'}`);
+            console.log(`- lastSeen: ${new Date(user.lastSeen).toLocaleTimeString()}`);
+            
+            // Check all properties that might contain module info
+            const moduleProps = [];
+            for (const prop in user) {
+                if (prop.toLowerCase().includes('module') && user[prop]) {
+                    moduleProps.push(`${prop}: ${user[prop]}`);
+                }
+            }
+            if (moduleProps.length > 0) {
+                console.log(`- module properties found:`, moduleProps);
+            }
+        });
+    });
+}
+
+// You can call this from the browser console:
+// debugOnlineUsersModules()
+
+// Call this periodically for registered users
+function updateRegisteredUsersModules() {
+    if (!firebaseInitialized || !database) return;
+    
+    onlineUsersMap.forEach((user, key) => {
+        if (user.type === 'registered' && user.userId && !user.userId.startsWith('guest_')) {
+            fetchUserModuleData(user.userId, user.name);
         }
     });
+}
+
+// Call this every 30 seconds
+setInterval(() => {
+    if (document.getElementById('onlineSection')?.classList.contains('active')) {
+        updateRegisteredUsersModules();
+    }
+}, 30000);
+// Call this when admin logs in to fix any users without proper sessionStart
+async function fixSessionStarts() {
+    if (!firebaseInitialized || !database) return;
+    
+    try {
+        const snapshot = await database.ref('chat/onlineUsers').once('value');
+        const users = snapshot.val() || {};
+        const now = Date.now();
+        const updates = {};
+        
+        Object.entries(users).forEach(([key, user]) => {
+            // Only process active users
+            if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
+                // If no sessionStart, set it to firstSeen or lastSeen
+                if (!user.sessionStart) {
+                    const sessionStart = user.firstSeen || user.lastSeen;
+                    updates[`chat/onlineUsers/${key}/sessionStart`] = sessionStart;
+                    console.log(`🔧 Fixing sessionStart for ${key}: ${new Date(sessionStart).toLocaleTimeString()}`);
+                }
+            }
+        });
+        
+        if (Object.keys(updates).length > 0) {
+            await database.ref().update(updates);
+            console.log(`✅ Fixed sessionStart for ${Object.keys(updates).length} users`);
+        }
+    } catch (error) {
+        console.error('Error fixing session starts:', error);
+    }
+}
+
+// Call this after admin login
+// Add this line where admin successfully logs in:
+fixSessionStarts();
+
+// Add this function to initialize sessionStart for all existing online users
+async function initializeSessionStarts() {
+    if (!firebaseInitialized || !database) return;
+    
+    try {
+        const snapshot = await database.ref('chat/onlineUsers').once('value');
+        const users = snapshot.val() || {};
+        const now = Date.now();
+        const updates = {};
+        
+        Object.entries(users).forEach(([key, user]) => {
+            // Only initialize for active users (lastSeen within last 30 seconds)
+            if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
+                if (!user.sessionStart) {
+                    // Use firstSeen if available, otherwise use lastSeen
+                    const sessionStart = user.firstSeen || user.lastSeen;
+                    updates[`chat/onlineUsers/${key}/sessionStart`] = sessionStart;
+                    console.log(`Initializing sessionStart for ${key}: ${new Date(sessionStart).toLocaleTimeString()}`);
+                }
+            }
+        });
+        
+        if (Object.keys(updates).length > 0) {
+            await database.ref().update(updates);
+            console.log(`✅ Initialized sessionStart for ${Object.keys(updates).length} users`);
+        }
+    } catch (error) {
+        console.error('Error initializing session starts:', error);
+    }
+}
+
+// Call this function after admin logs in
+// Add this line in the admin login success section:
+initializeSessionStarts();
+
+// counter-ის განახლება
+function updateOnlineCounter() {
+    const onlineUsersCountHeader = document.getElementById('onlineUsersCountHeader');
+    if (onlineUsersCountHeader) {
+        onlineUsersCountHeader.textContent = onlineUsersMap.size;
+    }
+}
+
+
+// კონკრეტული მომხმარებლის განახლება
+function updateOnlineUser(user) {
+    const element = document.getElementById(`online-user-${user.key}`);
+    if (element) {
+        // განვაახლოთ შიგთავსი ციმციმის გარეშე
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = createOnlineUserHTML(user);
+        element.innerHTML = tempDiv.firstChild.innerHTML;
+    }
+}
+
+
+// დამხმარე ფუნქცია მხოლოდ UI-ს გასაახლებლად
+function renderOnlineUsersFromCache() {
+    if (!onlineUsers) return;
+    
+    const now = Date.now();
+    const onlineListArray = [];
+    
+    Object.entries(onlineUsers).forEach(([key, user]) => {
+        if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
+            const isGuest = (user.userId && user.userId.startsWith('guest_')) || 
+                           (user.name && user.name.includes('სტუმარი'));
+            
+            // განვაახლოთ ტაიმერის დაწყების დრო, თუ ჯერ არ არსებობს
+            if (!sessionTimers[key]) {
+                sessionTimers[key] = {
+                    startTime: user.sessionStart || user.lastSeen,
+                    lastUpdate: now
+                };
+            }
+            
+            onlineListArray.push({
+                key: key,
+                ...user,
+                type: isGuest ? 'guest' : 'registered',
+                sessionStart: sessionTimers[key].startTime
+            });
+        } else {
+            delete sessionTimers[key];
+        }
+    });
+    
+onlineListArray.sort((a, b) => b.lastSeen - a.lastSeen); // უახლესი პირველ რიგში
+    renderOnlineUsers(onlineListArray);
+    
+    // განვაახლოთ სათაურში რაოდენობა
+    const onlineUsersCountHeader = document.getElementById('onlineUsersCountHeader');
+    if (onlineUsersCountHeader) {
+        onlineUsersCountHeader.textContent = onlineListArray.length;
+    }
 }
 
 // დებაგის ფუნქცია - აჩვენებს ონლაინ მომხმარებლების დეტალებს
@@ -6155,9 +6819,9 @@ window.viewUserDetails = async function(userId) {
                             <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">აქტიური სესიები:</div>
                             ${activeSessions.map(s => `
                                 <div style="display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0;">
-                                    <span>🖥️ მოწყობილობა: ${s.device.substring(0, 8)}...</span>
-                                    <span>📚 ${s.module}</span>
-                                    <span>🕐 ${s.lastSeen}</span>
+                                    <span>მოწყობილობა: ${s.device.substring(0, 8)}...</span>
+                                    <span>${s.module}</span>
+                                    <span>${s.lastSeen}</span>
                                 </div>
                             `).join('')}
                         </div>
