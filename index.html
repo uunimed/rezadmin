@@ -5626,30 +5626,26 @@ function startHeartbeatMonitor() {
 function setupOnlineUsersListener() {
     if (!firebaseInitialized || !database) return;
     
-    console.log("🟢 Setting up optimized online users listener with 60s timeout");
+    console.log("🟢 Setting up online users listener with immediate removal");
     
     database.ref('chat/onlineUsers').on('value', (snapshot) => {
         const newOnlineUsers = snapshot.val() || {};
         const now = Date.now();
-        const TIMEOUT = 60000; // 60 seconds timeout
-        
-        // Update onlineUsers variable
-        onlineUsers = newOnlineUsers;
+        const TIMEOUT = 15000; // 15 seconds timeout (shorter for quicker removal)
         
         const newMap = new Map();
-        const userSessions = new Map(); // Group by user ID
+        const userSessions = new Map();
         
         // First, group all sessions by user ID
         Object.entries(newOnlineUsers).forEach(([sessionKey, user]) => {
+            // Only include users seen in the last 15 seconds
             if (user && user.lastSeen && (now - user.lastSeen) < TIMEOUT) {
-                // Determine user ID (use userId or create one from name for guests)
                 let userId = user.userId;
                 if (!userId) {
-                    // For guests without userId, create a consistent ID based on name
                     if (user.name && user.name.includes('სტუმარი')) {
-                        userId = user.name; // Use name as ID for guests
+                        userId = user.name;
                     } else {
-                        userId = sessionKey; // Fallback to session key
+                        userId = sessionKey;
                     }
                 }
                 
@@ -5660,108 +5656,38 @@ function setupOnlineUsersListener() {
             }
         });
         
-        // Now create one entry per unique user (use the most recent session)
+        // Create one entry per unique user
         userSessions.forEach((sessions, userId) => {
-            // Sort sessions by lastSeen (most recent first)
             sessions.sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
-            
-            // Use the most recent session as the main representation
             const mainSession = sessions[0];
-            const sessionKey = mainSession.sessionKey;
             
             const isGuest = (mainSession.userId && mainSession.userId.startsWith('guest_')) || 
                            (mainSession.name && mainSession.name.includes('სტუმარი'));
             
-            // 👇 CRITICAL FIX: Get sessionStart with proper priority
-            let sessionStart;
+            // Use the sessionStart from Firebase (which is now always current)
+            let sessionStart = mainSession.sessionStart || mainSession.lastSeen;
             
-            // Check if we already have this user in the map with a sessionStart
-            const existingUser = onlineUsersMap.get(userId);
+            // Get module information
+            let moduleInfo = mainSession.module || mainSession.currentModule || mainSession.selectedModule || null;
             
-            if (existingUser?.sessionStart) {
-                // ✅ CRITICAL: Keep the original session start time from when user first appeared
-                sessionStart = existingUser.sessionStart;
-                console.log(`📌 User ${userId} keeping original session start: ${new Date(sessionStart).toLocaleTimeString()}`);
-            } else {
-                // No existing record - this is a new user for the admin panel
-                // Priority order for sessionStart:
-                // 1. sessionStart field (explicitly set by user HTML)
-                // 2. firstSeen field
-                // 3. earliest lastSeen
-                
-                if (mainSession.sessionStart) {
-                    // User HTML properly set this
-                    sessionStart = mainSession.sessionStart;
-                    console.log(`📌 New user ${userId} using sessionStart from Firebase: ${new Date(sessionStart).toLocaleTimeString()}`);
-                } else if (mainSession.firstSeen) {
-                    sessionStart = mainSession.firstSeen;
-                    console.log(`📌 New user ${userId} using firstSeen: ${new Date(sessionStart).toLocaleTimeString()}`);
-                    
-                    // Save this as sessionStart for future
-                    database.ref(`chat/onlineUsers/${sessionKey}/sessionStart`).set(sessionStart);
-                } else {
-                    // If we have to use lastSeen, use the OLDEST lastSeen among all sessions
-                    const oldestSession = sessions.reduce((oldest, current) => 
-                        (current.lastSeen < oldest.lastSeen) ? current : oldest, sessions[0]);
-                    sessionStart = oldestSession.lastSeen;
-                    console.log(`📌 New user ${userId} using oldest lastSeen: ${new Date(sessionStart).toLocaleTimeString()}`);
-                    
-                    // Save this as sessionStart for future
-                    database.ref(`chat/onlineUsers/${sessionKey}/sessionStart`).set(sessionStart);
-                }
-            }
-            
-            // IMPORTANT: Get module information from multiple possible sources
-            let moduleInfo = null;
-            
-            // Check all possible module fields in the user object
-            if (mainSession.module && mainSession.module !== 'undefined' && mainSession.module !== 'null') {
-                moduleInfo = mainSession.module;
-            } else if (mainSession.currentModule && mainSession.currentModule !== 'undefined' && mainSession.currentModule !== 'null') {
-                moduleInfo = mainSession.currentModule;
-            } else if (mainSession.selectedModule && mainSession.selectedModule !== 'undefined' && mainSession.selectedModule !== 'null') {
-                moduleInfo = mainSession.selectedModule;
-            } else if (mainSession.activeModule && mainSession.activeModule !== 'undefined' && mainSession.activeModule !== 'null') {
-                moduleInfo = mainSession.activeModule;
-            } else if (existingUser?.module) {
-                // Keep existing module if we had it before
-                moduleInfo = existingUser.module;
-            }
-            
-            // If we still don't have module info, check if this user has progress data
-            if (!moduleInfo && mainSession.progress) {
-                const modulesWithProgress = Object.keys(mainSession.progress);
-                if (modulesWithProgress.length > 0) {
-                    moduleInfo = modulesWithProgress[0];
-                }
-            }
-            
-            // Store with userId as key to prevent duplicates
             newMap.set(userId, {
-                key: sessionKey, // Keep the session key for reference
+                key: mainSession.sessionKey,
                 userId: userId,
                 name: mainSession.name || 'უცნობი',
                 type: isGuest ? 'guest' : 'registered',
-                sessionStart: sessionStart, // This is the critical field for timer
+                sessionStart: sessionStart,
                 module: moduleInfo,
-                currentModule: mainSession.currentModule || moduleInfo,
-                lastModule: mainSession.lastModule,
-                selectedModule: mainSession.selectedModule,
-                progress: mainSession.progress || {},
-                lastSeen: mainSession.lastSeen,
-                // Store all session keys for debugging
-                sessions: sessions.map(s => s.sessionKey)
+                lastSeen: mainSession.lastSeen
             });
         });
         
-        // Compare old and new states
+        // Update the map
         const oldKeys = new Set(onlineUsersMap.keys());
         const newKeys = new Set(newMap.keys());
         
         // Removed users
         oldKeys.forEach(key => {
             if (!newKeys.has(key)) {
-                const oldUser = onlineUsersMap.get(key);
                 console.log(`🔴 User ${key} removed - offline`);
                 removeOnlineUser(key);
             }
@@ -5776,37 +5702,22 @@ function setupOnlineUsersListener() {
                 addOnlineUserToTop(newUser);
             } else {
                 // Updated user
-                const oldUser = onlineUsersMap.get(key);
-                
-                // Check if important data changed
-                if (oldUser.module !== newUser.module || 
-                    oldUser.name !== newUser.name ||
-                    Math.abs((oldUser.lastSeen || 0) - (newUser.lastSeen || 0)) > 5000) {
-                    // Update but KEEP the original sessionStart
-                    newUser.sessionStart = oldUser.sessionStart;
-                    updateOnlineUser(newUser);
-                }
+                updateOnlineUser(newUser);
             }
         });
         
-        // Update main data
         onlineUsersMap = newMap;
-        
-        // Update counter
         updateOnlineCounter();
         
         console.log(`🟢 Online users updated: ${onlineUsersMap.size} unique users`);
         
         // Log all users and their session start times
-        console.log("Current online users with session start:");
+        console.log("Current online users:");
         onlineUsersMap.forEach((user, key) => {
             const sessionDuration = Math.floor((now - user.sessionStart) / 1000);
-            const hours = Math.floor(sessionDuration / 3600);
-            const minutes = Math.floor((sessionDuration % 3600) / 60);
-            console.log(`- ${user.name}: started ${new Date(user.sessionStart).toLocaleTimeString()} (${hours}h ${minutes}m ago)`);
+            console.log(`- ${user.name}: started ${new Date(user.sessionStart).toLocaleTimeString()} (${sessionDuration}s ago)`);
         });
         
-        // Force re-render to ensure UI updates
         renderAllOnlineUsers();
     }, (error) => {
         console.error("Error in online users listener:", error);
