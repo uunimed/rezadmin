@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniMed · ადმინისტრატორი</title>
+    <title>ადმინისტრატორი</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1961,7 +1961,7 @@
                             <rect x="14" y="12" width="7" height="9"/>
                             <rect x="3" y="16" width="7" height="5"/>
                         </svg>
-                        <span>დაშბორდი</span>
+                        <span>მთავარი</span>
                     </div>
                     <div class="nav-item" data-section="users">
                         <svg class="icon" viewBox="0 0 24 24">
@@ -1997,7 +1997,7 @@
                         <svg class="icon" viewBox="0 0 24 24">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                         </svg>
-                        <span>ჩატი</span>
+                        <span>მიმოწერები</span>
                     </div>
                     <div class="nav-item" data-section="settings">
                         <svg class="icon" viewBox="0 0 24 24">
@@ -2014,7 +2014,6 @@
                         <div class="admin-avatar">A</div>
                         <div class="admin-details">
                             <div class="admin-name">ადმინისტრატორი</div>
-                            <div class="admin-role">სუპერ ადმინი</div>
                         </div>
                     </div>
                     <button id="adminLogoutBtn" class="logout-btn">
@@ -2033,7 +2032,7 @@
                 <!-- Dashboard Section -->
                 <div id="dashboardSection" class="content-section active">
                     <div class="content-header">
-                        <h2 class="content-title">დაშბორდი</h2>
+                        <h2 class="content-title">მთავარი გვერდი</h2>
                     </div>
                     
                     <div class="dashboard-grid">
@@ -6469,10 +6468,10 @@ window.sortModuleQuestions = function(type) {
                 </button>
             </div>
             <div style="color: var(--text-muted); font-size: 14px;">
-                📝 სულ კითხვები: ${window.currentSortedModule.questionCount} | 
-                👥 სულ მომხმარებელი: ${sortedQuestions.reduce((sum, q) => sum + q.totalUsers, 0)} | 
-                ✅ სწორი: ${sortedQuestions.reduce((sum, q) => sum + q.correctUsers, 0)} | 
-                ❌ არასწორი: ${sortedQuestions.reduce((sum, q) => sum + q.incorrectUsers, 0)}
+               სულ კითხვები: ${window.currentSortedModule.questionCount} | 
+               სულ მომხმარებელი: ${sortedQuestions.reduce((sum, q) => sum + q.totalUsers, 0)} | 
+               სწორი: ${sortedQuestions.reduce((sum, q) => sum + q.correctUsers, 0)} | 
+               არასწორი: ${sortedQuestions.reduce((sum, q) => sum + q.incorrectUsers, 0)}
             </div>
         </div>
     `;
@@ -6578,8 +6577,8 @@ async function showModuleQuestions(moduleId, moduleName) {
         const onlineSnapshot = await database.ref('chat/onlineUsers').once('value');
         const onlineUsers = onlineSnapshot.val() || {};
         
-        console.log(`📦 სულ მომხმარებლები: ${Object.keys(users).length}`);
-        console.log(`📦 ონლაინ მომხმარებლები: ${Object.keys(onlineUsers).length}`);
+        console.log(`სულ მომხმარებლები: ${Object.keys(users).length}`);
+        console.log(`ონლაინ მომხმარებლები: ${Object.keys(onlineUsers).length}`);
         
         // === შევქმნათ სტრუქტურა უნიკალური მომხმარებლების დასათვლელად ===
         // questionStats[questionId] = { correctUsers: Set, incorrectUsers: Set }
@@ -6662,8 +6661,8 @@ async function showModuleQuestions(moduleId, moduleName) {
             totalCorrectUsers += stat.correctUsers.size;
             totalIncorrectUsers += stat.incorrectUsers.size;
         });
-        console.log(`✅ სწორი პასუხების ჯამი: ${totalCorrectUsers} მომხმარებელი`);
-        console.log(`❌ არასწორი პასუხების ჯამი: ${totalIncorrectUsers} მომხმარებელი`);
+        console.log(`სწორი პასუხების ჯამი: ${totalCorrectUsers} მომხმარებელი`);
+        console.log(`არასწორი პასუხების ჯამი: ${totalIncorrectUsers} მომხმარებელი`);
         
         // ჩავტვირთოთ CSV ამ მოდულისთვის
         const csvUrl = MODULE_CSV_URLS[moduleId];
@@ -6705,7 +6704,7 @@ async function showModuleQuestions(moduleId, moduleName) {
             
             const correctPercent = totalUsers > 0 ? Math.round((correctUsers / totalUsers) * 100) : 0;
             
-            console.log(`📊 კითხვა #${questionId}: სულ=${totalUsers}, სწორი=${correctUsers} (${correctPercent}%), არასწორი=${incorrectUsers}`);
+            console.log(`კითხვა #${questionId}: სულ=${totalUsers}, სწორი=${correctUsers} (${correctPercent}%), არასწორი=${incorrectUsers}`);
             
             questionsArray.push({
                 id: questionId,
@@ -6765,10 +6764,10 @@ async function showModuleQuestions(moduleId, moduleName) {
                     </button>
                 </div>
                 <div style="color: var(--text-muted); font-size: 14px;">
-                    📝 სულ კითხვები: ${tests.length} | 
-                    👥 სულ მომხმარებელი: ${questionsArray.reduce((sum, q) => sum + q.totalUsers, 0)} | 
-                    ✅ სწორი: ${questionsArray.reduce((sum, q) => sum + q.correctUsers, 0)} | 
-                    ❌ არასწორი: ${questionsArray.reduce((sum, q) => sum + q.incorrectUsers, 0)}
+                    სულ კითხვები: ${tests.length} | 
+                    სულ მომხმარებელი: ${questionsArray.reduce((sum, q) => sum + q.totalUsers, 0)} | 
+                    სწორი: ${questionsArray.reduce((sum, q) => sum + q.correctUsers, 0)} | 
+                    არასწორი: ${questionsArray.reduce((sum, q) => sum + q.incorrectUsers, 0)}
                 </div>
             </div>
         `;
@@ -6845,10 +6844,10 @@ async function showModuleQuestions(moduleId, moduleName) {
         }
         
         modalContent.innerHTML = questionsHtml;
-        console.log("✅ Popup-ის შიგთავსი განახლდა");
+        console.log("შიგთავსი განახლდა");
         
     } catch (error) {
-        console.error("❌ შეცდომა კითხვების ჩატვირთვისას:", error);
+        console.error("შეცდომა კითხვების ჩატვირთვისას:", error);
         modalContent.innerHTML = `
             <div style="text-align: center; padding: 60px; color: var(--danger);">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto 20px;">
@@ -7051,7 +7050,7 @@ async function loadStatistics() {
         const modulesWithQuestions = allModules.filter(m => moduleCounts[m.id] > 0);
         
         if (modulesWithQuestions.length === 0) {
-            modulesList.innerHTML = '<div style="text-align: center; padding: 60px; color: var(--text-muted);">📭 მოდულები არ არის</div>';
+            modulesList.innerHTML = '<div style="text-align: center; padding: 60px; color: var(--text-muted);">მოდულები არ არის</div>';
             window.isLoadingStatistics = false;
             return;
         }
@@ -7143,19 +7142,19 @@ async function loadStatistics() {
         summaryCard.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <span style="color: var(--text-muted);">📊 სულ მოდულები</span>
+                    <span style="color: var(--text-muted);">სულ მოდულები</span>
                     <span style="font-weight: 700; font-size: 24px; color: var(--accent); margin-left: 12px;">${modulesWithQuestions.length}</span>
                 </div>
                 <div>
-                    <span style="color: var(--text-muted);">📝 ჯამური კითხვები</span>
+                    <span style="color: var(--text-muted);">ჯამური კითხვები</span>
                     <span style="font-weight: 700; font-size: 24px; color: var(--warning); margin-left: 12px;">${totalQuestions}</span>
                 </div>
                 <div>
-                    <span style="color: var(--text-muted);">👥 აქტიური მომხმარებელი</span>
+                    <span style="color: var(--text-muted);">აქტიური მომხმარებელი</span>
                     <span style="font-weight: 700; font-size: 24px; color: var(--success); margin-left: 12px;">${totalUsers}</span>
                 </div>
                 <div>
-                    <span style="color: var(--text-muted);">🎯 აქტიური მოდულები</span>
+                    <span style="color: var(--text-muted);">აქტიური მოდულები</span>
                     <span style="font-weight: 700; font-size: 24px; color: #f59e0b; margin-left: 12px;">${modulesWithActivity}</span>
                 </div>
             </div>
@@ -7168,7 +7167,7 @@ async function loadStatistics() {
         lastUpdateTime.style.textAlign = 'right';
         lastUpdateTime.style.fontSize = '12px';
         lastUpdateTime.style.color = 'var(--text-muted)';
-        lastUpdateTime.innerHTML = `🔄 ბოლო განახლება: ${new Date().toLocaleTimeString('ka-GE')}`;
+        lastUpdateTime.innerHTML = `ბოლო განახლება: ${new Date().toLocaleTimeString('ka-GE')}`;
         modulesList.appendChild(lastUpdateTime);
 
         console.log("✅ Statistics loaded successfully with correct user counts");
