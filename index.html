@@ -5441,6 +5441,7 @@ function renderOnlineUsers(users) {
     `}).join('');
 }
 // Update the timer interval function
+// Update the timer interval function
 function startSessionTimerIfNeeded() {
     if (timerInterval) return;
     
@@ -5448,7 +5449,7 @@ function startSessionTimerIfNeeded() {
         if (document.getElementById('onlineSection')?.classList.contains('active')) {
             const now = Date.now();
             
-            onlineUsersMap.forEach((user, userKey) => {
+            onlineUsersMap.forEach((user, userId) => {
                 if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
                     // Calculate seconds from sessionStart (original login time)
                     const sessionSeconds = Math.floor((now - user.sessionStart) / 1000);
@@ -5465,14 +5466,6 @@ function startSessionTimerIfNeeded() {
                         sessionStr = `${minutes}წთ ${seconds.toString().padStart(2, '0')}წმ`;
                     } else {
                         sessionStr = `${seconds}წმ`;
-                        
-                        // For the first few seconds, make it pulse to show it's counting
-                        if (seconds < 5) {
-                            const timerElement = document.querySelector(`.session-timer-${userKey}`);
-                            if (timerElement) {
-                                timerElement.style.animation = 'timerPulse 1s infinite';
-                            }
-                        }
                     }
                     
                     // Determine timer color based on duration
@@ -5483,17 +5476,11 @@ function startSessionTimerIfNeeded() {
                         timerColor = 'var(--warning)';
                     }
                     
-// In startSessionTimerIfNeeded function, update this part:
-const timerElement = document.querySelector(`.session-timer-${user.userId}`);
-if (timerElement) {
-    timerElement.textContent = sessionStr;
-    timerElement.style.color = timerColor;
-    
-    // Remove pulse animation after 5 seconds
-    if (sessionSeconds >= 5) {
-        timerElement.style.animation = 'none';
-    }
-}
+                    const timerElement = document.querySelector(`.session-timer-${userId}`);
+                    if (timerElement) {
+                        timerElement.textContent = sessionStr;
+                        timerElement.style.color = timerColor;
+                    }
                 }
             });
         }
@@ -5700,7 +5687,7 @@ function setupOnlineUsersListener() {
                 // Priority order for sessionStart:
                 // 1. sessionStart field (explicitly set by user HTML)
                 // 2. firstSeen field
-                // 3. earliest lastSeen (but only if it's significantly older than now)
+                // 3. earliest lastSeen
                 
                 if (mainSession.sessionStart) {
                     // User HTML properly set this
@@ -5714,7 +5701,6 @@ function setupOnlineUsersListener() {
                     database.ref(`chat/onlineUsers/${sessionKey}/sessionStart`).set(sessionStart);
                 } else {
                     // If we have to use lastSeen, use the OLDEST lastSeen among all sessions
-                    // This is better than using the most recent one
                     const oldestSession = sessions.reduce((oldest, current) => 
                         (current.lastSeen < oldest.lastSeen) ? current : oldest, sessions[0]);
                     sessionStart = oldestSession.lastSeen;
@@ -5819,6 +5805,11 @@ function setupOnlineUsersListener() {
             const minutes = Math.floor((sessionDuration % 3600) / 60);
             console.log(`- ${user.name}: started ${new Date(user.sessionStart).toLocaleTimeString()} (${hours}h ${minutes}m ago)`);
         });
+        
+        // Force re-render to ensure UI updates
+        renderAllOnlineUsers();
+    }, (error) => {
+        console.error("Error in online users listener:", error);
     });
 }
 
