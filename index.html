@@ -1670,6 +1670,46 @@
     }
 }
 
+/* ადმინისტრატორის წამზომის სტილი */
+#adminSessionTimer {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+#adminSessionTimer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: timerShine 3s infinite;
+}
+
+@keyframes timerShine {
+    0% { left: -100%; }
+    20% { left: 100%; }
+    100% { left: 100%; }
+}
+
+.sidebar.collapsed #adminSessionTimer {
+    padding: 8px;
+    font-size: 14px;
+    margin: 10px 10px 0 10px;
+}
+
+.sidebar.collapsed #adminSessionTimer span {
+    display: none;
+}
+
+.sidebar.collapsed #adminSessionTimer svg {
+    width: 24px;
+    height: 24px;
+    margin: 0;
+}
+
 /* Stat number animation */
 .stat-number {
     display: inline-block;
@@ -3025,7 +3065,8 @@ let isAdminAuthenticated = false;
 let currentActivityTab = 'custom';
 let onlineUsers = {};
 let currentQuestionFilter = 'all';
-
+let adminSessionStartTime = null;
+let adminTimerInterval = null;
 // გლობალური ცვლადის გამოცხადება (თუ არ არსებობს)
 if (typeof window.onlineUsers === 'undefined') {
     window.onlineUsers = {};
@@ -3039,6 +3080,121 @@ if (typeof window.onlineUsers === 'undefined') {
         // Settings - Email Auth Toggle
         const EMAIL_AUTH_KEY = 'adminEmailAuthEnabled';
         let isEmailAuthEnabled = localStorage.getItem(EMAIL_AUTH_KEY) === 'true';
+
+// ადმინისტრატორის სესიის წამზომის დაწყება
+function startAdminSessionTimer() {
+    // მნიშვნელოვანი: ყოველთვის დავაყენოთ ახალი დრო
+    adminSessionStartTime = Date.now();
+    console.log('⏱️ ადმინის სესია დაიწყო:', new Date(adminSessionStartTime).toLocaleTimeString());
+    
+    // თუ უკვე გვაქვს ტაიმერი, გავაუქმოთ და შევქმნათ ახალი
+    if (adminTimerInterval) {
+        clearInterval(adminTimerInterval);
+        adminTimerInterval = null;
+    }
+    
+    // ტაიმერის შექმნა, რომელიც ყოველ წამში განაახლებს UI-ს
+    adminTimerInterval = setInterval(updateAdminTimerDisplay, 1000);
+    
+    // პირველად განვაახლოთ
+    updateAdminTimerDisplay();
+}
+
+// ადმინისტრატორის წამზომის UI-ს განახლება
+function updateAdminTimerDisplay() {
+    if (!adminSessionStartTime) return;
+    
+    const now = Date.now();
+    const elapsedSeconds = Math.floor((now - adminSessionStartTime) / 1000);
+    
+    // წამზომის ფორმატირება
+    const hours = Math.floor(elapsedSeconds / 3600);
+    const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+    const seconds = elapsedSeconds % 60;
+    
+    let timerString;
+    if (hours > 0) {
+        timerString = `${hours}ს ${minutes.toString().padStart(2, '0')}წთ ${seconds.toString().padStart(2, '0')}წმ`;
+    } else {
+        timerString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    // მოვძებნოთ ელემენტი, სადაც გვინდა წამზომის ჩვენება
+    // მაგალითად, sidebar-ის სათაურში ან სადმე ზედა პანელში
+    const timerElement = document.getElementById('adminSessionTimer');
+    
+    if (timerElement) {
+        timerElement.textContent = timerString;
+    } else {
+        // თუ ელემენტი არ არსებობს, შევქმნათ და დავამატოთ sidebar-ში
+        createAdminTimerElement(timerString);
+    }
+}
+
+// ადმინის წამზომის ელემენტის შექმნა
+function createAdminTimerElement(timerString) {
+    const sidebar = document.getElementById('adminSidebar');
+    if (!sidebar) return;
+    
+    // შევამოწმოთ უკვე არსებობს თუ არა
+    let timerElement = document.getElementById('adminSessionTimer');
+    
+    if (!timerElement) {
+        // შევქმნათ ახალი ელემენტი
+        timerElement = document.createElement('div');
+        timerElement.id = 'adminSessionTimer';
+        timerElement.style.cssText = `
+            background: linear-gradient(135deg, #0ea5a4, #0891b2);
+            color: white;
+            padding: 12px 20px;
+            margin: 10px 20px 0 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 18px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        `;
+        
+        // დავამატოთ sidebar-ის header-ის შემდეგ
+        const sidebarHeader = sidebar.querySelector('.sidebar-header');
+        if (sidebarHeader) {
+            sidebarHeader.insertAdjacentElement('afterend', timerElement);
+        } else {
+            // თუ header ვერ ვიპოვეთ, დავამატოთ sidebar-ის დასაწყისში
+            sidebar.insertBefore(timerElement, sidebar.firstChild);
+        }
+    }
+    
+    timerElement.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span>${timerString}</span>
+    `;
+}
+
+// სესიის დასრულებისას წამზომის გაწმენდა
+function resetAdminSessionTimer() {
+    if (adminTimerInterval) {
+        clearInterval(adminTimerInterval);
+        adminTimerInterval = null;
+    }
+    adminSessionStartTime = null;
+    
+    // დავმალოთ ტაიმერის ელემენტი
+    const timerElement = document.getElementById('adminSessionTimer');
+    if (timerElement) {
+        timerElement.remove();
+    }
+    
+    console.log('⏱️ ადმინის სესიის ტაიმერი გასუფთავდა');
+}
 
 function getModuleName(module) {
     if (!module || module === 'unknown' || module === 'undefined') {
@@ -5035,6 +5191,7 @@ UniMed`;
             initChat();
             
             startSessionTimerIfNeeded();
+    startAdminSessionTimer();
 
             if (countdownInterval) {
                 clearInterval(countdownInterval);
@@ -5080,7 +5237,8 @@ document.getElementById('verifyEmailCodeBtn').addEventListener('click', () => {
         loadAllData();
         startOnlineTracking();
         initChat();
-        
+            startAdminSessionTimer();
+
         if (countdownInterval) {
             clearInterval(countdownInterval);
         }
@@ -5184,13 +5342,14 @@ UniMed`;
         });
 
 // Logout
+// Logout
 document.getElementById('adminLogoutBtn').addEventListener('click', async () => {
     // ჯერ დავასრულოთ მიმდინარე სესია
     await completeCurrentSession();
     
-    // შემდეგ დავამატოთ ახალი ჩანაწერი (სურვილისამებრ)
-    // saveAdminAuthHistory(true, 'logout', 'სესიის დასრულება');
-    
+    // წამზომის გაწმენდა
+    resetAdminSessionTimer();
+
     isAdminAuthenticated = false;
     isAdminCodeValid = false;
     generatedEmailCode = null;
@@ -5278,37 +5437,19 @@ async function completeCurrentSession() {
     }
 }
 
-// Add this new function to load fresh data
-function loadOnlineUsersFresh() {
-    if (!firebaseInitialized || !database) return;
-    
-    database.ref('chat/onlineUsers').once('value', (snapshot) => {
-        const users = snapshot.val() || {};
-        const now = Date.now();
-        const TIMEOUT = 60000;
-        
-        onlineUsersMap.clear();
-        
-        Object.entries(users).forEach(([key, user]) => {
-            if (user && user.lastSeen && (now - user.lastSeen) < TIMEOUT) {
-                const isGuest = (user.userId && user.userId.startsWith('guest_')) || 
-                               (user.name && user.name.includes('სტუმარი'));
-                
-                onlineUsersMap.set(key, {
-                    key: key,
-                    ...user,
-                    type: isGuest ? 'guest' : 'registered',
-                    sessionStart: user.sessionStart || now,
-                    module: user.module || user.currentModule || null
-                });
-            }
-        });
-        
-        renderAllOnlineUsers();
-        updateOnlineCounter();
-    });
+// დაამატე ეს ფუნქცია
+function displayCurrentCode() {
+    const codeDisplay = document.getElementById('currentCodeDisplay');
+    if (codeDisplay) {
+        // აჩვენე პირველი და ბოლო ციფრი, დანარჩენი ვარსკვლავებით
+        const firstChar = ADMIN_CODE[0];
+        const lastChar = ADMIN_CODE[ADMIN_CODE.length - 1];
+        const stars = '*'.repeat(ADMIN_CODE.length - 2);
+        codeDisplay.textContent = `${firstChar}${stars}${lastChar}`;
+    }
 }
 
+// გამოიძახე ეს ფუნქცია initSettingsPage()-ში
 
 async function loadOnlineUsers() {
     // ეს ფუნქცია აღარ არის საჭირო, რადგან realtime updates უკვე მუშაობს
@@ -5459,7 +5600,6 @@ function renderOnlineUsers(users) {
     `}).join('');
 }
 // Update the timer interval function
-// Update the timer interval function
 function startSessionTimerIfNeeded() {
     if (timerInterval) return;
     
@@ -5467,7 +5607,7 @@ function startSessionTimerIfNeeded() {
         if (document.getElementById('onlineSection')?.classList.contains('active')) {
             const now = Date.now();
             
-            onlineUsersMap.forEach((user, userId) => {
+            onlineUsersMap.forEach((user, userKey) => {
                 if (user && user.lastSeen && (now - user.lastSeen) < 30000) {
                     // Calculate seconds from sessionStart (original login time)
                     const sessionSeconds = Math.floor((now - user.sessionStart) / 1000);
@@ -5484,6 +5624,14 @@ function startSessionTimerIfNeeded() {
                         sessionStr = `${minutes}წთ ${seconds.toString().padStart(2, '0')}წმ`;
                     } else {
                         sessionStr = `${seconds}წმ`;
+                        
+                        // For the first few seconds, make it pulse to show it's counting
+                        if (seconds < 5) {
+                            const timerElement = document.querySelector(`.session-timer-${userKey}`);
+                            if (timerElement) {
+                                timerElement.style.animation = 'timerPulse 1s infinite';
+                            }
+                        }
                     }
                     
                     // Determine timer color based on duration
@@ -5494,11 +5642,17 @@ function startSessionTimerIfNeeded() {
                         timerColor = 'var(--warning)';
                     }
                     
-                    const timerElement = document.querySelector(`.session-timer-${userId}`);
-                    if (timerElement) {
-                        timerElement.textContent = sessionStr;
-                        timerElement.style.color = timerColor;
-                    }
+// In startSessionTimerIfNeeded function, update this part:
+const timerElement = document.querySelector(`.session-timer-${user.userId}`);
+if (timerElement) {
+    timerElement.textContent = sessionStr;
+    timerElement.style.color = timerColor;
+    
+    // Remove pulse animation after 5 seconds
+    if (sessionSeconds >= 5) {
+        timerElement.style.animation = 'none';
+    }
+}
                 }
             });
         }
@@ -5529,85 +5683,87 @@ let lastOnlineUsersJSON = ''; // წინა მდგომარეობი�
 let updateTimeout = null; // debounce-ისთვის
 let onlineUsersMap = new Map(); // მიმდინარე ონლაინ მომხმარებლების რუკა
 
-// Replace your existing startOnlineTracking function with this:
 function startOnlineTracking() {
     if (!firebaseInitialized || !database) return;
     
-    console.log("🟢 Starting online tracking - resetting all sessions");
+    console.log("🟢 Starting optimized online tracking with 60s timeout");
     
-    // First, get current online users
+    // Clean up any old sessions first
+    cleanupOldSessions();
+    
+    // Initial load with longer timeout
     database.ref('chat/onlineUsers').once('value', (snapshot) => {
         const users = snapshot.val() || {};
         const now = Date.now();
-        const updates = {};
-        
-        // Reset ALL session start times to current time
-        Object.keys(users).forEach(key => {
-            const user = users[key];
-            // Only reset active users (last seen within last 60 seconds)
-            if (user && user.lastSeen && (now - user.lastSeen) < 60000) {
-                updates[`chat/onlineUsers/${key}/sessionStart`] = now;
-                updates[`chat/onlineUsers/${key}/firstSeen`] = now;
-                console.log(`🔄 Resetting session for ${user.name || key} to start at ${new Date(now).toLocaleTimeString()}`);
-            }
-        });
-        
-        // Apply updates if any
-        if (Object.keys(updates).length > 0) {
-            database.ref().update(updates).then(() => {
-                console.log(`✅ Reset ${Object.keys(updates).length} sessions on page refresh`);
-                // Now load fresh data
-                loadOnlineUsersFresh();
-            });
-        } else {
-            loadOnlineUsersFresh();
-        }
-    });
-    
-    // Set up listeners with fresh data
-    setupOnlineUsersListener();
-    startHeartbeatMonitor();
-}
-
-function setupOnlineUsersListener() {
-    if (!firebaseInitialized || !database) return;
-    
-    console.log("🟢 Setting up online users listener with fresh timestamps");
-    
-    database.ref('chat/onlineUsers').on('value', (snapshot) => {
-        const newOnlineUsers = snapshot.val() || {};
-        const now = Date.now();
         const TIMEOUT = 60000;
         
-        const newMap = new Map();
+        onlineUsersMap.clear();
         
-        Object.entries(newOnlineUsers).forEach(([sessionKey, user]) => {
+        // Create array of active users
+        const activeUsers = [];
+        
+        Object.entries(users).forEach(([key, user]) => {
             if (user && user.lastSeen && (now - user.lastSeen) < TIMEOUT) {
                 const isGuest = (user.userId && user.userId.startsWith('guest_')) || 
                                (user.name && user.name.includes('სტუმარი'));
                 
-                // CRITICAL: Don't preserve old timestamps on refresh
-                // The sessionStart from Firebase is always the current one
-                newMap.set(sessionKey, {
-                    key: sessionKey,
-                    userId: user.userId || sessionKey,
-                    name: user.name || 'უცნობი',
+                let sessionStart;
+                
+                // For initial load, check if this is a new session or existing one
+                // We'll use the sessionStart from Firebase, but if it's too old (> 60 seconds) and user is active, reset it
+                if (user.sessionStart) {
+                    const timeSinceSessionStart = now - user.sessionStart;
+                    
+                    // If sessionStart is very old but user just appeared, treat as new session
+                    if (timeSinceSessionStart > 60000) {
+                        sessionStart = now;
+                        database.ref(`chat/onlineUsers/${key}/sessionStart`).set(now);
+                        console.log(`🆕 Initial load: resetting old session for ${key} to now`);
+                    } else {
+                        sessionStart = user.sessionStart;
+                    }
+                } else if (user.firstSeen) {
+                    sessionStart = user.firstSeen;
+                    database.ref(`chat/onlineUsers/${key}/sessionStart`).set(user.firstSeen);
+                } else {
+                    sessionStart = user.lastSeen;
+                    database.ref(`chat/onlineUsers/${key}/sessionStart`).set(user.lastSeen);
+                }
+                
+                activeUsers.push({
+                    key: key,
+                    ...user,
                     type: isGuest ? 'guest' : 'registered',
-                    sessionStart: user.sessionStart || user.lastSeen || now,
+                    sessionStart: sessionStart,
                     module: user.module || user.currentModule || null,
-                    lastSeen: user.lastSeen
+                    status: 'active'
                 });
             }
         });
         
-        // Update the map
-        onlineUsersMap = newMap;
-        renderAllOnlineUsers();
-        updateOnlineCounter();
+        // Sort by sessionStart (NEWEST FIRST - descending order)
+        activeUsers.sort((a, b) => b.sessionStart - a.sessionStart);
         
-        console.log(`🟢 Online users updated: ${onlineUsersMap.size} users`);
+        // Add to map
+        activeUsers.forEach(user => {
+            onlineUsersMap.set(user.key, user);
+        });
+        
+        // Render with newest first
+        if (document.getElementById('onlineSection')?.classList.contains('active')) {
+            renderAllOnlineUsers();
+        }
+        
+        console.log(`🟢 Initial load: ${activeUsers.length} active users (sorted newest first)`);
     });
+    
+    // Set up listeners
+    setupOnlineUsersListener();
+    
+    // Start heartbeat monitor
+    startHeartbeatMonitor();
 }
+
 
 function startHeartbeatMonitor() {
     if (!firebaseInitialized || !database) return;
@@ -5654,6 +5810,207 @@ function startHeartbeatMonitor() {
         });
     }, 5000); // Check every 5 seconds
 }
+
+function setupOnlineUsersListener() {
+    if (!firebaseInitialized || !database) return;
+    
+    console.log("🟢 Setting up optimized online users listener with 60s timeout");
+    
+    database.ref('chat/onlineUsers').on('value', (snapshot) => {
+        const newOnlineUsers = snapshot.val() || {};
+        const now = Date.now();
+        const TIMEOUT = 60000; // 60 seconds timeout
+        
+        // Update onlineUsers variable
+        onlineUsers = newOnlineUsers;
+        
+        const newMap = new Map();
+        const userSessions = new Map(); // Group by user ID
+        
+        // First, group all sessions by user ID
+        Object.entries(newOnlineUsers).forEach(([sessionKey, user]) => {
+            if (user && user.lastSeen && (now - user.lastSeen) < TIMEOUT) {
+                // Determine user ID (use userId or create one from name for guests)
+                let userId = user.userId;
+                if (!userId) {
+                    // For guests without userId, create a consistent ID based on name
+                    if (user.name && user.name.includes('სტუმარი')) {
+                        userId = user.name; // Use name as ID for guests
+                    } else {
+                        userId = sessionKey; // Fallback to session key
+                    }
+                }
+                
+                if (!userSessions.has(userId)) {
+                    userSessions.set(userId, []);
+                }
+                userSessions.get(userId).push({ sessionKey, ...user });
+            }
+        });
+        
+        // Now create one entry per unique user (use the most recent session)
+        userSessions.forEach((sessions, userId) => {
+            // Sort sessions by lastSeen (most recent first)
+            sessions.sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
+            
+            // Use the most recent session as the main representation
+            const mainSession = sessions[0];
+            const sessionKey = mainSession.sessionKey;
+            
+            const isGuest = (mainSession.userId && mainSession.userId.startsWith('guest_')) || 
+                           (mainSession.name && mainSession.name.includes('სტუმარი'));
+            
+            // 👇 FIX: Get sessionStart - FOR NEW SESSIONS, USE CURRENT TIME
+            let sessionStart;
+            
+            // Check if we already have this user in the map with a sessionStart
+            const existingUser = onlineUsersMap.get(userId);
+            
+            if (existingUser?.sessionStart) {
+                // Check if this is actually a new session (lastSeen is very recent)
+                const timeSinceLastSeen = now - mainSession.lastSeen;
+                const timeSinceExistingStart = now - existingUser.sessionStart;
+                
+                // If user was offline for more than 60 seconds, treat as NEW session
+                if (timeSinceLastSeen > 60000) {
+                    // This is a new session - use current time
+                    sessionStart = now;
+                    console.log(`🆕 NEW SESSION for user ${userId} - resetting timer to 0`);
+                    
+                    // Update Firebase with new sessionStart
+                    database.ref(`chat/onlineUsers/${sessionKey}/sessionStart`).set(now);
+                } else {
+                    // Keep existing session start
+                    sessionStart = existingUser.sessionStart;
+                    console.log(`📌 User ${userId} keeping original session start: ${new Date(sessionStart).toLocaleTimeString()}`);
+                }
+            } else {
+                // No existing record - this is a NEW user
+                sessionStart = now; // Always use current time for new users
+                console.log(`🆕 NEW USER ${userId} - starting timer from 0`);
+                
+                // Save this as sessionStart for future
+                database.ref(`chat/onlineUsers/${sessionKey}/sessionStart`).set(now);
+            }
+            
+            // IMPORTANT: Get module information from multiple possible sources
+            let moduleInfo = null;
+            
+            // Check all possible module fields in the user object
+            if (mainSession.module && mainSession.module !== 'undefined' && mainSession.module !== 'null') {
+                moduleInfo = mainSession.module;
+            } else if (mainSession.currentModule && mainSession.currentModule !== 'undefined' && mainSession.currentModule !== 'null') {
+                moduleInfo = mainSession.currentModule;
+            } else if (mainSession.selectedModule && mainSession.selectedModule !== 'undefined' && mainSession.selectedModule !== 'null') {
+                moduleInfo = mainSession.selectedModule;
+            } else if (mainSession.activeModule && mainSession.activeModule !== 'undefined' && mainSession.activeModule !== 'null') {
+                moduleInfo = mainSession.activeModule;
+            } else if (existingUser?.module) {
+                // Keep existing module if we had it before
+                moduleInfo = existingUser.module;
+            }
+            
+            // If we still don't have module info, check if this user has progress data
+            if (!moduleInfo && mainSession.progress) {
+                const modulesWithProgress = Object.keys(mainSession.progress);
+                if (modulesWithProgress.length > 0) {
+                    moduleInfo = modulesWithProgress[0];
+                }
+            }
+            
+            // Store with userId as key to prevent duplicates
+            newMap.set(userId, {
+                key: sessionKey, // Keep the session key for reference
+                userId: userId,
+                name: mainSession.name || 'უცნობი',
+                type: isGuest ? 'guest' : 'registered',
+                sessionStart: sessionStart, // This is the critical field for timer
+                module: moduleInfo,
+                currentModule: mainSession.currentModule || moduleInfo,
+                lastModule: mainSession.lastModule,
+                selectedModule: mainSession.selectedModule,
+                progress: mainSession.progress || {},
+                lastSeen: mainSession.lastSeen,
+                // Store all session keys for debugging
+                sessions: sessions.map(s => s.sessionKey)
+            });
+        });
+        
+        // Compare old and new states
+        const oldKeys = new Set(onlineUsersMap.keys());
+        const newKeys = new Set(newMap.keys());
+        
+        // Removed users
+        oldKeys.forEach(key => {
+            if (!newKeys.has(key)) {
+                const oldUser = onlineUsersMap.get(key);
+                console.log(`🔴 User ${key} removed - offline`);
+                removeOnlineUser(key);
+            }
+        });
+        
+        // Added or updated users
+        newKeys.forEach(key => {
+            const newUser = newMap.get(key);
+            
+            if (!oldKeys.has(key)) {
+                // New user
+                addOnlineUserToTop(newUser);
+            } else {
+                // Updated user
+                const oldUser = onlineUsersMap.get(key);
+                
+                // Check if important data changed
+                if (oldUser.module !== newUser.module || 
+                    oldUser.name !== newUser.name ||
+                    Math.abs((oldUser.lastSeen || 0) - (newUser.lastSeen || 0)) > 5000) {
+                    // Update but KEEP the original sessionStart
+                    newUser.sessionStart = oldUser.sessionStart;
+                    updateOnlineUser(newUser);
+                }
+            }
+        });
+        
+        // Update main data
+        onlineUsersMap = newMap;
+        
+        // Update counter
+        updateOnlineCounter();
+        
+        console.log(`🟢 Online users updated: ${onlineUsersMap.size} unique users`);
+    });
+}
+
+// დამატებითი ფუნქცია - ასუფთავებს ძველ სესიებს
+async function cleanupOldSessions() {
+    if (!firebaseInitialized || !database) return;
+    
+    try {
+        const snapshot = await database.ref('chat/onlineUsers').once('value');
+        const users = snapshot.val() || {};
+        const now = Date.now();
+        const updates = {};
+        
+        Object.entries(users).forEach(([key, user]) => {
+            // თუ მომხმარებელი არ არის აქტიური (60 წამზე მეტია არ ყოფილა აქტივობა)
+            if (user && user.lastSeen && (now - user.lastSeen) > 60000) {
+                // წავშალოთ
+                updates[`chat/onlineUsers/${key}`] = null;
+                console.log(`🧹 Cleaning up inactive session: ${key}`);
+            }
+        });
+        
+        if (Object.keys(updates).length > 0) {
+            await database.ref().update(updates);
+            console.log(`✅ Cleaned up ${Object.keys(updates).length} inactive sessions`);
+        }
+    } catch (error) {
+        console.error('Error cleaning up sessions:', error);
+    }
+}
+
+// გამოიძახეთ cleanup ყოველ 30 წამში
+setInterval(cleanupOldSessions, 30000);
 
 // Replace your existing addOnlineUserToTop function with this:
 function addOnlineUserToTop(user) {
