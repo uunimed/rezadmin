@@ -2276,6 +2276,46 @@
     animation: barAppear 0.5s ease-out;
     transform-origin: bottom;
 }
+
+/* Top Users არეალი */
+#topUsersList {
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--surface-light);
+}
+
+#topUsersList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#topUsersList::-webkit-scrollbar-track {
+    background: var(--surface-light);
+    border-radius: 10px;
+}
+
+#topUsersList::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 10px;
+}
+
+/* ანიმაციები */
+@keyframes medalPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.medal-animation {
+    animation: medalPulse 2s infinite;
+}
+
+/* მედლების ფერები */
+.place-1 { background: linear-gradient(135deg, #FFD700, #FDB931); }
+.place-2 { background: linear-gradient(135deg, #C0C0C0, #E8E8E8); }
+.place-3 { background: linear-gradient(135deg, #CD7F32, #B87333); }
+
     </style>
 </head>
 <body>
@@ -2650,24 +2690,33 @@
                             </div>
                         </div>
 
-                        <!-- Score Distribution -->
-                        <div style="margin-top: 24px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                <span style="font-size: 13px; color: var(--text-muted);">ქულების განაწილება</span>
-                                <span style="font-size: 13px; font-weight: 600;" id="scoreRange">0-200</span>
-                            </div>
-                            <div style="height: 8px; background: var(--surface-light); border-radius: 4px; overflow: hidden; display: flex;" id="scoreDistribution">
-                                <div style="background: var(--danger); height: 100%; width: 0%;" id="scoreLow"></div>
-                                <div style="background: var(--warning); height: 100%; width: 0%;" id="scoreMid"></div>
-                                <div style="background: var(--success); height: 100%; width: 0%;" id="scoreHigh"></div>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-muted);">
-                                <span>0-99</span>
-                                <span>100-149</span>
-                                <span>150-200</span>
-                            </div>
-                        </div>
-                    </div>
+<!-- Score Distribution -->
+<div style="margin-top: 24px;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+        <span style="font-size: 13px; color: var(--text-muted);">ქულების განაწილება (0-200)</span>
+        <span style="font-size: 13px; font-weight: 600;" id="scoreRange">0-200</span>
+    </div>
+    
+    <!-- ზოლები -->
+    <div style="height: 8px; background: var(--surface-light); border-radius: 4px; overflow: hidden; display: flex; margin-bottom: 16px;" id="scoreDistribution">
+        <div style="background: var(--danger); height: 100%; width: 0%;" id="scoreLow"></div>
+        <div style="background: var(--warning); height: 100%; width: 0%;" id="scoreMid"></div>
+        <div style="background: var(--success); height: 100%; width: 0%;" id="scoreHigh"></div>
+    </div>
+    
+    <!-- დეტალური განაწილების კონტეინერი -->
+    <div style="background: var(--surface-light); border-radius: 16px; padding: 16px; margin-top: 20px;">
+        <h4 style="margin: 0 0 16px 0; font-size: 14px; color: var(--text); display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+            დეტალური განაწილება (10-ქულიანი ინტერვალები)
+        </h4>
+        <div id="detailedScoreDistribution" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;"></div>
+    </div>
+</div>
 
                     <!-- Top Users List -->
                     <div>
@@ -4379,6 +4428,7 @@ async function disconnectUser(userKey) {
 }
 
 // Load modules stats - TOP 5 MOST ACTIVE MODULES
+// ==================== CORRECTED loadModulesStats FUNCTION ====================
 async function loadModulesStats() {
     if (!firebaseInitialized || !database) return;
     
@@ -4390,7 +4440,6 @@ async function loadModulesStats() {
         console.log("Loading modules stats...");
         
         // ჩავტვირთოთ CSV მონაცემები
-        console.log("Calling loadAllModuleQuestionCounts...");
         const moduleCounts = await loadAllModuleQuestionCounts();
         console.log("Module counts received:", moduleCounts);
         
@@ -4448,19 +4497,25 @@ async function loadModulesStats() {
             { id: 'hematologia', name: 'ჰემატოლოგია' }
         ];
 
+        // === გასწორება: მხოლოდ ის მოდულები, რომლებსაც აქვთ კითხვები CSV-ში ===
+        const modulesWithQuestions = allModules.filter(module => {
+            const count = moduleCounts[module.id];
+            return count && count > 0; // მხოლოდ ის მოდულები, რომლებსაც აქვთ კითხვები
+        });
+
+        console.log(`📊 მოდულები კითხვებით: ${modulesWithQuestions.length} / ${allModules.length}`);
+        console.log('მოდულების სია:', modulesWithQuestions.map(m => `${m.id}: ${moduleCounts[m.id]} კითხვა`));
+
         const totalUsers = Object.keys(users).length;
         const moduleEntries = [];
 
-        // თითოეული მოდულის სტატისტიკის დამუშავება
-        for (const moduleInfo of allModules) {
+        // თითოეული მოდულის სტატისტიკის დამუშავება - მხოლოდ კითხვების მქონე მოდულებისთვის
+        for (const moduleInfo of modulesWithQuestions) {
             const moduleId = moduleInfo.id;
             const moduleName = moduleInfo.name;
             
             // კითხვების რაოდენობა CSV-დან
             const questionCount = moduleCounts[moduleId] || 0;
-            
-            // მხოლოდ ის მოდულები, რომლებსაც აქვთ კითხვები
-            if (questionCount === 0) continue;
 
             // მომხმარებლების სტატისტიკა
             const usersInModule = new Set();
@@ -4516,6 +4571,7 @@ async function loadModulesStats() {
                 }
             });
 
+            // მხოლოდ ის მოდულები, რომლებსაც აქვთ აქტივობა
             if (usersInModule.size > 0 || examScores.length > 0) {
                 moduleEntries.push({
                     id: moduleId,
@@ -4536,7 +4592,7 @@ async function loadModulesStats() {
             }
         }
 
-        console.log(`Total module entries with activity: ${moduleEntries.length}`);
+        console.log(`📊 მოდულები აქტივობით: ${moduleEntries.length}`);
         
         // დავალაგოთ აქტიურობის მიხედვით (ყველაზე მეტი მომხმარებელი)
         moduleEntries.sort((a, b) => b.totalUsers - a.totalUsers);
@@ -4544,7 +4600,7 @@ async function loadModulesStats() {
         // ავიღოთ TOP 5 (ან ყველა თუ 5-ზე ნაკლებია)
         const topModules = moduleEntries.slice(0, Math.min(5, moduleEntries.length));
 
-        console.log(`Showing top ${topModules.length} most active modules`);
+        console.log(`🏆 ტოპ ${topModules.length} მოდული:`, topModules.map(m => `${m.name}: ${m.totalUsers} მომხმარებელი`));
 
         modulesList.innerHTML = ''; // გავასუფთაოთ
 
@@ -4573,48 +4629,61 @@ async function loadModulesStats() {
                 };
                 moduleItem.onclick = () => showModuleDetails(module);
                 
-moduleItem.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-        <!-- მარცხენა მხარე: # და მოდულის სახელი -->
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="font-weight: 700; color: var(--accent); background: var(--surface-light); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">#${index + 1}</span>
-            <span style="font-weight: 600; font-size: 16px; color: var(--text);">${module.name}</span>
-        </div>
-        
-        <!-- მარჯვენა მხარე: კითხვების რაოდენობა და მუშაობს -->
-        <div style="display: flex; align-items: center; gap: 24px;">
-            <!-- კითხვების რაოდენობა -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="3" y1="9" x2="21" y2="9"/>
-                    <line x1="9" y1="21" x2="9" y2="9"/>
-                </svg>
-                <span style="font-weight: 700; font-size: 18px; color: var(--accent);">${module.count}</span>
-            </div>
-            
-            <!-- მუშაობს (მომხმარებლების რაოდენობა) -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                </svg>
-                <span style="font-weight: 600; color: var(--text);">${module.totalUsers}</span>
-                <span style="font-size: 14px; color: var(--text-muted);">მუშაობს</span>
-            </div>
-            
-            ${module.activeUsers > 0 ? `
-                <div style="display: flex; align-items: center; gap: 4px;" title="აქტიური ახლა">
-                    <span class="online-dot" style="width: 8px; height: 8px; background: var(--success);"></span>
-                    <span style="font-size: 13px; color: var(--success);">${module.activeUsers}</span>
-                </div>
-            ` : ''}
-        </div>
-    </div>
-`;
+                moduleItem.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-weight: 700; color: var(--accent); background: var(--surface-light); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">#${index + 1}</span>
+                            <span style="font-weight: 600; font-size: 16px; color: var(--text);">${module.name}</span>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 24px;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="3" y1="9" x2="21" y2="9"/>
+                                    <line x1="9" y1="21" x2="9" y2="9"/>
+                                </svg>
+                                <span style="font-weight: 700; font-size: 18px; color: var(--accent);">${module.count}</span>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                <span style="font-weight: 600; color: var(--text);">${module.totalUsers}</span>
+                                <span style="font-size: 14px; color: var(--text-muted);">მუშაობს</span>
+                            </div>
+                            
+                            ${module.activeUsers > 0 ? `
+                                <div style="display: flex; align-items: center; gap: 4px;" title="აქტიური ახლა">
+                                    <span class="online-dot" style="width: 8px; height: 8px; background: var(--success);"></span>
+                                    <span style="font-size: 13px; color: var(--success);">${module.activeUsers}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
                 
                 modulesList.appendChild(moduleItem);
             });
+            
+            // ჯამური ინფორმაცია
+            const summaryInfo = document.createElement('div');
+            summaryInfo.style.marginTop = '16px';
+            summaryInfo.style.padding = '12px';
+            summaryInfo.style.background = 'var(--surface-light)';
+            summaryInfo.style.borderRadius = '12px';
+            summaryInfo.style.fontSize = '13px';
+            summaryInfo.style.color = 'var(--text-muted)';
+            summaryInfo.style.display = 'flex';
+            summaryInfo.style.justifyContent = 'space-between';
+            summaryInfo.innerHTML = `
+                <span>📊 სულ მოდულები კითხვებით: ${modulesWithQuestions.length}</span>
+                <span>📈 აქტიური მოდულები: ${moduleEntries.length}</span>
+                <span>🏆 ნაჩვენებია: ${topModules.length}</span>
+            `;
+            modulesList.appendChild(summaryInfo);
             
             // დაამატეთ ღილაკი ყველა მოდულის სანახავად, თუ 5-ზე მეტია
             if (moduleEntries.length > 5) {
@@ -4658,10 +4727,288 @@ moduleItem.innerHTML = `
         return topModules;
         
     } catch (error) {
-        console.error("Error loading modules stats:", error);
-        modulesList.innerHTML = '<div style="color: var(--danger); text-align: center; padding: 40px;">❌ შეცდომა მოდულების ჩატვირთვისას</div>';
+        console.error("❌ Error loading modules stats:", error);
+        modulesList.innerHTML = `
+            <div style="color: var(--danger); text-align: center; padding: 40px;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto 20px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div>შეცდომა მოდულების ჩატვირთვისას</div>
+                <button onclick="loadModulesStats()" style="margin-top: 16px; padding: 8px 16px; background: var(--gradient); border: none; border-radius: 40px; color: white; cursor: pointer;">
+                    🔄 თავიდან ცდა
+                </button>
+            </div>
+        `;
         return [];
     }
+}
+
+// ==================== MODULE DETAILS ====================
+function showModuleDetails(module) {
+    if (!module) {
+        showNotification('მოდული არ მოიძებნა', true);
+        return;
+    }
+    
+    console.log("📊 Showing module details:", module);
+    
+    // სათაურის განახლება
+    document.getElementById('moduleDetailsTitle').textContent = `${module.name} - დეტალური სტატისტიკა`;
+    
+    // 1. ძირითადი სტატისტიკა
+    document.getElementById('moduleTotalTests').textContent = module.count || 0;
+    document.getElementById('moduleActiveUsers').textContent = module.activeUsers || 0;
+    document.getElementById('moduleUsersStarted').textContent = module.totalUsers || 0;
+    
+    const startedPercent = module.totalUsers > 0 ? 
+        Math.round((module.totalUsers / (module.totalUsers || 1)) * 100) : 0;
+    document.getElementById('moduleUsersStartedPercent').textContent = 
+        `მთლიანის ${startedPercent}%`;
+    
+    document.getElementById('moduleCompleted').textContent = module.completed || 0;
+    
+    const completedPercent = module.totalUsers > 0 ? 
+        Math.round((module.completed / module.totalUsers) * 100) : 0;
+    document.getElementById('moduleCompletedPercent').textContent = 
+        `დამწყებთა ${completedPercent}%`;
+    
+    document.getElementById('moduleAvgScore').textContent = 
+        module.avgScore ? `${module.avgScore}%` : '0%';
+    document.getElementById('moduleAvgDetails').textContent = 
+        `${module.avgScore || 0}/${module.count} ქულა`;
+    
+    // 2. საგამოცდო რეჟიმის სტატისტიკა
+    const examParticipants = module.examParticipants || 0;
+    const examPassed = module.examPassed || 0;
+    const examFailed = module.examFailed || 0;
+    
+    document.getElementById('examParticipants').textContent = examParticipants;
+    document.getElementById('examPassed').textContent = examPassed;
+    document.getElementById('examFailed').textContent = examFailed;
+    
+    const passPercent = examParticipants > 0 ? 
+        Math.round((examPassed / examParticipants) * 100) : 0;
+    const failPercent = examParticipants > 0 ? 
+        Math.round((examFailed / examParticipants) * 100) : 0;
+    
+    document.getElementById('examPassedPercent').textContent = `${passPercent}%`;
+    document.getElementById('examFailedPercent').textContent = `${failPercent}%`;
+    
+    // 3. ქულების განაწილების პროცენტები (0-200)
+    const scoreLow = module.scoreLow || 0;      // 0-99
+    const scoreMid = module.scoreMid || 0;      // 100-149
+    const scoreHigh = module.scoreHigh || 0;    // 150-200
+    
+    document.getElementById('scoreLow').style.width = `${scoreLow}%`;
+    document.getElementById('scoreMid').style.width = `${scoreMid}%`;
+    document.getElementById('scoreHigh').style.width = `${scoreHigh}%`;
+    
+    // 4. **დეტალური ქულების განაწილება 10 ნაწილად**
+    if (module.examScores && module.examScores.length > 0) {
+        // ყველა ქულის ამოღება
+        const allScores = module.examScores.map(s => s.score);
+        
+        // დეტალური განაწილება
+        const detailedDist = {
+            '0-19': 0, '20-39': 0, '40-59': 0, '60-79': 0,
+            '80-99': 0, '100-119': 0, '120-139': 0, '140-159': 0,
+            '160-179': 0, '180-200': 0
+        };
+        
+        allScores.forEach(score => {
+            if (score < 20) detailedDist['0-19']++;
+            else if (score < 40) detailedDist['20-39']++;
+            else if (score < 60) detailedDist['40-59']++;
+            else if (score < 80) detailedDist['60-79']++;
+            else if (score < 100) detailedDist['80-99']++;
+            else if (score < 120) detailedDist['100-119']++;
+            else if (score < 140) detailedDist['120-139']++;
+            else if (score < 160) detailedDist['140-159']++;
+            else if (score < 180) detailedDist['160-179']++;
+            else detailedDist['180-200']++;
+        });
+        
+        // HTML-ის გენერაცია დეტალური განაწილებისთვის
+        let distributionHtml = '';
+        Object.entries(detailedDist).forEach(([range, count]) => {
+            const percent = examParticipants > 0 ? 
+                Math.round((count / examParticipants) * 100) : 0;
+            
+            // ფერის განსაზღვრა ქულის მიხედვით
+            let bgColor = 'var(--surface)';
+            let textColor = 'var(--text)';
+            
+            if (range.includes('150') || range.includes('180')) {
+                bgColor = 'rgba(22, 163, 74, 0.1)';
+                textColor = 'var(--success)';
+            } else if (range.includes('100') || range.includes('120') || range.includes('140')) {
+                bgColor = 'rgba(245, 158, 11, 0.1)';
+                textColor = 'var(--warning)';
+            } else {
+                bgColor = 'rgba(220, 38, 38, 0.1)';
+                textColor = 'var(--danger)';
+            }
+            
+            distributionHtml += `
+                <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: ${bgColor}; border-radius: 8px; border-left: 3px solid ${textColor};">
+                    <span style="font-size: 13px; font-weight: 500;">${range}</span>
+                    <span style="font-weight: 700; color: ${textColor};">${count} (${percent}%)</span>
+                </div>
+            `;
+        });
+        
+        // თუ უკვე არსებობს detailedScoreDistribution ელემენტი, განვაახლოთ
+        let detailedContainer = document.getElementById('detailedScoreDistribution');
+        if (!detailedContainer) {
+            // თუ არ არსებობს, შევქმნათ
+            const scoreSection = document.querySelector('#moduleDetailsContent .modal-body > div:nth-child(3)');
+            if (scoreSection) {
+                const newDiv = document.createElement('div');
+                newDiv.id = 'detailedScoreDistribution';
+                newDiv.style.marginTop = '16px';
+                newDiv.style.display = 'grid';
+                newDiv.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                newDiv.style.gap = '8px';
+                scoreSection.appendChild(newDiv);
+                detailedContainer = newDiv;
+            }
+        }
+        
+        if (detailedContainer) {
+            detailedContainer.innerHTML = distributionHtml;
+        }
+    }
+    
+    // 5. **ტოპ 5 მომხმარებლის ჩვენება**
+    let topUsersHtml = '';
+    
+    if (module.examScores && module.examScores.length > 0) {
+        // დავალაგოთ ქულების მიხედვით (უმაღლესიდან)
+        const sortedScores = [...module.examScores].sort((a, b) => b.score - a.score);
+        
+        // ავიღოთ ტოპ 5 (ან ნაკლები თუ 5-ზე ნაკლებია)
+        const top5 = sortedScores.slice(0, 5);
+        
+        top5.forEach((user, index) => {
+            // მედლები
+            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '📌';
+            
+            // ჩაბარების სტატუსი
+            const passed = user.score >= 150;
+            const statusText = passed ? 'ჩაბარებული' : 'ჩაჭრილი';
+            const statusColor = passed ? 'var(--success)' : 'var(--danger)';
+            const statusBg = passed ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)';
+            
+            // პროგრესი (0-200)
+            const progressPercent = (user.score / 200) * 100;
+            
+            topUsersHtml += `
+                <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--surface); border-radius: 16px; border: 1px solid var(--border); margin-bottom: 8px; transition: all 0.3s;" 
+                     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-lg)'" 
+                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    
+                    <div style="width: 36px; height: 36px; background: ${statusBg}; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                        ${medal}
+                    </div>
+                    
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <span style="font-weight: 600; font-size: 15px; color: var(--text);">
+                                ${escapeHtml(user.username || user.userId)}
+                            </span>
+                            <span style="font-size: 11px; padding: 2px 8px; background: ${statusBg}; color: ${statusColor}; border-radius: 40px; font-weight: 600;">
+                                ${statusText}
+                            </span>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                    <span style="font-size: 12px; color: var(--text-muted);">ქულა</span>
+                                    <span style="font-size: 12px; font-weight: 600; color: ${statusColor};">${user.score}/200</span>
+                                </div>
+                                <div style="height: 6px; background: var(--surface-light); border-radius: 3px; overflow: hidden;">
+                                    <div style="height: 100%; width: ${progressPercent}%; background: ${statusColor}; border-radius: 3px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        topUsersHtml = `
+            <div style="text-align: center; padding: 40px; background: var(--surface-light); border-radius: 16px;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="margin: 0 auto 16px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div style="color: var(--text-muted);">საგამოცდო რეჟიმის მონაცემები არ არის</div>
+            </div>
+        `;
+    }
+    
+    document.getElementById('topUsersList').innerHTML = topUsersHtml;
+    
+    // 6. **დამატებითი ინფორმაცია**
+    const additionalInfo = document.createElement('div');
+    additionalInfo.style.marginTop = '24px';
+    additionalInfo.style.padding = '16px';
+    additionalInfo.style.background = 'var(--surface-light)';
+    additionalInfo.style.borderRadius = '12px';
+    additionalInfo.style.display = 'flex';
+    additionalInfo.style.justifyContent = 'space-between';
+    additionalInfo.style.flexWrap = 'wrap';
+    additionalInfo.style.gap = '16px';
+    
+    additionalInfo.innerHTML = `
+        <div>
+            <span style="color: var(--text-muted);">📊 სულ კითხვები:</span>
+            <span style="font-weight: 700; margin-left: 8px; color: var(--accent);">${module.count || 0}</span>
+        </div>
+        <div>
+            <span style="color: var(--text-muted);">👥 სულ მომხმარებელი:</span>
+            <span style="font-weight: 700; margin-left: 8px; color: var(--success);">${module.totalUsers || 0}</span>
+        </div>
+        <div>
+            <span style="color: var(--text-muted);">✅ დასრულებული:</span>
+            <span style="font-weight: 700; margin-left: 8px; color: var(--success);">${module.completed || 0}</span>
+        </div>
+        <div>
+            <span style="color: var(--text-muted);">🟢 აქტიური ახლა:</span>
+            <span style="font-weight: 700; margin-left: 8px; color: #10b981;">${module.activeUsers || 0}</span>
+        </div>
+    `;
+    
+    // დავამატოთ არსებულ კონტენტში
+    const modalBody = document.getElementById('moduleDetailsContent');
+    if (!document.getElementById('additionalInfo')) {
+        additionalInfo.id = 'additionalInfo';
+        modalBody.appendChild(additionalInfo);
+    } else {
+        document.getElementById('additionalInfo').replaceWith(additionalInfo);
+    }
+    
+    // 7. **განახლების დრო**
+    const updateTime = document.createElement('div');
+    updateTime.style.marginTop = '16px';
+    updateTime.style.textAlign = 'right';
+    updateTime.style.fontSize = '12px';
+    updateTime.style.color = 'var(--text-muted)';
+    updateTime.innerHTML = `ბოლო განახლება: ${new Date().toLocaleTimeString('ka-GE')}`;
+    
+    if (!document.getElementById('updateTime')) {
+        updateTime.id = 'updateTime';
+        modalBody.appendChild(updateTime);
+    } else {
+        document.getElementById('updateTime').replaceWith(updateTime);
+    }
+    
+    // გავხსნათ მოდალი
+    openModal('moduleDetailsModal');
 }
 
 // ==================== CORRECTED setupAnswersListener FUNCTION ====================
@@ -4732,8 +5079,12 @@ function setupAnswersListener() {
     });
 }
 
-// ყველა მოდულის ჩვენება მოდალურ ფანჯარაში
 function showAllModules(allModules) {
+    if (!allModules || allModules.length === 0) {
+        showNotification('მოდულები არ მოიძებნა', true);
+        return;
+    }
+    
     const modalContent = document.getElementById('moduleDetailsContent');
     
     // დავალაგოთ აქტიურობის მიხედვით
@@ -4751,19 +5102,87 @@ function showAllModules(allModules) {
     `;
     
     sortedModules.forEach((module, index) => {
+        // მოდულის სტატუსი (აქტიური თუ არა)
+        const hasActivity = module.totalUsers > 0;
+        const moduleStatus = hasActivity ? 'აქტიური' : 'უმოქმედო';
+        const statusColor = hasActivity ? 'var(--success)' : 'var(--text-muted)';
+        const statusBg = hasActivity ? 'rgba(22, 163, 74, 0.1)' : 'rgba(100, 116, 139, 0.1)';
+        
+        // მოდულის იკონკა (CSV-ის მიხედვით)
+        const hasQuestions = module.count > 0;
+        
         html += `
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px; background: ${index % 2 === 0 ? 'var(--surface)' : 'var(--surface-light)'}; border-radius: 12px; border: 1px solid var(--border); cursor: pointer;" onclick="showModuleDetails(${JSON.stringify(module).replace(/"/g, '&quot;')})">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="width: 28px; height: 28px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">${index + 1}</span>
-                    <div>
-                        <div style="font-weight: 600; color: var(--text);">${module.name}</div>
-                        <div style="display: flex; gap: 16px; margin-top: 4px; font-size: 12px; color: var(--text-muted);">
-                            <span>📊 ${module.count} კითხვა</span>
-                            <span>👥 ${module.totalUsers} მომხმარებელი</span>
-                            ${module.activeUsers > 0 ? `<span style="color: var(--success);">🟢 ${module.activeUsers} აქტიური</span>` : ''}
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px; background: ${hasActivity ? 'var(--surface)' : 'var(--surface-light)'}; border-radius: 16px; border: 1px solid ${hasActivity ? 'var(--accent)' : 'var(--border)'}; cursor: pointer; transition: all 0.3s; opacity: ${hasActivity ? 1 : 0.7};"
+                 onclick="showModuleDetailsFromAll('${module.id}')"
+                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-lg)'; this.style.borderColor='var(--accent)'"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='${hasActivity ? 'var(--accent)' : 'var(--border)'}'">
+                
+                <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+                    <div style="position: relative;">
+                        <div style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 20px;">
+                            ${index + 1}
                         </div>
+                        ${hasQuestions ? `
+                            <div style="position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; background: var(--success); border-radius: 50%; border: 2px solid var(--surface); display: flex; align-items: center; justify-content: center; font-size: 10px; color: white;">✓</div>
+                        ` : ''}
+                    </div>
+                    
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <span style="font-weight: 700; font-size: 16px; color: var(--text);">${module.name}</span>
+                            <span style="font-size: 11px; background: ${statusBg}; color: ${statusColor}; padding: 4px 8px; border-radius: 40px;">
+                                ${moduleStatus}
+                            </span>
+                        </div>
+                        
+                        <div style="display: flex; gap: 20px; margin-top: 6px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                                    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                                    <polyline points="2 17 12 22 22 17"/>
+                                    <polyline points="2 12 12 17 22 12"/>
+                                </svg>
+                                <span style="font-size: 13px; font-weight: ${hasQuestions ? '600' : '400'}; color: ${hasQuestions ? 'var(--accent)' : 'var(--text-muted)'};">${module.count} კითხვა</span>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 6px;" title="ნამუშევარი მომხმარებელი">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                <span style="font-size: 13px; font-weight: 600; color: var(--text);">${module.totalUsers}</span>
+                            </div>
+                            
+                            ${module.activeUsers > 0 ? `
+                                <div style="display: flex; align-items: center; gap: 4px;" title="აქტიური ახლა">
+                                    <span class="online-dot" style="width: 8px; height: 8px; background: var(--success);"></span>
+                                    <span style="font-size: 13px; color: var(--success);">${module.activeUsers}</span>
+                                </div>
+                            ` : ''}
+                            
+                            ${module.completed > 0 ? `
+                                <div style="display: flex; align-items: center; gap: 4px;" title="სრულად დასრულებული">
+                                    <span style="font-size: 13px; color: var(--success);">✅ ${module.completed}</span>
+                                </div>
+                            ` : ''}
+                            
+                            ${module.examParticipants > 0 ? `
+                                <div style="display: flex; align-items: center; gap: 4px;" title="საგამოცდო რეჟიმი">
+                                    <span style="font-size: 13px; color: var(--warning);">📝 ${module.examParticipants}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- Progress bar (if module has users) -->
+                        ${module.totalUsers > 0 ? `
+                            <div style="margin-top: 8px; height: 4px; background: var(--surface); border-radius: 2px; overflow: hidden;">
+                                <div style="height: 100%; width: ${(module.completed / module.totalUsers) * 100}%; background: var(--success);"></div>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
+                
+                <!-- Arrow icon for click -->
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
                     <polyline points="9 18 15 12 9 6"/>
                 </svg>
@@ -4773,16 +5192,59 @@ function showAllModules(allModules) {
     
     html += `
             </div>
+            
+            <!-- Summary card -->
+            <div style="margin-top: 20px; padding: 16px; background: linear-gradient(145deg, var(--surface), var(--surface-light)); border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="color: var(--text-muted);">📊 მოდულები კითხვებით:</span>
+                    <span style="font-weight: 700; margin-left: 8px;">${sortedModules.filter(m => m.count > 0).length}</span>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">👥 ჯამური მომხმარებელი:</span>
+                    <span style="font-weight: 700; margin-left: 8px;">${sortedModules.reduce((sum, m) => sum + m.totalUsers, 0)}</span>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">✅ დასრულებული:</span>
+                    <span style="font-weight: 700; margin-left: 8px;">${sortedModules.reduce((sum, m) => sum + m.completed, 0)}</span>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">🟢 აქტიური ახლა:</span>
+                    <span style="font-weight: 700; margin-left: 8px; color: var(--success);">${sortedModules.reduce((sum, m) => sum + m.activeUsers, 0)}</span>
+                </div>
+            </div>
         </div>
     `;
+    
+    // Save all modules data for later use
+    window.allModulesData = sortedModules;
     
     document.getElementById('moduleDetailsTitle').textContent = 'ყველა მოდული';
     document.getElementById('moduleDetailsContent').innerHTML = html;
     
-    // დამალეთ სხვა სექციები, რომლებიც არ გვჭირდება
-    document.querySelectorAll('#moduleDetailsContent > div:not(:first-child)').forEach(el => el.style.display = 'none');
+    // Hide other sections that we don't need
+    document.querySelectorAll('#moduleDetailsContent > div:not(:first-child)').forEach(el => {
+        if (el.id !== 'additionalInfo' && el.id !== 'updateTime') {
+            el.style.display = 'none';
+        }
+    });
     
     openModal('moduleDetailsModal');
+}
+
+// Add this helper function to show module details from all modules list
+function showModuleDetailsFromAll(moduleId) {
+    if (!window.allModulesData) {
+        showNotification('მონაცემები არ არის', true);
+        return;
+    }
+    
+    const module = window.allModulesData.find(m => m.id === moduleId);
+    if (!module) {
+        showNotification('მოდული არ მოიძებნა', true);
+        return;
+    }
+    
+    showModuleDetails(module);
 }
 
 // ==================== CSV PARSING FUNCTIONS ====================
@@ -5516,6 +5978,7 @@ async function completeCurrentSession() {
 
 // Replace your existing loadStatistics function with this:
 
+// ==================== CORRECTED loadStatistics FUNCTION ====================
 async function loadStatistics() {
     if (!firebaseInitialized || !database) return;
 
@@ -5645,6 +6108,7 @@ async function loadStatistics() {
             const questionCount = moduleCounts[moduleId] || 0;
             const userCount = moduleUserCounts[moduleId] || 0;
             
+            // === აქ არის სწორი კოდი - moduleCard-ის შექმნა ===
             const moduleCard = document.createElement('div');
             moduleCard.className = 'table-container';
             moduleCard.style.marginBottom = '12px';
@@ -5652,6 +6116,9 @@ async function loadStatistics() {
             moduleCard.style.transition = 'all 0.3s ease';
             moduleCard.style.borderRadius = '16px';
             moduleCard.style.overflow = 'hidden';
+            moduleCard.style.background = 'var(--surface)';
+            moduleCard.style.border = '1px solid var(--border)';
+            moduleCard.style.boxShadow = 'var(--shadow)';
             moduleCard.setAttribute('data-module-id', moduleId);
             
             const safeModuleName = moduleName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
@@ -5661,39 +6128,49 @@ async function loadStatistics() {
                 showModuleQuestions(moduleId, safeModuleName);
             };
             
-moduleItem.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-        <!-- მარცხენა მხარე: # და მოდულის სახელი -->
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="font-weight: 700; color: var(--accent); background: var(--surface-light); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">${index + 1}</span>
-            <span style="font-weight: 600; font-size: 16px; color: var(--text);">${module.name}</span>
-        </div>
-        
-        <!-- მარჯვენა მხარე: კითხვების რაოდენობა და მუშაობს -->
-        <div style="display: flex; align-items: center; gap: 24px;">
-            <!-- კითხვების რაოდენობა -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="3" y1="9" x2="21" y2="9"/>
-                    <line x1="9" y1="21" x2="9" y2="9"/>
-                </svg>
-                <span style="font-weight: 700; font-size: 18px; color: var(--accent);">${module.count}</span>
-            </div>
+            // moduleCard-ის შიგთავსი
+            moduleCard.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 18px 20px;">
+                    <!-- მარცხენა მხარე: ინფორმაცია -->
+                    <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+                        <!-- მოდულის იკონკა -->
+                        <div style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                                <polyline points="2 17 12 22 22 17"/>
+                                <polyline points="2 12 12 17 22 12"/>
+                            </svg>
+                        </div>
+                        
+                        <!-- მოდულის სახელი და ID -->
+                        <div>
+                            <div style="font-weight: 700; font-size: 18px; color: var(--text); margin-bottom: 4px;">
+                                ${moduleName}
+                            </div>
+                            <div style="display: flex; gap: 16px;">
+                                <span style="font-size: 13px; color: var(--text-muted);">ID: ${moduleId}</span>
+                                <span style="font-size: 13px; color: var(--text-muted);">📊 ${questionCount} კითხვა</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- მარჯვენა მხარე: სტატისტიკა -->
+                    <div style="display: flex; align-items: center; gap: 24px;">
+                        <!-- მომხმარებლების რაოდენობა -->
+                        <div style="text-align: right;">
+                            <div style="font-size: 24px; font-weight: 700; color: var(--accent);">${userCount}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">მომხმარებელი</div>
+                        </div>
+                        
+                        <!-- ისარი -->
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </div>
+                </div>
+            `;
             
-            <!-- მუშაობს (მომხმარებლების რაოდენობა) -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                </svg>
-                <span style="font-weight: 600; color: var(--text);">${module.totalUsers}</span>
-                <span style="font-size: 14px; color: var(--text-muted);">მუშაობს</span>
-            </div>
-        </div>
-    </div>
-`;
-            
+            // Hover ეფექტები
             moduleCard.onmouseover = () => {
                 moduleCard.style.transform = 'translateY(-2px)';
                 moduleCard.style.boxShadow = 'var(--shadow-lg)';
@@ -5719,22 +6196,23 @@ moduleItem.innerHTML = `
         summaryCard.style.background = 'linear-gradient(145deg, var(--surface), var(--surface-light))';
         summaryCard.style.borderRadius = '16px';
         summaryCard.style.border = '1px solid var(--border)';
+        summaryCard.style.boxShadow = 'var(--shadow)';
         summaryCard.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                 <div>
-                    <span style="color: var(--text-muted);">სულ მოდულები</span>
+                    <span style="color: var(--text-muted);">📚 სულ მოდულები</span>
                     <span style="font-weight: 700; font-size: 24px; color: var(--accent); margin-left: 12px;">${modulesToShow.length}</span>
                 </div>
                 <div>
-                    <span style="color: var(--text-muted);">ჯამური კითხვები</span>
+                    <span style="color: var(--text-muted);">❓ ჯამური კითხვები</span>
                     <span style="font-weight: 700; font-size: 24px; color: var(--warning); margin-left: 12px;">${totalQuestions > 0 ? totalQuestions : '?'}</span>
                 </div>
                 <div>
-                    <span style="color: var(--text-muted);">სულ მომხმარებელი</span>
+                    <span style="color: var(--text-muted);">👥 სულ მომხმარებელი</span>
                     <span style="font-weight: 700; font-size: 24px; color: var(--success); margin-left: 12px;">${totalUsers}</span>
                 </div>
                 <div>
-                    <span style="color: var(--text-muted);">აქტიური მოდულები</span>
+                    <span style="color: var(--text-muted);">⚡ აქტიური მოდულები</span>
                     <span style="font-weight: 700; font-size: 24px; color: #f59e0b; margin-left: 12px;">${modulesWithActivity}</span>
                 </div>
             </div>
@@ -5747,20 +6225,189 @@ moduleItem.innerHTML = `
         lastUpdateTime.style.textAlign = 'right';
         lastUpdateTime.style.fontSize = '12px';
         lastUpdateTime.style.color = 'var(--text-muted)';
-        lastUpdateTime.innerHTML = `ბოლო განახლება: ${new Date().toLocaleTimeString('ka-GE')}`;
+        lastUpdateTime.innerHTML = `🔄 ბოლო განახლება: ${new Date().toLocaleTimeString('ka-GE')}`;
         modulesList.appendChild(lastUpdateTime);
 
         console.log("✅ Statistics loaded successfully with lazy loading (questions not loaded yet)");
+        console.log(`📊 მოდულები: ${modulesToShow.length}, მომხმარებლები: ${totalUsers}, კითხვები: ${totalQuestions}`);
 
     } catch (error) {
-        console.error("Error loading statistics:", error);
+        console.error("❌ Error loading statistics:", error);
         const modulesList = document.getElementById('moduleStatisticsList');
         if (modulesList) {
-            modulesList.innerHTML = '<div style="text-align: center; padding: 60px; color: var(--danger);">❌ შეცდომა მოდულების ჩატვირთვისას</div>';
+            modulesList.innerHTML = `
+                <div style="text-align: center; padding: 60px; color: var(--danger);">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto 20px;">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <div style="font-size: 18px; margin-bottom: 8px;">შეცდომა მონაცემების ჩატვირთვისას</div>
+                    <div style="color: var(--text-muted); font-size: 14px;">${error.message || 'უცნობი შეცდომა'}</div>
+                    <button onclick="loadStatistics()" style="margin-top: 20px; padding: 10px 24px; background: var(--gradient); border: none; border-radius: 40px; color: white; font-weight: 600; cursor: pointer;">
+                        🔄 თავიდან ცდა
+                    </button>
+                </div>
+            `;
         }
     } finally {
         window.isLoadingStatistics = false;
     }
+}
+
+// ==================== TOP 5 USERS LIST ====================
+function renderTopUsersList(module) {
+    if (!module || !module.examScores || module.examScores.length === 0) {
+        document.getElementById('topUsersList').innerHTML = `
+            <div style="text-align: center; padding: 40px; background: var(--surface-light); border-radius: 16px;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="margin: 0 auto 16px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div style="color: var(--text-muted); font-size: 16px;">📭 საგამოცდო რეჟიმის მონაცემები არ არის</div>
+                <div style="color: var(--text-muted); font-size: 13px; margin-top: 8px;">ჯერ არცერთ მომხმარებელს არ უცდია ტესტირება</div>
+            </div>
+        `;
+        return;
+    }
+
+    // დავალაგოთ ქულების მიხედვით (უმაღლესიდან)
+    const sortedScores = [...module.examScores].sort((a, b) => b.score - a.score);
+    
+    // ავიღოთ ტოპ 5 (ან ნაკლები თუ 5-ზე ნაკლებია)
+    const top5 = sortedScores.slice(0, 5);
+    
+    // ჯამური სტატისტიკა
+    const totalParticipants = module.examParticipants || 0;
+    const passedCount = module.examPassed || 0;
+    const failedCount = module.examFailed || 0;
+    const avgScore = totalParticipants > 0 ? 
+        Math.round(sortedScores.reduce((sum, s) => sum + s.score, 0) / totalParticipants) : 0;
+
+    const topUsersHtml = `
+        <!-- სათაური და სტატისტიკა -->
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                <h4 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    ტოპ 5 მომხმარებელი
+                </h4>
+                <div style="display: flex; gap: 12px; background: var(--surface-light); padding: 8px 16px; border-radius: 40px;">
+                    <span title="საშუალო ქულა">
+                        <span style="color: var(--text-muted);">📊 საშ.:</span>
+                        <span style="font-weight: 700; color: var(--warning);">${avgScore}</span>
+                    </span>
+                    <span title="ჩაბარებული">
+                        <span style="color: var(--text-muted);">✅:</span>
+                        <span style="font-weight: 700; color: var(--success);">${passedCount}</span>
+                    </span>
+                    <span title="ჩაჭრილი">
+                        <span style="color: var(--text-muted);">❌:</span>
+                        <span style="font-weight: 700; color: var(--danger);">${failedCount}</span>
+                    </span>
+                </div>
+            </div>
+            
+            <!-- TOP 5 სია -->
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                ${top5.map((user, index) => {
+                    // მედლები
+                    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '📌';
+                    
+                    // ჩაბარების სტატუსი
+                    const passed = user.score >= 150;
+                    const statusText = passed ? 'ჩაბარებული' : 'ჩაჭრილი';
+                    const statusColor = passed ? 'var(--success)' : 'var(--danger)';
+                    const statusBg = passed ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)';
+                    
+                    // პროგრესი (0-200)
+                    const progressPercent = (user.score / 200) * 100;
+                    
+                    // ადგილის ფერი
+                    const placeColors = ['#FFD700', '#C0C0C0', '#CD7F32', '#9CA3AF', '#9CA3AF'];
+                    const placeColor = placeColors[index] || '#9CA3AF';
+                    
+                    return `
+                        <div style="display: flex; align-items: center; gap: 15px; padding: 16px; background: var(--surface); border-radius: 16px; border: 1px solid ${index === 0 ? placeColor + '40' : 'var(--border)'}; box-shadow: ${index === 0 ? 'var(--shadow-lg)' : 'var(--shadow)'}; transition: all 0.3s;" 
+                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-lg)'" 
+                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='${index === 0 ? 'var(--shadow-lg)' : 'var(--shadow)'}'">
+                            
+                            <!-- ადგილი და მედალი -->
+                            <div style="position: relative;">
+                                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, ${placeColor}30, ${placeColor}10); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid ${placeColor};">
+                                    <span style="font-size: 24px;">${medal}</span>
+                                </div>
+                                <div style="position: absolute; top: -5px; right: -5px; background: ${placeColor}; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; border: 2px solid var(--surface);">
+                                    ${index + 1}
+                                </div>
+                            </div>
+                            
+                            <!-- მომხმარებლის ინფორმაცია -->
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                    <span style="font-weight: 700; font-size: 16px; color: var(--text);">
+                                        ${escapeHtml(user.username || user.userId)}
+                                    </span>
+                                    <span style="font-size: 11px; padding: 4px 10px; background: ${statusBg}; color: ${statusColor}; border-radius: 40px; font-weight: 600; border: 1px solid ${statusColor}30;">
+                                        ${statusText}
+                                    </span>
+                                </div>
+                                
+                                <!-- ქულის პროგრესი -->
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                            <span style="font-size: 12px; color: var(--text-muted);">ქულა</span>
+                                            <span style="font-size: 14px; font-weight: 700; color: ${statusColor};">${user.score}/200</span>
+                                        </div>
+                                        <div style="height: 8px; background: var(--surface-light); border-radius: 4px; overflow: hidden;">
+                                            <div style="height: 100%; width: ${progressPercent}%; background: linear-gradient(90deg, ${statusColor}, ${statusColor}80); border-radius: 4px;"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- სწორი პასუხების რაოდენობა -->
+                                    <div style="text-align: center; min-width: 60px;">
+                                        <div style="font-size: 18px; font-weight: 700; color: var(--success);">${user.score}</div>
+                                        <div style="font-size: 10px; color: var(--text-muted);">სწორი</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            
+            <!-- ფუტერი - თუ მეტი მომხმარებელია -->
+            ${sortedScores.length > 5 ? `
+                <div style="margin-top: 16px; padding: 12px; background: var(--surface-light); border-radius: 12px; text-align: center; border: 1px dashed var(--border);">
+                    <span style="color: var(--text-muted); font-size: 13px;">
+                        📊 და კიდევ ${sortedScores.length - 5} მომხმარებელი (ჯამში ${sortedScores.length})
+                    </span>
+                </div>
+            ` : ''}
+            
+            <!-- ინფორმაცია ქულების შესახებ -->
+            <div style="margin-top: 16px; display: flex; justify-content: space-between; background: var(--surface-light); padding: 12px 16px; border-radius: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="width: 12px; height: 12px; background: var(--success); border-radius: 50%;"></span>
+                    <span style="font-size: 12px; color: var(--text-muted);">≥150 - ჩაბარებული</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="width: 12px; height: 12px; background: var(--danger); border-radius: 50%;"></span>
+                    <span style="font-size: 12px; color: var(--text-muted);">&lt;150 - ჩაჭრილი</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 12px; color: var(--text-muted);">🏆 მაქსიმალური:</span>
+                    <span style="font-weight: 700; color: var(--accent);">${sortedScores[0]?.score || 0}</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('topUsersList').innerHTML = topUsersHtml;
 }
 
 // დაამატე ეს ფუნქცია
@@ -8073,6 +8720,31 @@ async function deleteChatMessage(messageId) {
         }
     );
 }
+
+// ქულების დეტალური განაწილების ჩვენება
+function renderScoreDistribution(scores) {
+    const distribution = {
+        '0-19': 0, '20-39': 0, '40-59': 0, '60-79': 0,
+        '80-99': 0, '100-119': 0, '120-139': 0, '140-159': 0,
+        '160-179': 0, '180-200': 0
+    };
+    
+    scores.forEach(score => {
+        if (score < 20) distribution['0-19']++;
+        else if (score < 40) distribution['20-39']++;
+        else if (score < 60) distribution['40-59']++;
+        else if (score < 80) distribution['60-79']++;
+        else if (score < 100) distribution['80-99']++;
+        else if (score < 120) distribution['100-119']++;
+        else if (score < 140) distribution['120-139']++;
+        else if (score < 160) distribution['140-159']++;
+        else if (score < 180) distribution['160-179']++;
+        else distribution['180-200']++;
+    });
+    
+    return distribution;
+}
+
 
 function sendAdminMessage() {
     const input = document.getElementById('adminChatInput');
