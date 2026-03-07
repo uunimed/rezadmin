@@ -2811,19 +2811,17 @@
                         <div class="table-header">
                             <h3>მოდულების აქტივობა</h3>
                         </div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>მოდული</th>
-                                    <th>აქტიური მომხმარებელი</th>
-                                    <th>შესრულებული ტესტი</th>
-                                    <th>სწორი პასუხი</th>
-                                    <th>სიზუსტე</th>
-                                    <th>საშ. ტესტი/მომხ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="activityTableBody"></tbody>
-                        </table>
+<table>
+    <thead>
+        <tr>
+            <th>მოდული</th>
+            <th>აქტიური მომხმარებელი</th>
+            <th>შესრულებული ტესტი</th>
+            <th>სწორი პასუხი (პირველივე ცდით)</th>
+        </tr>
+    </thead>
+    <tbody id="activityTableBody"></tbody>
+</table>
                     </div>
                 </div>
                 
@@ -5437,6 +5435,268 @@ async function completeCurrentSession() {
     }
 }
 
+// განახლებული loadStatistics ფუნქცია - ყოველთვის აჩვენებს ყველა მოდულს
+async function loadStatistics() {
+    if (!firebaseInitialized || !database) return;
+
+    try {
+        // ვამოწმებთ არის თუ არა უკვე ჩატვირთვის პროცესში
+        if (window.isLoadingStatistics) {
+            console.log("📊 Statistics already loading, skipping...");
+            return;
+        }
+        
+        window.isLoadingStatistics = true;
+        
+        // ჩავტვირთოთ მოდულების კითხვების რაოდენობა CSV-დან
+        let moduleCounts = {};
+        try {
+            moduleCounts = await loadAllModuleQuestionCounts();
+            console.log("✅ Module counts loaded from CSV:", moduleCounts);
+        } catch (csvError) {
+            console.error("❌ Error loading CSV module counts:", csvError);
+            // თუ CSV ვერ ჩაიტვირთა, გამოვიყენოთ ცარიელი ობიექტი
+            moduleCounts = {};
+        }
+        
+        // ჩავტვირთოთ მომხმარებლების მონაცემები
+        const usersSnapshot = await database.ref('users').once('value');
+        const users = usersSnapshot.val() || {};
+        
+        const modulesList = document.getElementById('moduleStatisticsList');
+        if (!modulesList) return;
+        
+        modulesList.innerHTML = '';
+
+        // ყველა მოდულის სია (გარანტირებულად ყოველთვის გამოჩნდება)
+        const allModules = [
+            { id: 'samkurnaloo', name: 'სამკურნალო' },
+            { id: 'stomatologia', name: 'სტომატოლოგია' },
+            { id: 'alergologia', name: 'ალერგოლოგია' },
+            { id: 'angiokirurgia', name: 'ანგიოქირურგია' },
+            { id: 'anesteziologia', name: 'ანესთეზიოლოგია, რეანიმატოლოგია' },
+            { id: 'bavshvta_gadaudebeli', name: 'ბავშვთა გადაუდებელი' },
+            { id: 'bavshvta_kardiorevmatologia', name: 'ბავშვთა კარდიორევმატოლოგია' },
+            { id: 'bavshvta_nevrologia', name: 'ბავშვთა ნევროლოგია' },
+            { id: 'bavshvta_nevrologia2', name: 'ბავშვთა ნეფროლოგია' },
+            { id: 'gadaudebeli_medicina', name: 'გადაუდებელი მედიცინა' },
+            { id: 'gastroenterologia', name: 'გასტროენტეროლოგია' },
+            { id: 'ginekologia', name: 'გინეკოლოგია' },
+            { id: 'dermatologia', name: 'დერმატოლოგია' },
+            { id: 'endokrinologia', name: 'ენდოკრინოლოგია' },
+            { id: 'zogadi_kirurgia', name: 'ზოგადი ქირურგია' },
+            { id: 'terapiuli_stomatologia', name: 'თერაპიული სტომატოლოგია' },
+            { id: 'infekciuri', name: 'ინფექციური' },
+            { id: 'kardiologia', name: 'კარდიოლოგია' },
+            { id: 'kardiokirurgia', name: 'კარდიოქირურგია' },
+            { id: 'laboratoriuli_medicina', name: 'ლაბორატორიული მედიცინა' },
+            { id: 'narkologia', name: 'ნარკოლოგია' },
+            { id: 'nevrologia', name: 'ნევროლოგია' },
+            { id: 'neonatologia', name: 'ნეონატოლოგია' },
+            { id: 'nefrologia', name: 'ნეფროლოგია' },
+            { id: 'onkologia', name: 'ონკოლოგია' },
+            { id: 'ortodontia', name: 'ორთოდონტია' },
+            { id: 'ortopedia_travmatologia', name: 'ორთოპედია ტრავმატოლოგია' },
+            { id: 'ortopediuli_stomatologia', name: 'ორთოპედიული სტომატოლოგია' },
+            { id: 'otorinolaringologia', name: 'ოტორინოლარინგოლოგია' },
+            { id: 'oftalmologia', name: 'ოფთალმოლოგია' },
+            { id: 'patologia', name: 'პათოლოგია' },
+            { id: 'pediatria', name: 'პედიატრია' },
+            { id: 'plastikuri_kirurgia', name: 'პლასტიკური და რეკონსტრუქციული ქირურგია' },
+            { id: 'radiologia', name: 'რადიოლოგია' },
+            { id: 'radiacioni_onkologia', name: 'რადიაციული ონკოლოგია' },
+            { id: 'reproduqtologia', name: 'რეპროდუქტოლოგია' },
+            { id: 'revmatologia', name: 'რევმატოლოგია' },
+            { id: 'saokjao_medicina', name: 'საოჯახო მედიცინა' },
+            { id: 'sportuli_medicina', name: 'სპორტული მედიცინა' },
+            { id: 'toksikologia', name: 'ტოქსიკოლოგია' },
+            { id: 'urologia', name: 'უროლოგია' },
+            { id: 'ftiziatria_pulmonologia', name: 'ფთიზიატრია, პულმონოლოგია' },
+            { id: 'psikiatria', name: 'ფსიქიატრია' },
+            { id: 'qba_saxis_kirurgia', name: 'ყბა-სახის ქირურგია' },
+            { id: 'shinagani_medicina', name: 'შინაგანი მედიცინა' },
+            { id: 'hematologia', name: 'ჰემატოლოგია' }
+        ];
+
+        // გამოვთვალოთ თითოეული მოდულისთვის რამდენმა მომხმარებელმა იმუშავა
+        const moduleUserCounts = {};
+        const uniqueUsersByModule = {};
+
+        // გადავუაროთ ყველა მომხმარებელს
+        Object.entries(users).forEach(([userId, userData]) => {
+            if (userData.progress) {
+                // გადავუაროთ მოდულებს, რომლებზეც მომხმარებელს აქვს პროგრესი
+                Object.entries(userData.progress).forEach(([moduleId, moduleProgress]) => {
+                    // შევამოწმოთ, აქვს თუ არა მომხმარებელს ნამდვილად ნამუშევარი ამ მოდულზე
+                    const hasNormalProgress = moduleProgress.normal?.answeredQuestions && 
+                                              Object.keys(moduleProgress.normal.answeredQuestions).length > 0;
+                    const hasExamProgress = moduleProgress.exam?.answeredQuestions && 
+                                           Object.keys(moduleProgress.exam.answeredQuestions).length > 0;
+                    
+                    if (hasNormalProgress || hasExamProgress) {
+                        if (!uniqueUsersByModule[moduleId]) {
+                            uniqueUsersByModule[moduleId] = new Set();
+                        }
+                        uniqueUsersByModule[moduleId].add(userId);
+                    }
+                });
+            }
+        });
+
+        // გადავიყვანოთ Set-ები რიცხვებში
+        Object.keys(uniqueUsersByModule).forEach(moduleId => {
+            moduleUserCounts[moduleId] = uniqueUsersByModule[moduleId].size;
+        });
+
+        console.log("📊 Module user counts:", moduleUserCounts);
+
+        // === მნიშვნელოვანი: გამოვიყენოთ ყველა მოდული, მაგრამ მხოლოდ ის, რომელსაც აქვს კითხვები CSV-ში ===
+        // თუ CSV ვერ ჩაიტვირთა, მაინც ვაჩვენოთ მოდულები, ოღონდ 0 კითხვით
+        const modulesToShow = allModules.filter(m => {
+            // თუ CSV მოვიდა, ვაჩვენოთ მხოლოდ ის, რასაც აქვს კითხვები
+            if (Object.keys(moduleCounts).length > 0) {
+                return moduleCounts[m.id] > 0;
+            }
+            // თუ CSV ვერ ჩაიტვირთა, მაინც ვაჩვენოთ ყველა მოდული
+            return true;
+        });
+
+        if (modulesToShow.length === 0) {
+            modulesList.innerHTML = '<div style="text-align: center; padding: 60px; color: var(--text-muted);">მოდულები არ არის</div>';
+            window.isLoadingStatistics = false;
+            return;
+        }
+
+        // დავალაგოთ მოდულები ანბანის მიხედვით
+        modulesToShow.sort((a, b) => a.name.localeCompare(b.name, 'ka'));
+        
+        // თითოეული მოდულისთვის შევქმნათ ბარათი
+        modulesToShow.forEach(moduleInfo => {
+            const moduleId = moduleInfo.id;
+            const moduleName = moduleInfo.name;
+            const questionCount = moduleCounts[moduleId] || 0;
+            const userCount = moduleUserCounts[moduleId] || 0;
+            
+            const moduleCard = document.createElement('div');
+            moduleCard.className = 'table-container';
+            moduleCard.style.marginBottom = '12px';
+            moduleCard.style.cursor = 'pointer';
+            moduleCard.style.transition = 'all 0.3s ease';
+            moduleCard.style.borderRadius = '16px';
+            moduleCard.style.overflow = 'hidden';
+            moduleCard.setAttribute('data-module-id', moduleId);
+            
+            const safeModuleName = moduleName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            
+            // თუ კითხვების რაოდენობა 0-ია, მაგრამ CSV ვერ ჩაიტვირთა, მაინც გავხსნათ
+            const clickHandler = questionCount > 0 
+                ? `showModuleQuestions('${moduleId}', '${safeModuleName}')`
+                : `showNotification('ამ მოდულის კითხვები ვერ ჩაიტვირთა', true)`;
+            
+            moduleCard.innerHTML = `
+                <div class="table-header" style="cursor: pointer; padding: 16px 24px;" onclick="${clickHandler}">
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                                <polyline points="2 17 12 22 22 17"/>
+                                <polyline points="2 12 12 17 22 12"/>
+                            </svg>
+                            <span style="font-weight: 600; color: var(--text); font-size: 16px;">${moduleName}</span>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 32px;">
+                            <div style="display: flex; align-items: center; gap: 8px;" title="${questionCount > 0 ? questionCount + ' კითხვა' : 'კითხვების რაოდენობა უცნობია'}">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${questionCount > 0 ? 'var(--accent)' : 'var(--text-muted)'}" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="3" y1="9" x2="21" y2="9"/>
+                                    <line x1="9" y1="21" x2="9" y2="9"/>
+                                </svg>
+                                <span class="question-count-${moduleId}" style="color: ${questionCount > 0 ? 'var(--text)' : 'var(--text-muted)'}; font-weight: 500;">${questionCount > 0 ? questionCount : '?'}</span>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 8px; min-width: 100px;" title="${userCount > 0 ? userCount + ' მომხმარებელი მუშაობდა' : 'ჯერ არ უმუშავია'}">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${userCount > 0 ? 'var(--success)' : 'var(--text-muted)'}" stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                </svg>
+                                <span class="user-count-${moduleId}" style="color: ${userCount > 0 ? 'var(--success)' : 'var(--text-muted)'}; font-weight: 500;">${userCount}</span>
+                            </div>
+                            
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            moduleCard.onmouseover = () => {
+                moduleCard.style.transform = 'translateY(-2px)';
+                moduleCard.style.boxShadow = 'var(--shadow-lg)';
+                moduleCard.style.borderColor = 'var(--accent)';
+            };
+            moduleCard.onmouseout = () => {
+                moduleCard.style.transform = 'translateY(0)';
+                moduleCard.style.boxShadow = 'var(--shadow)';
+                moduleCard.style.borderColor = 'var(--border)';
+            };
+            
+            modulesList.appendChild(moduleCard);
+        });
+
+        // დავამატოთ მთლიანი სტატისტიკის შემაჯამებელი
+        const totalUsers = Object.keys(users).length;
+        const totalQuestions = Object.values(moduleCounts).reduce((a, b) => a + b, 0);
+        const modulesWithActivity = Object.keys(moduleUserCounts).length;
+
+        const summaryCard = document.createElement('div');
+        summaryCard.style.marginTop = '24px';
+        summaryCard.style.padding = '20px';
+        summaryCard.style.background = 'linear-gradient(145deg, var(--surface), var(--surface-light))';
+        summaryCard.style.borderRadius = '16px';
+        summaryCard.style.border = '1px solid var(--border)';
+        summaryCard.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <span style="color: var(--text-muted);">სულ მოდულები</span>
+                    <span style="font-weight: 700; font-size: 24px; color: var(--accent); margin-left: 12px;">${modulesToShow.length}</span>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">ჯამური კითხვები</span>
+                    <span style="font-weight: 700; font-size: 24px; color: var(--warning); margin-left: 12px;">${totalQuestions > 0 ? totalQuestions : '?'}</span>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">სულ მომხმარებელი</span>
+                    <span style="font-weight: 700; font-size: 24px; color: var(--success); margin-left: 12px;">${totalUsers}</span>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">აქტიური მოდულები</span>
+                    <span style="font-weight: 700; font-size: 24px; color: #f59e0b; margin-left: 12px;">${modulesWithActivity}</span>
+                </div>
+            </div>
+        `;
+        modulesList.appendChild(summaryCard);
+        
+        // დავამატოთ ბოლო განახლების დრო
+        const lastUpdateTime = document.createElement('div');
+        lastUpdateTime.style.marginTop = '16px';
+        lastUpdateTime.style.textAlign = 'right';
+        lastUpdateTime.style.fontSize = '12px';
+        lastUpdateTime.style.color = 'var(--text-muted)';
+        lastUpdateTime.innerHTML = `ბოლო განახლება: ${new Date().toLocaleTimeString('ka-GE')}`;
+        modulesList.appendChild(lastUpdateTime);
+
+        console.log("✅ Statistics loaded successfully with all modules");
+
+    } catch (error) {
+        console.error("Error loading statistics:", error);
+        showNotification('შეცდომა სტატისტიკის ჩატვირთვისას', true);
+    } finally {
+        window.isLoadingStatistics = false;
+    }
+}
+
 // დაამატე ეს ფუნქცია
 function displayCurrentCode() {
     const codeDisplay = document.getElementById('currentCodeDisplay');
@@ -6970,268 +7230,271 @@ async function checkUserData() {
 // გამოიძახეთ კონსოლიდან საჭიროების შემთხვევაში
 // checkUserData();
 
-        // Load activity data
-        async function loadActivityData() {
-            if (!firebaseInitialized || !database) return;
+// Load activity data - UPDATED VERSION
+async function loadActivityData() {
+    if (!firebaseInitialized || !database) return;
 
-            try {
-                const [usersSnapshot, answersSnapshot] = await Promise.all([
-                    database.ref('users').once('value'),
-                    database.ref('answers').once('value')
-                ]);
+    try {
+        console.log("Loading activity data with all modules...");
+        
+        // ჩავტვირთოთ საჭირო მონაცემები
+        const [usersSnapshot, answersSnapshot, moduleCounts] = await Promise.all([
+            database.ref('users').once('value'),
+            database.ref('answers').once('value'),
+            loadAllModuleQuestionCounts() // CSV-დან კითხვების რაოდენობა
+        ]);
 
-                const users = usersSnapshot.val() || {};
-                const answers = answersSnapshot.val() || {};
+        const users = usersSnapshot.val() || {};
+        const answers = answersSnapshot.val() || {};
 
-                let startTime, endTime;
-                
-                if (currentActivityTab === 'custom') {
-                    const startDate = document.getElementById('activityStartDate').value;
-                    const endDate = document.getElementById('activityEndDate').value;
-                    
-                    if (startDate && endDate) {
-                        startTime = new Date(startDate).setHours(0, 0, 0, 0);
-                        endTime = new Date(endDate).setHours(23, 59, 59, 999);
-                    } else {
-                        const now = Date.now();
-                        endTime = now;
-                        startTime = now - 30 * 24 * 60 * 60 * 1000;
-                    }
-                } else {
-                    const now = Date.now();
-                    const timeRanges = {
-                        day: 24 * 60 * 60 * 1000,
-                        week: 7 * 24 * 60 * 60 * 1000,
-                        month: 30 * 24 * 60 * 60 * 1000,
-                        year: 365 * 24 * 60 * 60 * 1000
-                    };
-                    endTime = now;
-                    startTime = now - timeRanges[currentActivityTab];
-                }
-
-                let activeUsers = 0;
-                Object.values(users).forEach(user => {
-                    if (user.lastUpdated && user.lastUpdated >= startTime && user.lastUpdated <= endTime) {
-                        activeUsers++;
-                    }
-                });
-
-                let newRegistrations = 0;
-                Object.values(users).forEach(user => {
-                    if (user.registeredAt && user.registeredAt >= startTime && user.registeredAt <= endTime) {
-                        newRegistrations++;
-                    }
-                });
-
-                let totalTests = 0;
-                let correctTests = 0;
-                const moduleStats = {};
-                const userTestCounts = {};
-
-                Object.values(answers).forEach(answer => {
-                    if (answer.timestamp && answer.timestamp >= startTime && answer.timestamp <= endTime) {
-                        totalTests++;
-                        if (answer.isCorrect) correctTests++;
-                        
-                        const module = answer.module || 'unknown';
-                        if (!moduleStats[module]) {
-                            moduleStats[module] = { users: new Set(), tests: 0, correct: 0 };
-                        }
-                        moduleStats[module].tests++;
-                        moduleStats[module].correct += answer.isCorrect ? 1 : 0;
-                        if (answer.userId) {
-                            moduleStats[module].users.add(answer.userId);
-                            userTestCounts[answer.userId] = (userTestCounts[answer.userId] || 0) + 1;
-                        }
-                    }
-                });
-
-                const avgTestsPerUser = totalTests / (Object.keys(userTestCounts).length || 1);
-
-                document.getElementById('activityStats').innerHTML = `
-                    <div class="stat-card">
-                        <div class="stat-title">აქტიური მომხმარებელი</div>
-                        <div class="stat-value">${activeUsers}</div>
-                        <div class="stat-change">${((activeUsers / Object.keys(users).length) * 100 || 0).toFixed(1)}%</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-title">ახალი რეგისტრაცია</div>
-                        <div class="stat-value">${newRegistrations}</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-title">შესრულებული ტესტი</div>
-                        <div class="stat-value">${totalTests}</div>
-                        <div class="stat-change">საშ. ${avgTestsPerUser.toFixed(1)}/მომხ</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-title">სწორი პასუხი</div>
-                        <div class="stat-value">${((correctTests / totalTests) * 100 || 0).toFixed(1)}%</div>
-                        <div class="stat-change">${correctTests}/${totalTests}</div>
-                    </div>
-                `;
-
-                const tableBody = document.getElementById('activityTableBody');
-                tableBody.innerHTML = Object.entries(moduleStats)
-                    .sort((a, b) => b[1].tests - a[1].tests)
-                    .map(([module, stats]) => `
-                    <tr>
-                        <td><strong>${getModuleName(module)}</strong></td>
-                        <td>${stats.users.size}</td>
-                        <td>${stats.tests}</td>
-                        <td>${stats.correct}</td>
-                        <td>${((stats.correct / stats.tests) * 100 || 0).toFixed(1)}%</td>
-                        <td>${(stats.tests / stats.users.size || 0).toFixed(1)}</td>
-                    </tr>
-                `).join('');
-
-            } catch (error) {
-                console.error("Error loading activity:", error);
+        // დროის პერიოდის განსაზღვრა
+        let startTime, endTime;
+        if (currentActivityTab === 'custom') {
+            const startDate = document.getElementById('activityStartDate').value;
+            const endDate = document.getElementById('activityEndDate').value;
+            
+            if (startDate && endDate) {
+                startTime = new Date(startDate).setHours(0, 0, 0, 0);
+                endTime = new Date(endDate).setHours(23, 59, 59, 999);
+            } else {
+                const now = Date.now();
+                endTime = now;
+                startTime = now - 30 * 24 * 60 * 60 * 1000;
             }
+        } else {
+            const now = Date.now();
+            const timeRanges = {
+                day: 24 * 60 * 60 * 1000,
+                week: 7 * 24 * 60 * 60 * 1000,
+                month: 30 * 24 * 60 * 60 * 1000,
+                year: 365 * 24 * 60 * 60 * 1000
+            };
+            endTime = now;
+            startTime = now - timeRanges[currentActivityTab];
         }
 
-// განახლებული sortModuleQuestions ფუნქცია
-window.sortModuleQuestions = function(type) {
-    if (!window.currentSortedModule) return;
-    
-    // განვაახლოთ მიმდინარე სორტის ტიპი
-    window.currentSortType = type;
-    
-    // განვაახლოთ ღილაკების სტილი
-    document.querySelectorAll('#moduleQuestionsContent .filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
-    
-    let sortedQuestions = [...window.currentSortedModule.questions];
-    
-    if (type === 'default') {
-        sortedQuestions.sort((a, b) => {
-            const aNum = parseInt(a.id) || 0;
-            const bNum = parseInt(b.id) || 0;
-            return aNum - bNum;
+        // === მთავარი სტატისტიკა (სტატისტიკის ბარათები) ===
+        let activeUsers = 0;
+        let newRegistrations = 0;
+        let totalTests = 0;
+        let correctTests = 0;
+
+        Object.values(users).forEach(user => {
+            if (user.lastUpdated && user.lastUpdated >= startTime && user.lastUpdated <= endTime) {
+                activeUsers++;
+            }
+            if (user.registeredAt && user.registeredAt >= startTime && user.registeredAt <= endTime) {
+                newRegistrations++;
+            }
         });
-    } else if (type === 'best') {
-        sortedQuestions.sort((a, b) => {
-            if (a.totalUsers === 0 && b.totalUsers > 0) return 1;
-            if (b.totalUsers === 0 && a.totalUsers > 0) return -1;
-            return b.correctPercent - a.correctPercent;
+
+        Object.values(answers).forEach(answer => {
+            if (answer.timestamp && answer.timestamp >= startTime && answer.timestamp <= endTime) {
+                totalTests++;
+                if (answer.isCorrect) correctTests++;
+            }
         });
-    } else if (type === 'worst') {
-        sortedQuestions.sort((a, b) => {
-            if (a.totalUsers === 0 && b.totalUsers > 0) return 1;
-            if (b.totalUsers === 0 && a.totalUsers > 0) return -1;
-            return a.correctPercent - b.correctPercent;
-        });
-    } else if (type === 'most') {
-        sortedQuestions.sort((a, b) => b.totalUsers - a.totalUsers);
-    }
-    
-    // განვაახლოთ ჩვენება
-    const modalContent = document.getElementById('moduleQuestionsContent');
-    
-    let questionsHtml = `
-        <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center;">
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="filter-btn ${type === 'default' ? 'active' : ''}" onclick="sortModuleQuestions('default')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="4" y1="6" x2="20" y2="6"/>
-                        <line x1="4" y1="12" x2="20" y2="12"/>
-                        <line x1="4" y1="18" x2="20" y2="18"/>
-                        <circle cx="8" cy="6" r="1" fill="currentColor"/>
-                        <circle cx="8" cy="12" r="1" fill="currentColor"/>
-                        <circle cx="8" cy="18" r="1" fill="currentColor"/>
-                    </svg>
-                    ნაგულისხმევი (ID)
-                </button>
-                <button class="filter-btn ${type === 'best' ? 'active' : ''}" onclick="sortModuleQuestions('best')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M12 16v-4M12 8h.01"/>
-                    </svg>
-                    ყველაზე კარგი
-                </button>
-                <button class="filter-btn ${type === 'worst' ? 'active' : ''}" onclick="sortModuleQuestions('worst')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                    ყველაზე ცუდი
-                </button>
-                <button class="filter-btn ${type === 'most' ? 'active' : ''}" onclick="sortModuleQuestions('most')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                        <polyline points="3.29 7 12 12 20.71 7"/>
-                        <line x1="12" y1="22" x2="12" y2="12"/>
-                    </svg>
-                    ყველაზე მეტი პასუხი
-                </button>
+
+        // განვაახლოთ სტატისტიკის ბარათები
+        document.getElementById('activityStats').innerHTML = `
+            <div class="stat-card">
+                <div class="stat-title">აქტიური მომხმარებელი</div>
+                <div class="stat-value">${activeUsers}</div>
+                <div class="stat-change">${((activeUsers / Object.keys(users).length) * 100 || 0).toFixed(1)}%</div>
             </div>
-            <div style="color: var(--text-muted); font-size: 14px;">
-               სულ კითხვები: ${window.currentSortedModule.questionCount} | 
-               სულ მომხმარებელი: ${sortedQuestions.reduce((sum, q) => sum + q.totalUsers, 0)} | 
-               სწორი: ${sortedQuestions.reduce((sum, q) => sum + q.correctUsers, 0)} | 
-               არასწორი: ${sortedQuestions.reduce((sum, q) => sum + q.incorrectUsers, 0)}
+            <div class="stat-card">
+                <div class="stat-title">ახალი რეგისტრაცია</div>
+                <div class="stat-value">${newRegistrations}</div>
             </div>
-        </div>
-    `;
-    
-    sortedQuestions.forEach((q, index) => {
-        const barColor = q.correctPercent > 70 ? 'var(--success)' : 
-                        (q.correctPercent < 30 ? 'var(--danger)' : 'var(--warning)');
-        
-        const noAnswers = q.totalUsers === 0;
-        
-        questionsHtml += `
-            <div style="background: ${noAnswers ? 'rgba(0,0,0,0.02)' : 'var(--surface-light)'}; border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); ${noAnswers ? 'opacity: 0.7;' : ''}">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                    <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
-                        <span style="background: ${noAnswers ? 'var(--text-muted)' : 'var(--accent)'}; color: white; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;">${index + 1}</span>
-                        <span style="font-weight: 600; color: var(--text);">${escapeHtml(q.text)}</span>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 16px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span style="color: var(--text-muted); font-size: 13px;">ამ კითხვაზე უპასუხა:</span>
-                        <span style="font-weight: 600; font-size: 14px; color: ${barColor};">
-                            ${noAnswers ? 0 : q.totalUsers} მომხმარებელმა
-                        </span>
-                    </div>
-                    
-                    ${!noAnswers ? `
-                        <div style="position: relative; height: 24px; background: var(--surface); border-radius: 40px; overflow: hidden; margin-bottom: 6px; border: 1px solid var(--border); cursor: help;" 
-                             title="✅ სწორი: ${q.correctUsers} მომხმარებელი (${q.correctPercent}%) | ❌ არასწორი: ${q.incorrectUsers} მომხმარებელი (${100 - q.correctPercent}%)">
-                            <div style="background: var(--success); width: ${q.correctPercent}%; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: white; font-size: 12px; font-weight: 600;">
-                                ${q.correctPercent > 10 ? q.correctPercent + '%' : ''}
-                            </div>
-                            <div style="position: absolute; top: 0; right: 0; height: 100%; background: var(--danger); width: ${100 - q.correctPercent}%; border-radius: 0 40px 40px 0; pointer-events: none;"></div>
-                        </div>
-                        
-                        <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted);">
-                            <span>0%</span>
-                            <span title="✅ სწორი: ${q.correctUsers} | ❌ არასწორი: ${q.incorrectUsers}">
-                                ✅ ${q.correctUsers} | ❌ ${q.incorrectUsers}
-                            </span>
-                            <span>100%</span>
-                        </div>
-                        
-                        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--text-muted);">
-                            <span>სწორი: ${q.correctPercent}% (${q.correctUsers} მომხმარებელი)</span>
-                            <span>არასწორი: ${100 - q.correctPercent}% (${q.incorrectUsers} მომხმარებელი)</span>
-                        </div>
-                    ` : `
-                        <div style="height: 24px; background: var(--surface); border-radius: 40px; margin-bottom: 6px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 13px;">
-                            ჯერ არავის უპასუხია
-                        </div>
-                    `}
-                </div>
+            <div class="stat-card">
+                <div class="stat-title">შესრულებული ტესტი</div>
+                <div class="stat-value">${totalTests}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">სწორი პასუხი</div>
+                <div class="stat-value">${((correctTests / totalTests) * 100 || 0).toFixed(1)}%</div>
+                <div class="stat-change">${correctTests}/${totalTests}</div>
             </div>
         `;
-    });
-    
-    modalContent.innerHTML = questionsHtml;
-};
+
+        // === მოდულების სტატისტიკა ===
+        
+        // 1. შევქმნათ ყველა მოდულის სია CSV მონაცემებით
+        const allModules = [
+            { id: 'samkurnaloo', name: 'სამკურნალო' },
+            { id: 'stomatologia', name: 'სტომატოლოგია' },
+            { id: 'alergologia', name: 'ალერგოლოგია' },
+            { id: 'angiokirurgia', name: 'ანგიოქირურგია' },
+            { id: 'anesteziologia', name: 'ანესთეზიოლოგია, რეანიმატოლოგია' },
+            { id: 'bavshvta_gadaudebeli', name: 'ბავშვთა გადაუდებელი' },
+            { id: 'bavshvta_kardiorevmatologia', name: 'ბავშვთა კარდიორევმატოლოგია' },
+            { id: 'bavshvta_nevrologia', name: 'ბავშვთა ნევროლოგია' },
+            { id: 'bavshvta_nevrologia2', name: 'ბავშვთა ნეფროლოგია' },
+            { id: 'gadaudebeli_medicina', name: 'გადაუდებელი მედიცინა' },
+            { id: 'gastroenterologia', name: 'გასტროენტეროლოგია' },
+            { id: 'ginekologia', name: 'გინეკოლოგია' },
+            { id: 'dermatologia', name: 'დერმატოლოგია' },
+            { id: 'endokrinologia', name: 'ენდოკრინოლოგია' },
+            { id: 'zogadi_kirurgia', name: 'ზოგადი ქირურგია' },
+            { id: 'terapiuli_stomatologia', name: 'თერაპიული სტომატოლოგია' },
+            { id: 'infekciuri', name: 'ინფექციური' },
+            { id: 'kardiologia', name: 'კარდიოლოგია' },
+            { id: 'kardiokirurgia', name: 'კარდიოქირურგია' },
+            { id: 'laboratoriuli_medicina', name: 'ლაბორატორიული მედიცინა' },
+            { id: 'narkologia', name: 'ნარკოლოგია' },
+            { id: 'nevrologia', name: 'ნევროლოგია' },
+            { id: 'neonatologia', name: 'ნეონატოლოგია' },
+            { id: 'nefrologia', name: 'ნეფროლოგია' },
+            { id: 'onkologia', name: 'ონკოლოგია' },
+            { id: 'ortodontia', name: 'ორთოდონტია' },
+            { id: 'ortopedia_travmatologia', name: 'ორთოპედია ტრავმატოლოგია' },
+            { id: 'ortopediuli_stomatologia', name: 'ორთოპედიული სტომატოლოგია' },
+            { id: 'otorinolaringologia', name: 'ოტორინოლარინგოლოგია' },
+            { id: 'oftalmologia', name: 'ოფთალმოლოგია' },
+            { id: 'patologia', name: 'პათოლოგია' },
+            { id: 'pediatria', name: 'პედიატრია' },
+            { id: 'plastikuri_kirurgia', name: 'პლასტიკური და რეკონსტრუქციული ქირურგია' },
+            { id: 'radiologia', name: 'რადიოლოგია' },
+            { id: 'radiacioni_onkologia', name: 'რადიაციული ონკოლოგია' },
+            { id: 'reproduqtologia', name: 'რეპროდუქტოლოგია' },
+            { id: 'revmatologia', name: 'რევმატოლოგია' },
+            { id: 'saokjao_medicina', name: 'საოჯახო მედიცინა' },
+            { id: 'sportuli_medicina', name: 'სპორტული მედიცინა' },
+            { id: 'toksikologia', name: 'ტოქსიკოლოგია' },
+            { id: 'urologia', name: 'უროლოგია' },
+            { id: 'ftiziatria_pulmonologia', name: 'ფთიზიატრია, პულმონოლოგია' },
+            { id: 'psikiatria', name: 'ფსიქიატრია' },
+            { id: 'qba_saxis_kirurgia', name: 'ყბა-სახის ქირურგია' },
+            { id: 'shinagani_medicina', name: 'შინაგანი მედიცინა' },
+            { id: 'hematologia', name: 'ჰემატოლოგია' }
+        ];
+
+        // გავფილტროთ მხოლოდ ის მოდულები, რომლებსაც აქვთ კითხვები CSV-ში
+        const modulesWithQuestions = allModules.filter(m => moduleCounts[m.id] > 0);
+        
+        // შევქმნათ მონაცემთა სტრუქტურა თითოეული მოდულისთვის
+        const moduleData = {};
+
+        // 2. შევავსოთ მონაცემები users პროგრესიდან
+        Object.entries(users).forEach(([userId, userData]) => {
+            if (userData.progress) {
+                Object.entries(userData.progress).forEach(([moduleId, moduleProgress]) => {
+                    // შევამოწმოთ, აქვს თუ არა მომხმარებელს ნამუშევარი ამ მოდულზე
+                    const hasNormalProgress = moduleProgress.normal?.answeredQuestions && 
+                                              Object.keys(moduleProgress.normal.answeredQuestions).length > 0;
+                    const hasExamProgress = moduleProgress.exam?.answeredQuestions && 
+                                           Object.keys(moduleProgress.exam.answeredQuestions).length > 0;
+                    
+                    if (hasNormalProgress || hasExamProgress) {
+                        if (!moduleData[moduleId]) {
+                            moduleData[moduleId] = {
+                                users: new Set(),
+                                tests: 0,
+                                correctFirstTry: 0,
+                                firstTryUserQuestions: {} // userId -> Set of questionIds answered correctly first try
+                            };
+                        }
+                        moduleData[moduleId].users.add(userId);
+                        
+                        // 3. დავითვალოთ ტესტები და პირველივე ცდით სწორი პასუხები
+                        if (hasNormalProgress) {
+                            Object.entries(moduleProgress.normal.answeredQuestions).forEach(([questionId, answerData]) => {
+                                // ტესტების რაოდენობა - ყველა პასუხი
+                                moduleData[moduleId].tests++;
+                                
+                                // პირველივე ცდით სწორი პასუხების დათვლა
+                                if (answerData.isCorrect) {
+                                    // შევამოწმოთ, არის თუ არა ეს პირველი ცდა
+                                    if (!answerData.attemptCount || answerData.attemptCount === 1) {
+                                        // შევქმნათ სტრუქტურა, რომ თითოეული მომხმარებელი თითო კითხვაზე მხოლოდ ერთხელ ჩავთვალოთ
+                                        if (!moduleData[moduleId].firstTryUserQuestions[userId]) {
+                                            moduleData[moduleId].firstTryUserQuestions[userId] = new Set();
+                                        }
+                                        moduleData[moduleId].firstTryUserQuestions[userId].add(questionId);
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // საგამოცდო რეჟიმშიც ჩავთვალოთ
+                        if (hasExamProgress) {
+                            Object.entries(moduleProgress.exam.answeredQuestions).forEach(([questionId, answerData]) => {
+                                moduleData[moduleId].tests++;
+                                
+                                // საგამოცდო რეჟიმშიც შეგვიძლია ჩავთვალოთ პირველივე ცდად
+                                if (answerData.isCorrect) {
+                                    if (!moduleData[moduleId].firstTryUserQuestions[userId]) {
+                                        moduleData[moduleId].firstTryUserQuestions[userId] = new Set();
+                                    }
+                                    moduleData[moduleId].firstTryUserQuestions[userId].add(questionId);
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        });
+
+        // 4. გადავთვალოთ firstTryUserQuestions Set-ებიდან ჯამური რაოდენობა
+        Object.keys(moduleData).forEach(moduleId => {
+            let totalFirstTryCorrect = 0;
+            if (moduleData[moduleId].firstTryUserQuestions) {
+                Object.values(moduleData[moduleId].firstTryUserQuestions).forEach(questionSet => {
+                    totalFirstTryCorrect += questionSet.size;
+                });
+            }
+            moduleData[moduleId].correctFirstTry = totalFirstTryCorrect;
+        });
+
+        // 5. მოვამზადოთ ცხრილის მონაცემები (ყველა მოდული, რომელსაც აქვს კითხვები)
+        const tableRows = [];
+        
+        modulesWithQuestions.forEach(moduleInfo => {
+            const moduleId = moduleInfo.id;
+            const data = moduleData[moduleId] || { 
+                users: new Set(), 
+                tests: 0, 
+                correctFirstTry: 0 
+            };
+            
+            tableRows.push({
+                id: moduleId,
+                name: moduleInfo.name,
+                usersCount: data.users.size,
+                testsCount: data.tests,
+                correctFirstTry: data.correctFirstTry
+            });
+        });
+
+        // დავალაგოთ მოდულები მომხმარებლების რაოდენობის მიხედვით (ყველაზე აქტიური პირველ რიგში)
+        tableRows.sort((a, b) => b.usersCount - a.usersCount);
+
+        // 6. განვაახლოთ ცხრილი
+        const tableBody = document.getElementById('activityTableBody');
+        tableBody.innerHTML = tableRows.map(row => `
+            <tr>
+                <td><strong>${escapeHtml(row.name)}</strong></td>
+                <td>${row.usersCount}</td>
+                <td>${row.testsCount}</td>
+                <td>${row.correctFirstTry}</td>
+            </tr>
+        `).join('');
+
+        // თუ არცერთი მოდული არ არის
+        if (tableRows.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--text-muted);">📭 მონაცემები არ არის</td></tr>';
+        }
+
+        console.log("Activity data loaded successfully with all modules");
+
+    } catch (error) {
+        console.error("Error loading activity:", error);
+        const tableBody = document.getElementById('activityTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--danger);">❌ შეცდომა მონაცემების ჩატვირთვისას</td></tr>';
+        }
+    }
+}
 
 // ==================== CORRECTED showModuleQuestions FUNCTION ====================
 async function showModuleQuestions(moduleId, moduleName) {
@@ -7638,247 +7901,7 @@ async function debugModuleAnswers(moduleId) {
     return { moduleAnswers, questionCounts };
 }
 
-// განახლებული loadStatistics ფუნქცია - სწორი დათვლით users პროგრესიდან
-async function loadStatistics() {
-    if (!firebaseInitialized || !database) return;
 
-    try {
-        // ვამოწმებთ არის თუ არა უკვე ჩატვირთვის პროცესში
-        if (window.isLoadingStatistics) {
-            console.log("📊 Statistics already loading, skipping...");
-            return;
-        }
-        
-        window.isLoadingStatistics = true;
-        
-        // ჩავტვირთოთ მოდულების კითხვების რაოდენობა CSV-დან
-        const moduleCounts = await loadAllModuleQuestionCounts();
-        
-        // ჩავტვირთოთ მომხმარებლების მონაცემები
-        const usersSnapshot = await database.ref('users').once('value');
-        const users = usersSnapshot.val() || {};
-        
-        const modulesList = document.getElementById('moduleStatisticsList');
-        if (!modulesList) return;
-        
-        modulesList.innerHTML = '';
-
-        // ყველა მოდულის სია
-        const allModules = [
-            { id: 'samkurnaloo', name: 'სამკურნალო' },
-            { id: 'stomatologia', name: 'სტომატოლოგია' },
-            { id: 'alergologia', name: 'ალერგოლოგია' },
-            { id: 'angiokirurgia', name: 'ანგიოქირურგია' },
-            { id: 'anesteziologia', name: 'ანესთეზიოლოგია, რეანიმატოლოგია' },
-            { id: 'bavshvta_gadaudebeli', name: 'ბავშვთა გადაუდებელი' },
-            { id: 'bavshvta_kardiorevmatologia', name: 'ბავშვთა კარდიორევმატოლოგია' },
-            { id: 'bavshvta_nevrologia', name: 'ბავშვთა ნევროლოგია' },
-            { id: 'bavshvta_nevrologia2', name: 'ბავშვთა ნეფროლოგია' },
-            { id: 'gadaudebeli_medicina', name: 'გადაუდებელი მედიცინა' },
-            { id: 'gastroenterologia', name: 'გასტროენტეროლოგია' },
-            { id: 'ginekologia', name: 'გინეკოლოგია' },
-            { id: 'dermatologia', name: 'დერმატოლოგია' },
-            { id: 'endokrinologia', name: 'ენდოკრინოლოგია' },
-            { id: 'zogadi_kirurgia', name: 'ზოგადი ქირურგია' },
-            { id: 'terapiuli_stomatologia', name: 'თერაპიული სტომატოლოგია' },
-            { id: 'infekciuri', name: 'ინფექციური' },
-            { id: 'kardiologia', name: 'კარდიოლოგია' },
-            { id: 'kardiokirurgia', name: 'კარდიოქირურგია' },
-            { id: 'laboratoriuli_medicina', name: 'ლაბორატორიული მედიცინა' },
-            { id: 'narkologia', name: 'ნარკოლოგია' },
-            { id: 'nevrologia', name: 'ნევროლოგია' },
-            { id: 'neonatologia', name: 'ნეონატოლოგია' },
-            { id: 'nefrologia', name: 'ნეფროლოგია' },
-            { id: 'onkologia', name: 'ონკოლოგია' },
-            { id: 'ortodontia', name: 'ორთოდონტია' },
-            { id: 'ortopedia_travmatologia', name: 'ორთოპედია ტრავმატოლოგია' },
-            { id: 'ortopediuli_stomatologia', name: 'ორთოპედიული სტომატოლოგია' },
-            { id: 'otorinolaringologia', name: 'ოტორინოლარინგოლოგია' },
-            { id: 'oftalmologia', name: 'ოფთალმოლოგია' },
-            { id: 'patologia', name: 'პათოლოგია' },
-            { id: 'pediatria', name: 'პედიატრია' },
-            { id: 'plastikuri_kirurgia', name: 'პლასტიკური და რეკონსტრუქციული ქირურგია' },
-            { id: 'radiologia', name: 'რადიოლოგია' },
-            { id: 'radiacioni_onkologia', name: 'რადიაციული ონკოლოგია' },
-            { id: 'reproduqtologia', name: 'რეპროდუქტოლოგია' },
-            { id: 'revmatologia', name: 'რევმატოლოგია' },
-            { id: 'saokjao_medicina', name: 'საოჯახო მედიცინა' },
-            { id: 'sportuli_medicina', name: 'სპორტული მედიცინა' },
-            { id: 'toksikologia', name: 'ტოქსიკოლოგია' },
-            { id: 'urologia', name: 'უროლოგია' },
-            { id: 'ftiziatria_pulmonologia', name: 'ფთიზიატრია, პულმონოლოგია' },
-            { id: 'psikiatria', name: 'ფსიქიატრია' },
-            { id: 'qba_saxis_kirurgia', name: 'ყბა-სახის ქირურგია' },
-            { id: 'shinagani_medicina', name: 'შინაგანი მედიცინა' },
-            { id: 'hematologia', name: 'ჰემატოლოგია' }
-        ];
-
-        // გამოვთვალოთ თითოეული მოდულისთვის რამდენმა მომხმარებელმა იმუშავა
-        const moduleUserCounts = {};
-        const uniqueUsersByModule = {};
-
-        // გადავუაროთ ყველა მომხმარებელს
-        Object.entries(users).forEach(([userId, userData]) => {
-            if (userData.progress) {
-                // გადავუაროთ მოდულებს, რომლებზეც მომხმარებელს აქვს პროგრესი
-                Object.entries(userData.progress).forEach(([moduleId, moduleProgress]) => {
-                    // შევამოწმოთ, აქვს თუ არა მომხმარებელს ნამდვილად ნამუშევარი ამ მოდულზე
-                    // (შეამოწმეთ normal ან exam რეჟიმში პასუხების არსებობა)
-                    const hasNormalProgress = moduleProgress.normal?.answeredQuestions && 
-                                              Object.keys(moduleProgress.normal.answeredQuestions).length > 0;
-                    const hasExamProgress = moduleProgress.exam?.answeredQuestions && 
-                                           Object.keys(moduleProgress.exam.answeredQuestions).length > 0;
-                    
-                    if (hasNormalProgress || hasExamProgress) {
-                        if (!uniqueUsersByModule[moduleId]) {
-                            uniqueUsersByModule[moduleId] = new Set();
-                        }
-                        uniqueUsersByModule[moduleId].add(userId);
-                    }
-                });
-            }
-        });
-
-        // გადავიყვანოთ Set-ები რიცხვებში
-        Object.keys(uniqueUsersByModule).forEach(moduleId => {
-            moduleUserCounts[moduleId] = uniqueUsersByModule[moduleId].size;
-        });
-
-        console.log("📊 Module user counts:", moduleUserCounts);
-
-        // გავფილტროთ მხოლოდ ის მოდულები, რომლებსაც აქვთ კითხვები
-        const modulesWithQuestions = allModules.filter(m => moduleCounts[m.id] > 0);
-        
-        if (modulesWithQuestions.length === 0) {
-            modulesList.innerHTML = '<div style="text-align: center; padding: 60px; color: var(--text-muted);">მოდულები არ არის</div>';
-            window.isLoadingStatistics = false;
-            return;
-        }
-
-        // დავალაგოთ მოდულები ანბანის მიხედვით
-        modulesWithQuestions.sort((a, b) => a.name.localeCompare(b.name, 'ka'));
-        
-        // თითოეული მოდულისთვის შევქმნათ ბარათი
-        modulesWithQuestions.forEach(moduleInfo => {
-            const moduleId = moduleInfo.id;
-            const moduleName = moduleInfo.name;
-            const questionCount = moduleCounts[moduleId];
-            const userCount = moduleUserCounts[moduleId] || 0;
-            
-            const moduleCard = document.createElement('div');
-            moduleCard.className = 'table-container';
-            moduleCard.style.marginBottom = '12px';
-            moduleCard.style.cursor = 'pointer';
-            moduleCard.style.transition = 'all 0.3s ease';
-            moduleCard.style.borderRadius = '16px';
-            moduleCard.style.overflow = 'hidden';
-            moduleCard.setAttribute('data-module-id', moduleId);
-            
-            const safeModuleName = moduleName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            
-            moduleCard.innerHTML = `
-                <div class="table-header" style="cursor: pointer; padding: 16px 24px;" onclick="showModuleQuestions('${moduleId}', '${safeModuleName}')">
-                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                                <polyline points="2 17 12 22 22 17"/>
-                                <polyline points="2 12 12 17 22 12"/>
-                            </svg>
-                            <span style="font-weight: 600; color: var(--text); font-size: 16px;">${moduleName}</span>
-                        </div>
-                        
-                        <div style="display: flex; align-items: center; gap: 32px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                                    <line x1="3" y1="9" x2="21" y2="9"/>
-                                    <line x1="9" y1="21" x2="9" y2="9"/>
-                                </svg>
-                                <span class="question-count-${moduleId}" style="color: var(--text); font-weight: 500;">${questionCount}</span>
-                            </div>
-                            
-                            <div style="display: flex; align-items: center; gap: 8px; min-width: 100px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${userCount > 0 ? 'var(--success)' : 'var(--text-muted)'}" stroke-width="2">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                    <circle cx="9" cy="7" r="4"/>
-                                </svg>
-                                <span class="user-count-${moduleId}" style="color: ${userCount > 0 ? 'var(--success)' : 'var(--text-muted)'}; font-weight: 500;">${userCount}</span>
-                            </div>
-                            
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                                <polyline points="9 18 15 12 9 6"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            moduleCard.onmouseover = () => {
-                moduleCard.style.transform = 'translateY(-2px)';
-                moduleCard.style.boxShadow = 'var(--shadow-lg)';
-                moduleCard.style.borderColor = 'var(--accent)';
-            };
-            moduleCard.onmouseout = () => {
-                moduleCard.style.transform = 'translateY(0)';
-                moduleCard.style.boxShadow = 'var(--shadow)';
-                moduleCard.style.borderColor = 'var(--border)';
-            };
-            
-            modulesList.appendChild(moduleCard);
-        });
-
-        // დავამატოთ მთლიანი სტატისტიკის შემაჯამებელი
-        const totalUsers = Object.keys(users).length;
-        const totalQuestions = Object.values(moduleCounts).reduce((a, b) => a + b, 0);
-        const modulesWithActivity = Object.keys(moduleUserCounts).length;
-
-        const summaryCard = document.createElement('div');
-        summaryCard.style.marginTop = '24px';
-        summaryCard.style.padding = '20px';
-        summaryCard.style.background = 'linear-gradient(145deg, var(--surface), var(--surface-light))';
-        summaryCard.style.borderRadius = '16px';
-        summaryCard.style.border = '1px solid var(--border)';
-        summaryCard.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <span style="color: var(--text-muted);">სულ მოდულები</span>
-                    <span style="font-weight: 700; font-size: 24px; color: var(--accent); margin-left: 12px;">${modulesWithQuestions.length}</span>
-                </div>
-                <div>
-                    <span style="color: var(--text-muted);">ჯამური კითხვები</span>
-                    <span style="font-weight: 700; font-size: 24px; color: var(--warning); margin-left: 12px;">${totalQuestions}</span>
-                </div>
-                <div>
-                    <span style="color: var(--text-muted);">აქტიური მომხმარებელი</span>
-                    <span style="font-weight: 700; font-size: 24px; color: var(--success); margin-left: 12px;">${totalUsers}</span>
-                </div>
-                <div>
-                    <span style="color: var(--text-muted);">აქტიური მოდულები</span>
-                    <span style="font-weight: 700; font-size: 24px; color: #f59e0b; margin-left: 12px;">${modulesWithActivity}</span>
-                </div>
-            </div>
-        `;
-        modulesList.appendChild(summaryCard);
-        
-        // დავამატოთ ბოლო განახლების დრო
-        const lastUpdateTime = document.createElement('div');
-        lastUpdateTime.style.marginTop = '16px';
-        lastUpdateTime.style.textAlign = 'right';
-        lastUpdateTime.style.fontSize = '12px';
-        lastUpdateTime.style.color = 'var(--text-muted)';
-        lastUpdateTime.innerHTML = `ბოლო განახლება: ${new Date().toLocaleTimeString('ka-GE')}`;
-        modulesList.appendChild(lastUpdateTime);
-
-        console.log("✅ Statistics loaded successfully with correct user counts");
-
-    } catch (error) {
-        console.error("Error loading statistics:", error);
-        showNotification('შეცდომა სტატისტიკის ჩატვირთვისას', true);
-    } finally {
-        window.isLoadingStatistics = false;
-    }
-}
 
 // დებაგის ფუნქცია - წავშალოთ მოგვიანებით
 async function debugAnswers() {
