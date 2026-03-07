@@ -8403,29 +8403,33 @@ async function loadWeeklyActivity(weekOffset = 0) {
         
 // ** მთავარი შესწორება: maxValue უნდა იყოს ზუსტად მაქსიმალური მნიშვნელობა **
 // თუ maxValue = 5, მაშინ 5-ვე მომხმარებელი იქნება 100%-ზე
-// არ ვამრგვალებთ ზემოთ, რომ ზუსტი პროპორცია იყოს
-const localMaxValue = maxValue === 0 ? 10 : maxValue;
+const localMaxValue = maxValue === 0 ? 10 : maxValue; // 10 ნაგულისხმევი თუ არ არის მონაცემები
+
+// ** მნიშვნელოვანი: აღარ გვჭირდება maxValue, ვიყენებთ ფიქსირებულ 100-ს **
+renderWeeklyChart(chartData);
+
+console.log(`📊 კვირის მონაცემები:`, chartData);
         
-        // გამოვთვალოთ სტატისტიკა
-        const totalUsersWeek = chartData.reduce((sum, d) => sum + d.count, 0);
-        const avgDaily = Math.round(totalUsersWeek / 7);
-        document.getElementById('avgDaily').textContent = avgDaily;
-        
-        // პიკის დღე
-        const peak = chartData.reduce((max, d) => d.count > max.count ? d : max, chartData[0]);
-        document.getElementById('peakDay').textContent = `${peak.day} (${peak.count})`;
-        
-        // შევინახოთ მონაცემები ქეშში
-        window.cachedWeeklyData = {
-            offset: weekOffset,
-            data: chartData,
-            timestamp: Date.now()
-        };
-        
-        // დავხატოთ დიაგრამა (გადავცეთ localMaxValue)
-        renderWeeklyChart(chartData, localMaxValue);
-        
-        console.log(`📊 კვირის მონაცემები:`, chartData);
+// გამოვთვალოთ სტატისტიკა
+const totalUsersWeek = chartData.reduce((sum, d) => sum + d.count, 0);
+const avgDaily = Math.round(totalUsersWeek / 7);
+document.getElementById('avgDaily').textContent = avgDaily;
+
+// პიკის დღე
+const peak = chartData.reduce((max, d) => d.count > max.count ? d : max, chartData[0]);
+document.getElementById('peakDay').textContent = `${peak.day} (${peak.count})`;
+
+// შევინახოთ მონაცემები ქეშში
+window.cachedWeeklyData = {
+    offset: weekOffset,
+    data: chartData,
+    timestamp: Date.now()
+};
+
+// ** მნიშვნელოვანი: აღარ გადავცემთ localMaxValue-ს, ვიყენებთ ფიქსირებულ 100-ს **
+renderWeeklyChart(chartData);
+
+console.log(`📊 კვირის მონაცემები:`, chartData);
         
     } catch (error) {
         console.error('Error loading weekly activity:', error);
@@ -8491,7 +8495,7 @@ function renderDemoWeeklyData(weekOffset) {
     renderWeeklyChart(demoData);
 }
 
-function renderWeeklyChart(data, maxValue) {
+function renderWeeklyChart(data) {
     const container = document.getElementById('weeklyChart');
     if (!container) return;
     
@@ -8500,39 +8504,50 @@ function renderWeeklyChart(data, maxValue) {
         return;
     }
     
-    const chartHeight = 220; // დიაგრამის სიმაღლე
+    const chartHeight = 250; // დიაგრამის სიმაღლე
+    const FIXED_MAX = 100; // ფიქსირებული მაქსიმალური მნიშვნელობა Y ღერძზე
     
     let html = `
-        <div class="chart-grid" style="position: absolute; top: 10px; left: 45px; right: 45px; bottom: 30px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none;">
+        <div style="position: relative; width: 100%; height: ${chartHeight}px;">
+            <!-- Y-ღერძის ხაზები და მნიშვნელობები -->
+            <div style="position: absolute; top: 0; left: 40px; right: 40px; bottom: 40px;">
     `;
     
-    // 6 ხაზი maxValue-ს მიხედვით
-    for (let i = 0; i <= 5; i++) {
-        const percent = i * 20; // 0%, 20%, 40%, 60%, 80%, 100%
-        const value = Math.round((percent / 100) * maxValue);
-        const bottomPosition = (i / 5) * 100; // 0% to 100%
+    // Y-ღერძის მნიშვნელობები: 0, 20, 40, 60, 80, 100
+    const yValues = [100, 80, 60, 40, 20, 0];
+    const totalHeight = chartHeight - 60; // ხელმისაწვდომი სიმაღლე (ზემოდან და ქვემოდან ჩათვლით)
+    
+    yValues.forEach((value) => {
+        // პოზიცია: 0 = ბოლოში, 100 = ზევით
+        const position = ((FIXED_MAX - value) / FIXED_MAX) * totalHeight + 20; // 20px ზემოდან დასაწყისი
         
         html += `
-            <div style="position: absolute; bottom: ${bottomPosition}%; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent);">
-                <span style="position: absolute; left: -40px; top: -8px; font-size: 11px; color: var(--text-muted);">${value}</span>
+            <div style="position: absolute; top: ${position}px; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent);">
+                <span style="position: absolute; left: -35px; top: -8px; font-size: 11px; color: var(--text-muted);">${value}</span>
             </div>
         `;
-    }
+    });
     
-    html += `</div>`;
-    
-    // ბარები - იწყება ქვემოდან (0-დან)
-    html += `<div class="chart-bars" style="position: relative; height: ${chartHeight}px; margin-left: 45px; margin-right: 45px; display: flex; align-items: flex-end; justify-content: space-around; gap: 8px; z-index: 2; margin-top: 20px;">`;
+    // ბარების კონტეინერი
+    html += `
+            </div>
+            
+            <!-- ბარები -->
+            <div style="position: absolute; bottom: 40px; left: 70px; right: 70px; height: ${totalHeight}px; display: flex; align-items: flex-end; justify-content: space-around; gap: 8px;">
+    `;
 
-    data.forEach((item, index) => {
-        // ** მთავარი შესწორება: ბარის სიმაღლე ზუსტად პროპორციული maxValue-სთან **
-        const maxBarHeight = chartHeight - 70; // მაქსიმალური სიმაღლე
-        const barHeight = (item.count / maxValue) * maxBarHeight; // პირდაპირი პროპორცია
+    data.forEach((item) => {
+        // ** მთავარი შესწორება: ბარის სიმაღლე გამოითვლება FIXED_MAX = 100-ის მიხედვით **
+        // პროცენტული მაჩვენებელი FIXED_MAX-თან მიმართებაში
+        const percentOfMax = Math.min(100, (item.count / FIXED_MAX) * 100);
+        
+        // ბარის სიმაღლე პიქსელებში (პროპორციული totalHeight-ის)
+        const barHeight = (percentOfMax / 100) * totalHeight;
         
         html += `
-            <div class="bar-container" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; position: relative;">
-                <div class="bar-wrapper" style="width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; position: relative;">
-                    <div class="bar" style="width: 60%; background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-radius: 8px 8px 4px 4px; height: ${barHeight}px; position: relative; min-height: ${barHeight > 0 ? '4px' : '0'}; box-shadow: 0 -2px 10px rgba(14, 165, 164, 0.3); cursor: pointer; margin-bottom: 0;" 
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; position: relative;">
+                <div style="width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center;">
+                    <div style="width: 70%; background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-radius: 8px 8px 4px 4px; height: ${barHeight}px; position: relative; min-height: 4px; box-shadow: 0 -2px 10px rgba(14, 165, 164, 0.3); cursor: pointer;" 
                          onmouseover="this.querySelector('.bar-value').style.opacity='1'"
                          onmouseout="this.querySelector('.bar-value').style.opacity='0'">
                         <span class="bar-value" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--accent); border: 1px solid var(--border); white-space: nowrap; opacity: 0; transition: opacity 0.2s; box-shadow: var(--shadow); z-index: 10; pointer-events: none; text-align: center;">
@@ -8546,22 +8561,38 @@ function renderWeeklyChart(data, maxValue) {
                         </span>
                     </div>
                 </div>
-                <div class="bar-label" style="font-size: 12px; font-weight: 500; color: var(--text-muted); text-align: center; margin-top: 8px; position: absolute; bottom: -25px;">
-                    ${item.day}
-                    <div class="bar-date" style="font-size: 10px; color: var(--text-muted); opacity: 0.7;">${item.date}</div>
-                </div>
             </div>
         `;
     });
 
-    html += `</div>`;
+    html += `
+            </div>
+            
+            <!-- კვირის დღეები (0-ის ხაზის ქვემოთ) -->
+            <div style="position: absolute; bottom: 10px; left: 70px; right: 70px; display: flex; justify-content: space-around; font-size: 12px; font-weight: 500; color: var(--text-muted);">
+    `;
     
-    // 0-ის მკაფიო ხაზი
-    html += `<div style="position: absolute; bottom: 40px; left: 45px; right: 45px; height: 1px; background: var(--accent); opacity: 0.3; z-index: 1; pointer-events: none;"></div>`;
+    data.forEach((item) => {
+        html += `
+            <div style="text-align: center;">
+                ${item.day}
+                <div style="font-size: 10px; color: var(--text-muted); opacity: 0.7;">${item.date}</div>
+            </div>
+        `;
+    });
+
+    html += `
+            </div>
+            
+            <!-- 0-ის მკაფიო ხაზი -->
+            <div style="position: absolute; bottom: 40px; left: 40px; right: 40px; height: 2px; background: var(--accent); opacity: 0.5; z-index: 1;"></div>
+        </div>
+    `;
 
     container.innerHTML = html;
-    container.style.position = 'relative';
-    container.style.minHeight = '280px';
+    
+    console.log(`📊 დიაგრამა დახატულია ფიქსირებული მაქსიმუმით 100`);
+    console.log(`📊 მონაცემები:`, data.map(d => `${d.day}: ${d.count} მომხმარებელი (${(d.count/100*100).toFixed(1)}%)`));
 }
 
 function previousWeek() {
