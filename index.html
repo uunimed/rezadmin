@@ -8494,22 +8494,22 @@ function renderWeeklyChart(data, maxValue) {
         return;
     }
     
-    // გამოვიყენოთ გადმოცემული maxValue
-    const chartHeight = 250;
+    const chartHeight = 220; // შევამციროთ სიმაღლე
+    const baseLine = chartHeight - 20; // ქვედა ხაზი (0-ის დონე)
     
     let html = `
-        <div class="chart-grid" style="position: absolute; top: 0; left: 45px; right: 45px; bottom: 25px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none;">
+        <div class="chart-grid" style="position: absolute; top: 10px; left: 45px; right: 45px; bottom: 30px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none;">
     `;
     
     // 6 ხაზი 0-დან maxValue-მდე (0%, 20%, 40%, 60%, 80%, 100%)
     for (let i = 0; i <= 5; i++) {
         const percent = i * 20; // 0%, 20%, 40%, 60%, 80%, 100%
         const value = Math.round((percent / 100) * maxValue);
-        const bottomPosition = (percent / 100) * 100; // 0-100%
+        const bottomPosition = (i / 5) * 100; // 0% to 100%
         
         html += `
             <div style="position: absolute; bottom: ${bottomPosition}%; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent);">
-                <span style="position: absolute; left: -35px; top: -8px; font-size: 11px; color: var(--text-muted);">${value}</span>
+                <span style="position: absolute; left: -40px; top: -8px; font-size: 11px; color: var(--text-muted);">${value}</span>
             </div>
         `;
     }
@@ -8517,17 +8517,20 @@ function renderWeeklyChart(data, maxValue) {
     html += `</div>`;
     
     // ბარები
-    html += `<div class="chart-bars" style="position: relative; height: 250px; margin-left: 45px; margin-right: 45px; display: flex; align-items: flex-end; justify-content: space-around; gap: 8px; z-index: 2;">`;
+    html += `<div class="chart-bars" style="position: relative; height: ${chartHeight}px; margin-left: 45px; margin-right: 45px; display: flex; align-items: flex-end; justify-content: space-around; gap: 8px; z-index: 2; margin-top: 10px;">`;
     
     data.forEach((item, index) => {
-        const barHeight = (item.count / maxValue) * (chartHeight - 40);
+        // გამოვთვალოთ ბარის სიმაღლე - პროპორციული maxValue-სთან
+        // ბარი იწყება 0-დან (baseLine) და ადის ზემოთ
+        const barHeight = (item.count / maxValue) * (chartHeight - 30);
+        
         html += `
             <div class="bar-container" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; position: relative;">
                 <div class="bar-wrapper" style="width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; position: relative;">
-                    <div class="bar" style="width: 60%; background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-radius: 8px 8px 4px 4px; height: ${Math.max(barHeight, 4)}px; position: relative; min-height: 4px; box-shadow: 0 -2px 10px rgba(14, 165, 164, 0.3); cursor: pointer;" 
+                    <div class="bar" style="width: 60%; background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-radius: 8px 8px 4px 4px; height: ${Math.max(barHeight, 4)}px; position: relative; min-height: 4px; box-shadow: 0 -2px 10px rgba(14, 165, 164, 0.3); cursor: pointer; margin-bottom: 0;" 
                          onmouseover="this.querySelector('.bar-value').style.opacity='1'"
                          onmouseout="this.querySelector('.bar-value').style.opacity='0'">
-                        <span class="bar-value" style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--accent); border: 1px solid var(--border); white-space: nowrap; opacity: 0; transition: opacity 0.2s; box-shadow: var(--shadow); z-index: 10; pointer-events: none; text-align: center;">
+                        <span class="bar-value" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--accent); border: 1px solid var(--border); white-space: nowrap; opacity: 0; transition: opacity 0.2s; box-shadow: var(--shadow); z-index: 10; pointer-events: none; text-align: center;">
                             <div>${item.count} მომხმარებელი</div>
                             <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
                                 ✦ რეგ: ${item.registered} | 🧑 სტუმ: ${item.guests}
@@ -8548,21 +8551,27 @@ function renderWeeklyChart(data, maxValue) {
     
     html += `</div>`;
     
+    // დავამატოთ 0-ის მნიშვნელობის ხაზი
+    html += `<div style="position: absolute; bottom: 40px; left: 45px; right: 45px; height: 2px; background: var(--border); z-index: 1;"></div>`;
+    
     // დავამატოთ დამაკავშირებელი ხაზი (SVG) - მხოლოდ თუ მონაცემები არსებობს
     if (data.some(d => d.count > 0)) {
-        const linePoints = data.map((d, i) => {
-            const x = 45 + 15 + (i * ((container.offsetWidth - 120) / 6));
-            const y = 35 + (chartHeight - 50) * (1 - d.count / maxValue);
-            return `${x},${y}`;
-        }).join(' ');
+        const points = [];
+        for (let i = 0; i < data.length; i++) {
+            const barHeight = (data[i].count / maxValue) * (chartHeight - 30);
+            const x = 45 + 20 + (i * ((container.offsetWidth - 120) / 6));
+            const y = 20 + (chartHeight - 30 - barHeight);
+            points.push(`${x},${y}`);
+        }
         
         html += `
-            <svg class="line-svg" style="position: absolute; top: 15px; left: 60px; right: 60px; height: ${chartHeight - 30}px; pointer-events: none; z-index: 5;">
-                <polyline points="${linePoints}" style="stroke: var(--warning); stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3));" />
+            <svg class="line-svg" style="position: absolute; top: 10px; left: 0; right: 0; height: ${chartHeight}px; pointer-events: none; z-index: 5; width: 100%;">
+                <polyline points="${points.join(' ')}" style="stroke: var(--warning); stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3));" />
                 ${data.map((d, i) => {
                     if (d.count === 0) return '';
-                    const x = 45 + 15 + (i * ((container.offsetWidth - 120) / 6));
-                    const y = 35 + (chartHeight - 50) * (1 - d.count / maxValue);
+                    const barHeight = (d.count / maxValue) * (chartHeight - 30);
+                    const x = 45 + 20 + (i * ((container.offsetWidth - 120) / 6));
+                    const y = 20 + (chartHeight - 30 - barHeight);
                     return `<circle cx="${x}" cy="${y}" r="6" style="fill: var(--warning); stroke: white; stroke-width: 2; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); cursor: pointer; pointer-events: all;" 
                                  onmouseover="showTooltip('${d.day}', ${d.count})" />`;
                 }).join('')}
@@ -8571,6 +8580,10 @@ function renderWeeklyChart(data, maxValue) {
     }
     
     container.innerHTML = html;
+    
+    // დავამატოთ CSS კლასი კონტეინერისთვის
+    container.style.position = 'relative';
+    container.style.minHeight = '280px';
 }
 
 function previousWeek() {
