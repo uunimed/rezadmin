@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ka">
 <head>
@@ -950,22 +949,33 @@
 }
 
 
-        /* Dashboard Cards */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+.dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 30px;
+    width: 100%;
+}
 
-        .dashboard-card {
-            background: var(--surface);
-            border-radius: 20px;
-            padding: 20px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-        }
 
+.dashboard-card {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    width: 100%;
+}
+
+/* ყოველკვირეული აქტივობის კონტეინერი */
+.weekly-activity-card .chart-container {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    width: 100%;
+}
         .dashboard-card h3 {
             font-size: 16px;
             font-weight: 600;
@@ -1671,45 +1681,6 @@
     }
 }
 
-/* ადმინისტრატორის წამზომის სტილი */
-#adminSessionTimer {
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-#adminSessionTimer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    animation: timerShine 3s infinite;
-}
-
-@keyframes timerShine {
-    0% { left: -100%; }
-    20% { left: 100%; }
-    100% { left: 100%; }
-}
-
-.sidebar.collapsed #adminSessionTimer {
-    padding: 8px;
-    font-size: 14px;
-    margin: 10px 10px 0 10px;
-}
-
-.sidebar.collapsed #adminSessionTimer span {
-    display: none;
-}
-
-.sidebar.collapsed #adminSessionTimer svg {
-    width: 24px;
-    height: 24px;
-    margin: 0;
-}
 
 /* Stat number animation */
 .stat-number {
@@ -1938,6 +1909,373 @@
     50% { opacity: 0.6; }
     100% { opacity: 1; }
 }
+
+.weekly-activity-card,
+.dashboard-card:not(.weekly-activity-card) {
+    width: 100%;
+    margin: 0;
+}
+
+.chart-container {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+}
+
+.chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.chart-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chart-title h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.chart-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface-light);
+    padding: 4px;
+    border-radius: 40px;
+    border: 1px solid var(--border);
+}
+
+.chart-nav-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: var(--shadow);
+}
+
+.chart-nav-btn:hover:not(:disabled) {
+    background: var(--gradient);
+    color: white;
+    transform: scale(1.05);
+}
+
+.chart-nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.week-range {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    padding: 0 12px;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+    margin-top: 20px;
+    padding: 10px 0;
+}
+
+/* გაასწორეთ chart-grid პოზიციონირება */
+.chart-grid {
+    position: absolute;
+    top: 0;
+    left: 50px;  /* შეცვალეთ 40px-დან 50px-მდე */
+    right: 50px; /* შეცვალეთ 40px-დან 50px-მდე */
+    bottom: 25px; /* შეცვალეთ 30px-დან 25px-მდე */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+.grid-line {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    position: relative;
+}
+
+.grid-line span {
+    position: absolute;
+    left: -40px; /* შეცვალეთ -30px-დან -40px-მდე */
+    top: -8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap; /* არ მოხდეს ტექსტის გადატანა */
+}
+
+/* chart-bars-ის მარგინებიც გაასწორეთ */
+.chart-bars {
+    position: relative;
+    height: 250px;
+    margin-left: 50px;  /* შეცვალეთ 40px-დან 50px-მდე */
+    margin-right: 50px; /* შეცვალეთ 40px-დან 50px-მდე */
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: 8px;
+    z-index: 2;
+}
+
+/* line-svg-ის პოზიციონირებაც გაასწორეთ */
+.line-svg {
+    position: absolute;
+    top: 15px;
+    left: 50px;  /* შეცვალეთ 60px-დან 50px-მდე */
+    right: 50px; /* შეცვალეთ 60px-დან 50px-მდე */
+    height: 220px; /* დაარეგულირეთ სიმაღლე */
+    pointer-events: none;
+    z-index: 5;
+}
+
+.bar-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    height: 100%;
+    position: relative;
+}
+
+.bar-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    position: relative;
+}
+
+.bar {
+    width: 60%;
+    background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+    border-radius: 8px 8px 4px 4px;
+    transition: height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    min-height: 4px;
+    box-shadow: 0 -2px 10px rgba(14, 165, 164, 0.3);
+    cursor: pointer;
+}
+
+.bar:hover {
+    transform: scaleX(1.1);
+    box-shadow: 0 -4px 15px rgba(14, 165, 164, 0.5);
+}
+
+.bar-value {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface);
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+    box-shadow: var(--shadow);
+    z-index: 10;
+}
+
+.bar:hover .bar-value {
+    opacity: 1;
+}
+
+.bar-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 8px;
+}
+
+.bar-date {
+    font-size: 10px;
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.chart-line {
+    position: absolute;
+    top: 0;
+    left: 60px;
+    right: 60px;
+    bottom: 30px;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.line-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.line-path {
+    stroke: var(--warning);
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3));
+}
+
+.line-dot {
+    fill: var(--warning);
+    stroke: white;
+    stroke-width: 2;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    cursor: pointer;
+    transition: r 0.2s;
+}
+
+.line-dot:hover {
+    r: 8;
+}
+
+.chart-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.total-stats {
+    display: flex;
+    gap: 24px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stat-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.stat-dot.warning {
+    background: var(--warning);
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.stat-number {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.week-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-light);
+    padding: 4px 4px 4px 12px;
+    border-radius: 40px;
+    border: 1px solid var(--border);
+}
+
+.week-selector span {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.week-btns {
+    display: flex;
+    gap: 4px;
+}
+
+.week-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: var(--shadow);
+}
+
+.week-btn:hover:not(:disabled) {
+    background: var(--gradient);
+    color: white;
+}
+
+.week-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.no-data {
+    text-align: center;
+    padding: 60px;
+    color: var(--text-muted);
+    background: var(--surface-light);
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+@keyframes barAppear {
+    from {
+        transform: scaleY(0);
+        opacity: 0;
+    }
+    to {
+        transform: scaleY(1);
+        opacity: 1;
+    }
+}
+
+.bar {
+    animation: barAppear 0.5s ease-out;
+    transform-origin: bottom;
+}
     </style>
 </head>
 <body>
@@ -2113,500 +2451,332 @@
                 </div>
             </div>
 
-            <!-- Main Content -->
-            <div class="main-content">
-                <!-- Dashboard Section -->
-                <div id="dashboardSection" class="content-section active">
-                    <div class="content-header">
-                        <h2 class="content-title">მთავარი გვერდი</h2>
-                    </div>
-                    
-                    <div class="dashboard-grid">
-<!-- მომხმარებლების სტატისტიკა - ADVANCED DESIGN -->
-<!-- მომხმარებლების სტატისტიკა - ADVANCED DESIGN -->
-<div class="dashboard-card" style="position: relative; overflow: hidden;">
-    <!-- ფონური გრადიენტური ეფექტი -->
-    <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 30% 30%, rgba(14, 165, 164, 0.03), transparent 70%); pointer-events: none;"></div>
-    
-    <h3 style="position: relative; z-index: 2;">
-        <svg class="icon" viewBox="0 0 24 24">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-        </svg>
-        მომხმარებლები
-    </h3>
-    
-    <div style="position: relative; z-index: 2; padding: 10px 0;">
-        <!-- ADVANCED PIE CHART -->
-        <div style="display: flex; align-items: center; gap: 30px;">
-            <!-- 3D დონატის ტიპის დიაგრამა -->
-            <div style="position: relative; width: 140px; height: 140px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));">
-                <!-- Multiple SVG layers for depth -->
-                <svg width="140" height="140" viewBox="0 0 140 140" style="position: absolute; top: 0; left: 0;">
-                    <defs>
-                        <!-- Complex gradients -->
-                        <radialGradient id="pieInnerGlow" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
-                            <stop offset="0%" stop-color="rgba(255,255,255,0.3)"/>
-                            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
-                        </radialGradient>
-                        
-                        <linearGradient id="pieRegisteredGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#10b981"/>
-                            <stop offset="50%" stop-color="#0ea5a4"/>
-                            <stop offset="100%" stop-color="#0891b2"/>
-                        </linearGradient>
-                        
-                        <linearGradient id="pieGuestGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#f59e0b"/>
-                            <stop offset="50%" stop-color="#f97316"/>
-                            <stop offset="100%" stop-color="#f97316"/>
-                        </linearGradient>
-                        
-                        <linearGradient id="pieOfflineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#64748b"/>
-                            <stop offset="50%" stop-color="#475569"/>
-                            <stop offset="100%" stop-color="#334155"/>
-                        </linearGradient>
-                        
-                        <filter id="pieGlow" x="-20%" y="-20%" width="140%" height="140%">
-                            <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
-                            <feMerge>
-                                <feMergeNode in="offsetblur" />
-                                <feMergeNode in="SourceGraphic" />
-                            </feMerge>
-                        </filter>
-                        
-                        <filter id="innerShadow" x="-50%" y="-50%" width="200%" height="200%">
-                            <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
-                            <feOffset dx="2" dy="2" result="offsetblur"/>
-                            <feComponentTransfer>
-                                <feFuncA type="linear" slope="0.3"/>
-                            </feComponentTransfer>
-                            <feMerge> 
-                                <feMergeNode/>
-                                <feMergeNode in="SourceGraphic"/> 
-                            </feMerge>
-                        </filter>
-                    </defs>
-                    
-                    <!-- Background ring with depth -->
-                    <circle cx="70" cy="70" r="58" fill="none" stroke="var(--surface-light)" stroke-width="12" stroke-linecap="round"/>
-                    
-                    <!-- Registered Users Ring -->
-                    <circle id="pieRegisteredRing" cx="70" cy="70" r="58" fill="none" stroke="url(#pieRegisteredGradient)" stroke-width="12" stroke-linecap="round" stroke-dasharray="364.4" stroke-dashoffset="0" transform="rotate(-90 70 70)" style="transition: stroke-dashoffset 1s cubic-bezier(0.34, 1.56, 0.64, 1); filter: url(#pieGlow);"/>
-                    
-                    <!-- Guest Users Ring -->
-                    <circle id="pieGuestRing" cx="70" cy="70" r="58" fill="none" stroke="url(#pieGuestGradient)" stroke-width="12" stroke-linecap="round" stroke-dasharray="364.4" stroke-dashoffset="0" transform="rotate(-90 70 70)" style="transition: stroke-dashoffset 1s cubic-bezier(0.34, 1.56, 0.64, 1); filter: url(#pieGlow);"/>
-                    
-                    <!-- Inner ring for 3D effect -->
-                    <circle cx="70" cy="70" r="52" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" stroke-dasharray="4 4"/>
-                    
-                    <!-- Center circle with glass morphism (NO TEXT) -->
-                    <circle cx="70" cy="70" r="42" fill="var(--surface)" stroke="rgba(255,255,255,0.5)" stroke-width="2" filter="url(#innerShadow)"/>
-                    
-                    <!-- Glass reflection effect -->
-                    <circle cx="70" cy="70" r="42" fill="url(#pieInnerGlow)" opacity="0.6"/>
-                    
-                    <!-- Decorative elements -->
-                    <circle cx="70" cy="70" r="38" fill="none" stroke="rgba(14,165,164,0.1)" stroke-width="1" stroke-dasharray="2 6"/>
-                    
-                    <!-- Small decorative dots -->
-                    <circle cx="110" cy="30" r="2" fill="var(--accent)" opacity="0.3"/>
-                    <circle cx="30" cy="110" r="3" fill="var(--success)" opacity="0.2"/>
-                </svg>           
-                <!-- Floating particles animation -->
-                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
-                    <div class="particle" style="top: 20%; left: 80%;"></div>
-                    <div class="particle" style="top: 80%; left: 20%; animation-delay: 1s;"></div>
-                    <div class="particle" style="top: 30%; left: 30%; animation-delay: 2s;"></div>
-                </div>
-            </div>
-            
-            <!-- Advanced Statistics Panel -->
-            <div style="flex: 1;">
-                <div style="background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(241,245,249,0.1)); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 20px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);">
-                    
-                    <!-- Registered Online Stats -->
-                    <div style="margin-bottom: 16px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div style="width: 12px; height: 12px; border-radius: 4px; background: linear-gradient(135deg, #10b981, #0ea5a4); transform: rotate(45deg); box-shadow: 0 0 15px #0ea5a4;"></div>
-                                <span style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 13px; color: var(--text-muted);">რეგისტრირებული</span>
-                            </div>
-                            <div>
-                                <span class="stat-number" style="font-weight: 700; font-size: 24px; color: #10b981;" id="registeredOnlineCount">0</span>
-                                <span style="color: var(--text-muted); font-size: 16px; margin-left: 4px;" id="registeredPercent">(0%)</span>
-                            </div>
-                        </div>
-                        <!-- Animated progress bar -->
-                        <div style="height: 6px; background: rgba(0,0,0,0.05); border-radius: 3px; overflow: hidden;">
-                            <div id="registeredBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #0ea5a4); border-radius: 3px; transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Guest Online Stats -->
-                    <div style="margin-bottom: 16px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div style="width: 12px; height: 12px; border-radius: 4px; background: linear-gradient(135deg, #f59e0b, #f97316); transform: rotate(45deg); box-shadow: 0 0 15px #f59e0b;"></div>
-                                <span style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 13px; color: var(--text-muted);">სტუმრები</span>
-                            </div>
-<div>
-    <span class="stat-number" style="font-weight: 700; font-size: 24px; color: #f59e0b;" id="guestOnlineCount">0</span>
-    <span style="color: var(--text-muted); font-size: 16px; margin-left: 4px;" id="guestPercent"></span>
-</div>
-                        </div>
-                        <!-- Animated progress bar -->
-                        <div style="height: 6px; background: rgba(0,0,0,0.05); border-radius: 3px; overflow: hidden;">
-                            <div id="guestBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #f59e0b, #f97316); border-radius: 3px; transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Total Online Stats -->
-                    <div style="margin-bottom: 20px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div style="width: 12px; height: 12px; border-radius: 4px; background: linear-gradient(135deg, #0ea5a4, #0891b2); transform: rotate(45deg);"></div>
-                                <span style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 13px; color: var(--text-muted);">სულ ონლაინ</span>
-                            </div>
-                            <div>
-                                <span class="stat-number" style="font-weight: 700; font-size: 24px; color: var(--accent);" id="totalOnlineCount">0</span>
-                                <span style="color: var(--text-muted); font-size: 16px; margin-left: 4px;" id="totalOnlinePercent">(0%)</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-
-                    <!-- Offline Stats -->
-                    <div style="margin-bottom: 20px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div style="width: 12px; height: 12px; border-radius: 4px; background: linear-gradient(135deg, #64748b, #475569); transform: rotate(45deg);"></div>
-                                <span style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 13px; color: var(--text-muted);">ოფლაინ</span>
-                            </div>
-                            <div>
-                                <span class="stat-number" style="font-weight: 700; font-size: 24px; color: var(--text);" id="offlineUsersCount">0</span>
-                                <span style="color: var(--text-muted); font-size: 16px; margin-left: 4px;" id="offlinePercent">(0%)</span>
-                            </div>
-                        </div>
-                        <div style="height: 6px; background: rgba(0,0,0,0.05); border-radius: 3px; overflow: hidden;">
-                            <div id="offlineBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #64748b, #475569); border-radius: 3px; transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Divider with animation -->
-                    <div style="position: relative; margin: 20px 0;">
-                        <div style="height: 2px; background: linear-gradient(90deg, transparent, var(--border), transparent);"></div>
-                        <div style="position: absolute; top: -3px; left: 50%; transform: translateX(-50%); width: 30px; height: 8px; background: var(--accent); border-radius: 4px; opacity: 0.3; filter: blur(4px);"></div>
-                    </div>
-                    
-                    <!-- Total with glow effect -->
-                    <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(14,165,164,0.05); padding: 12px 16px; border-radius: 16px; border: 1px solid rgba(14,165,164,0.1);">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                <circle cx="12" cy="7" r="4"/>
+<!-- Main Content -->
+<div class="main-content">
+    <!-- Dashboard Section -->
+    <div id="dashboardSection" class="content-section active">
+        <div class="content-header">
+            <h2 class="content-title">მთავარი გვერდი</h2>
+        </div>
+        
+        <!-- ერთიანი dashboard-grid, რომელიც შეიცავს ორივე ბარათს -->
+        <div class="dashboard-grid">
+            <!-- ახალი ყოველკვირეული აქტივობის დიაგრამა (მთელ სიგანეზე) -->
+            <div class="dashboard-card weekly-activity-card">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                                <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>
                             </svg>
-                            <span style="font-weight: 600; color: var(--text);">ყველა მომხმარებელი</span>
+                            <h3>ყოველკვირეული აქტივობა</h3>
                         </div>
-                        <span style="font-weight: 800; font-size: 28px; background: linear-gradient(135deg, var(--accent), #0891b2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;" id="totalUsersCount">0</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- მოდულები -->
-<div class="dashboard-card">
-    <h3>
-        <svg class="icon" viewBox="0 0 24 24">
-            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-            <polyline points="2 17 12 22 22 17"/>
-            <polyline points="2 12 12 17 22 12"/>
-        </svg>
-        პოპულარული მოდულები
-    </h3>
-    <div class="modules-list" id="modulesStatsList" style="max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
-</div>
-
-<!-- Module Details Modal -->
-<div id="moduleDetailsModal" class="modal-overlay">
-    <div class="modal wide">
-        <div class="modal-header">
-            <h3 id="moduleDetailsTitle">მოდულის დეტალები</h3>
-            <button class="modal-close" onclick="closeModal('moduleDetailsModal')">
-                <svg class="icon" viewBox="0 0 24 24">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-            </button>
-        </div>
-        <div class="modal-body" id="moduleDetailsContent">
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
-                <!-- Total Tests Card -->
-                <div style="background: linear-gradient(135deg, #0ea5a4, #0891b2); border-radius: 20px; padding: 24px; color: white;">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                            <polyline points="2 17 12 22 22 17"/>
-                            <polyline points="2 12 12 17 22 12"/>
-                        </svg>
-                        <span style="font-size: 16px; font-weight: 500; opacity: 0.9;">ჯამური ტესტები</span>
-                    </div>
-                    <div style="font-size: 48px; font-weight: 700;" id="moduleTotalTests">0</div>
-                </div>
-                
-                <!-- Active Users Card -->
-                <div style="background: linear-gradient(135deg, #6366f1, #4f46e5); border-radius: 20px; padding: 24px; color: white;">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                            <circle cx="9" cy="7" r="4"/>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                        </svg>
-                        <span style="font-size: 16px; font-weight: 500; opacity: 0.9;">აქტიური მომხმარებელი</span>
-                    </div>
-                    <div style="font-size: 48px; font-weight: 700;" id="moduleActiveUsers">0</div>
-                </div>
-            </div>
-
-            <!-- Statistics Grid -->
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 30px;">
-                <div style="background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border);">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-muted);">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                        </svg>
-                        <span style="font-size: 14px;">ნამუშევარი მომხმარებელი</span>
-                    </div>
-                    <div style="font-size: 32px; font-weight: 700; color: var(--accent);" id="moduleUsersStarted">0</div>
-                    <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;" id="moduleUsersStartedPercent">მთლიანის 0%</div>
-                </div>
-
-                <div style="background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border);">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-muted);">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                            <polyline points="22 4 12 14.01 9 11.01"/>
-                        </svg>
-                        <span style="font-size: 14px;">სრულად დასრულებული</span>
-                    </div>
-                    <div style="font-size: 32px; font-weight: 700; color: var(--success);" id="moduleCompleted">0</div>
-                    <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;" id="moduleCompletedPercent">დამწყებთა 0%</div>
-                </div>
-
-                <div style="background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border);">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-muted);">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
-                        </svg>
-                        <span style="font-size: 14px;">საშუალო ქულა</span>
-                    </div>
-                    <div style="font-size: 32px; font-weight: 700; color: var(--warning);" id="moduleAvgScore">0%</div>
-                    <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;" id="moduleAvgDetails">0/0 ქულა</div>
-                </div>
-            </div>
-
-            <!-- Exam Statistics -->
-            <div style="background: linear-gradient(145deg, var(--surface), var(--surface-light)); border-radius: 20px; padding: 24px; margin-bottom: 30px;">
-                <h4 style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; color: var(--text);">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                        <path d="M12 2v4M12 22v-4M4 12H2h2M20 12h2-2M5.64 5.64l-1.41 1.41 1.41-1.41M18.36 18.36l1.41-1.41-1.41 1.41M5.64 18.36l-1.41-1.41 1.41 1.41"/>
-                        <circle cx="12" cy="12" r="4"/>
-                    </svg>
-                    საგამოცდო რეჟიმის სტატისტიკა
-                </h4>
-                
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                    <div>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">მონაწილე მომხმარებელი</div>
-                        <div style="font-size: 28px; font-weight: 700; color: var(--accent);" id="examParticipants">0</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">ჩაბარებული (≥150)</div>
-                        <div style="font-size: 28px; font-weight: 700; color: var(--success);" id="examPassed">0</div>
-                        <div style="font-size: 12px; color: var(--text-muted);" id="examPassedPercent">0%</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">ჩაჭრილი (&lt;150)</div>
-                        <div style="font-size: 28px; font-weight: 700; color: var(--danger);" id="examFailed">0</div>
-                        <div style="font-size: 12px; color: var(--text-muted);" id="examFailedPercent">0%</div>
-                    </div>
-                </div>
-
-                <!-- Score Distribution -->
-                <div style="margin-top: 24px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span style="font-size: 13px; color: var(--text-muted);">ქულების განაწილება</span>
-                        <span style="font-size: 13px; font-weight: 600;" id="scoreRange">0-200</span>
-                    </div>
-                    <div style="height: 8px; background: var(--surface-light); border-radius: 4px; overflow: hidden; display: flex;" id="scoreDistribution">
-                        <div style="background: var(--danger); height: 100%; width: 0%;" id="scoreLow"></div>
-                        <div style="background: var(--warning); height: 100%; width: 0%;" id="scoreMid"></div>
-                        <div style="background: var(--success); height: 100%; width: 0%;" id="scoreHigh"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-muted);">
-                        <span>0-99</span>
-                        <span>100-149</span>
-                        <span>150-200</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Top Users List -->
-            <div>
-                <h4 style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                    </svg>
-                    ტოპ 5 მომხმარებელი
-                </h4>
-                <div id="topUsersList" style="display: flex; flex-direction: column; gap: 8px;"></div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="modal-btn secondary" onclick="closeModal('moduleDetailsModal')">დახურვა</button>
-        </div>
-    </div>
-</div>
-
-                        <!-- ბოლოს რეგისტრირებული -->
-                        <div class="dashboard-card">
-                            <h3>
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                    <line x1="16" y1="2" x2="16" y2="6"/>
-                                    <line x1="8" y1="2" x2="8" y2="6"/>
-                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                        <div class="chart-controls">
+                            <button class="chart-nav-btn" onclick="previousWeek()" id="prevWeekBtn" title="წინა კვირა">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6"/>
                                 </svg>
-                                ბოლოს რეგისტრირებული
-                            </h3>
-                            <div class="last-registered" id="lastRegisteredList"></div>
+                            </button>
+                            <span class="week-range" id="weekRange">იტვირთება...</span>
+                            <button class="chart-nav-btn" onclick="nextWeek()" id="nextWeekBtn" title="შემდეგი კვირა">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="weeklyChart" class="chart-wrapper">
+                        <!-- დიაგრამა გენერირდება JavaScript-ით -->
+                        <div class="loading-spinner" style="margin: 100px auto;"></div>
+                    </div>
+                    
+                    <div class="chart-stats">
+                        <div class="total-stats">
+                            <div class="stat-item">
+                                <span class="stat-dot"></span>
+                                <div class="stat-info">
+                                    <span class="stat-label">საშუალო დღიური</span>
+                                    <span class="stat-number" id="avgDaily">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-dot warning"></span>
+                                <div class="stat-info">
+                                    <span class="stat-label">პიკის დღე</span>
+                                    <span class="stat-number" id="peakDay">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="week-selector">
+                            <span id="currentWeekInfo">მიმდინარე კვირა</span>
+                            <div class="week-btns">
+                                <button class="week-btn" onclick="goToCurrentWeek()" title="მიმდინარე კვირა">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="12" y1="8" x2="12" y2="16"/>
+                                        <line x1="8" y1="12" x2="16" y2="12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- მოდულების ბარათი -->
+            <div class="dashboard-card">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                        <polyline points="2 17 12 22 22 17"/>
+                        <polyline points="2 12 12 17 22 12"/>
+                    </svg>
+                    პოპულარული მოდულები
+                </h3>
+                <div class="modules-list" id="modulesStatsList" style="max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
+            </div>
+        </div> <!-- ეს ხურავს dashboard-grid-ს -->
+
+        <!-- Module Details Modal -->
+        <div id="moduleDetailsModal" class="modal-overlay">
+            <div class="modal wide">
+                <div class="modal-header">
+                    <h3 id="moduleDetailsTitle">მოდულის დეტალები</h3>
+                    <button class="modal-close" onclick="closeModal('moduleDetailsModal')">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-body" id="moduleDetailsContent">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
+                        <!-- Total Tests Card -->
+                        <div style="background: linear-gradient(135deg, #0ea5a4, #0891b2); border-radius: 20px; padding: 24px; color: white;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                                    <polyline points="2 17 12 22 22 17"/>
+                                    <polyline points="2 12 12 17 22 12"/>
+                                </svg>
+                                <span style="font-size: 16px; font-weight: 500; opacity: 0.9;">ჯამური ტესტები</span>
+                            </div>
+                            <div style="font-size: 48px; font-weight: 700;" id="moduleTotalTests">0</div>
+                        </div>
+                        
+                        <!-- Active Users Card -->
+                        <div style="background: linear-gradient(135deg, #6366f1, #4f46e5); border-radius: 20px; padding: 24px; color: white;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                                <span style="font-size: 16px; font-weight: 500; opacity: 0.9;">აქტიური მომხმარებელი</span>
+                            </div>
+                            <div style="font-size: 48px; font-weight: 700;" id="moduleActiveUsers">0</div>
                         </div>
                     </div>
 
-                    <!-- ბოლო აქტივობები -->
-                    <div class="table-container" style="margin-bottom: 30px;">
-                        <div class="table-header">
-                            <h3>
-                                <svg class="icon" viewBox="0 0 24 24">
+                    <!-- Statistics Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 30px;">
+                        <div style="background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border);">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-muted);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                </svg>
+                                <span style="font-size: 14px;">ნამუშევარი მომხმარებელი</span>
+                            </div>
+                            <div style="font-size: 32px; font-weight: 700; color: var(--accent);" id="moduleUsersStarted">0</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;" id="moduleUsersStartedPercent">მთლიანის 0%</div>
+                        </div>
+
+                        <div style="background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border);">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-muted);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                                <span style="font-size: 14px;">სრულად დასრულებული</span>
+                            </div>
+                            <div style="font-size: 32px; font-weight: 700; color: var(--success);" id="moduleCompleted">0</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;" id="moduleCompletedPercent">დამწყებთა 0%</div>
+                        </div>
+
+                        <div style="background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border);">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-muted);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="10"/>
                                     <polyline points="12 6 12 12 16 14"/>
                                 </svg>
-                                ბოლო აქტივობები
-                            </h3>
+                                <span style="font-size: 14px;">საშუალო ქულა</span>
+                            </div>
+                            <div style="font-size: 32px; font-weight: 700; color: var(--warning);" id="moduleAvgScore">0%</div>
+                            <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;" id="moduleAvgDetails">0/0 ქულა</div>
                         </div>
-                        <div style="padding: 20px;" id="recentActivitiesList"></div>
                     </div>
 
-                    <!-- შეტყობინებები -->
-                    <div class="table-container">
-                        <div class="table-header">
-                            <h3>
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                                </svg>
-                                შეტყობინებები
-                            </h3>
-                        </div>
-                        <div style="padding: 20px;" id="notificationsList"></div>
-                    </div>
-                </div>
-                
-<!-- Settings Section -->
-<div id="settingsSection" class="content-section">
-    <div class="content-header">
-        <h2 class="content-title">პარამეტრები</h2>
-    </div>
-    
-    <div class="settings-grid">
-        <!-- ავტორიზაციის პარამეტრები -->
-        <div class="dashboard-card">
-            <h3>
-                <svg class="icon" viewBox="0 0 24 24">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-                ავტორიზაცია
-            </h3>
-            
-            <div style="padding: 16px 0;">
-                <!-- იმეილით ავტორიზაციის ტოგლი -->
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-light); border-radius: 16px; margin-bottom: 12px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <svg class="icon" viewBox="0 0 24 24" width="22" height="22" style="color: var(--accent);">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                            <polyline points="22,6 12,13 2,6"/>
-                        </svg>
-                        <div>
-                            <div style="font-weight: 600;">E-mail-ის დადასტურება</div>
-                        </div>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="emailAuthToggle">
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-
-                <!-- ადმინ კოდის შეცვლა - POPUP ბოქსით -->
-                <div style="padding: 16px; background: linear-gradient(145deg, #f8fafc, #f1f5f9); border-radius: 16px; border: 1px solid var(--border);">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                        <div style="width: 40px; height: 40px; background: var(--gradient); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <line x1="12" y1="8" x2="12" y2="16"/>
-                                <line x1="8" y1="12" x2="16" y2="12"/>
+                    <!-- Exam Statistics -->
+                    <div style="background: linear-gradient(145deg, var(--surface), var(--surface-light)); border-radius: 20px; padding: 24px; margin-bottom: 30px;">
+                        <h4 style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; color: var(--text);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                                <path d="M12 2v4M12 22v-4M4 12H2h2M20 12h2-2M5.64 5.64l-1.41 1.41 1.41-1.41M18.36 18.36l1.41-1.41-1.41 1.41M5.64 18.36l-1.41-1.41 1.41 1.41"/>
+                                <circle cx="12" cy="12" r="4"/>
                             </svg>
+                            საგამოცდო რეჟიმის სტატისტიკა
+                        </h4>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                            <div>
+                                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">მონაწილე მომხმარებელი</div>
+                                <div style="font-size: 28px; font-weight: 700; color: var(--accent);" id="examParticipants">0</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">ჩაბარებული (≥150)</div>
+                                <div style="font-size: 28px; font-weight: 700; color: var(--success);" id="examPassed">0</div>
+                                <div style="font-size: 12px; color: var(--text-muted);" id="examPassedPercent">0%</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">ჩაჭრილი (&lt;150)</div>
+                                <div style="font-size: 28px; font-weight: 700; color: var(--danger);" id="examFailed">0</div>
+                                <div style="font-size: 12px; color: var(--text-muted);" id="examFailedPercent">0%</div>
+                            </div>
                         </div>
-                        <span style="font-weight: 600; font-size: 16px; color: var(--text);">ავტორიზაციის კოდის შეცვლა</span>
+
+                        <!-- Score Distribution -->
+                        <div style="margin-top: 24px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-size: 13px; color: var(--text-muted);">ქულების განაწილება</span>
+                                <span style="font-size: 13px; font-weight: 600;" id="scoreRange">0-200</span>
+                            </div>
+                            <div style="height: 8px; background: var(--surface-light); border-radius: 4px; overflow: hidden; display: flex;" id="scoreDistribution">
+                                <div style="background: var(--danger); height: 100%; width: 0%;" id="scoreLow"></div>
+                                <div style="background: var(--warning); height: 100%; width: 0%;" id="scoreMid"></div>
+                                <div style="background: var(--success); height: 100%; width: 0%;" id="scoreHigh"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-muted);">
+                                <span>0-99</span>
+                                <span>100-149</span>
+                                <span>150-200</span>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <button onclick="openAdminCodeModal()" style="width: 100%; padding: 14px; background: var(--gradient); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.3s;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                            <path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/>
-                            <polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/>
-                        </svg>
-                        კოდის შეცვლა
-                    </button>
+
+                    <!-- Top Users List -->
+                    <div>
+                        <h4 style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                            ტოპ 5 მომხმარებელი
+                        </h4>
+                        <div id="topUsersList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-btn secondary" onclick="closeModal('moduleDetailsModal')">დახურვა</button>
                 </div>
             </div>
         </div>
 
-        <!-- ვერსია -->
-        <div class="dashboard-card">
-            <h3>
-                <svg class="icon" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                </svg>
-                ვერსია
-            </h3>
-            
-            <div style="padding: 20px 0; text-align: center;">
-                <div style="font-size: 48px; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; margin-bottom: 8px;" id="versionDisplay">1.0.0.0</div>
-                <div style="color: var(--text-muted); font-size: 14px;">მიმდინარე ვერსია</div>
-                <div style="margin-top: 16px; padding: 8px; background: var(--surface-light); border-radius: 40px; font-size: 12px; color: var(--text-muted);">
-                    ბოლო განახლება: <span id="lastVersionUpdate">დღეს</span>
+    </div> <!-- ეს ხურავს dashboardSection-ს -->
+    
+    <!-- Settings Section -->
+    <div id="settingsSection" class="content-section">
+        <div class="content-header">
+            <h2 class="content-title">პარამეტრები</h2>
+        </div>
+        
+        <div class="settings-grid">
+            <!-- ავტორიზაციის პარამეტრები -->
+            <div class="dashboard-card">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    ავტორიზაცია
+                </h3>
+                
+                <div style="padding: 16px 0;">
+                    <!-- იმეილით ავტორიზაციის ტოგლი -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-light); border-radius: 16px; margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <svg class="icon" viewBox="0 0 24 24" width="22" height="22" style="color: var(--accent);">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                            <div>
+                                <div style="font-weight: 600;">E-mail-ის დადასტურება</div>
+                            </div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="emailAuthToggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <!-- ადმინ კოდის შეცვლა - POPUP ბოქსით -->
+                    <div style="padding: 16px; background: linear-gradient(145deg, #f8fafc, #f1f5f9); border-radius: 16px; border: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                            <div style="width: 40px; height: 40px; background: var(--gradient); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="8" x2="12" y2="16"/>
+                                    <line x1="8" y1="12" x2="16" y2="12"/>
+                                </svg>
+                            </div>
+                            <span style="font-weight: 600; font-size: 16px; color: var(--text);">ავტორიზაციის კოდის შეცვლა</span>
+                        </div>
+                        
+                        <button onclick="openAdminCodeModal()" style="width: 100%; padding: 14px; background: var(--gradient); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.3s;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/>
+                                <polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/>
+                            </svg>
+                            კოდის შეცვლა
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ბოლო ავტორიზაციები -->
-        <div class="dashboard-card" style="grid-column: span 2;">
-            <h3>
-                <svg class="icon" viewBox="0 0 24 24">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                ბოლო ავტორიზაციები
-            </h3>
+            <!-- ვერსია -->
+            <div class="dashboard-card">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    ვერსია
+                </h3>
+                
+                <div style="padding: 20px 0; text-align: center;">
+                    <div style="font-size: 48px; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; margin-bottom: 8px;" id="versionDisplay">1.0.0.0</div>
+                    <div style="color: var(--text-muted); font-size: 14px;">მიმდინარე ვერსია</div>
+                    <div style="margin-top: 16px; padding: 8px; background: var(--surface-light); border-radius: 40px; font-size: 12px; color: var(--text-muted);">
+                        ბოლო განახლება: <span id="lastVersionUpdate">დღეს</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ბოლო ავტორიზაციები -->
+            <div class="dashboard-card" style="grid-column: span 2;">
+                <h3>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    ბოლო ავტორიზაციები
+                </h3>
             
 <div class="auth-history-container">
     <table id="authHistoryTable">
@@ -3062,11 +3232,9 @@ try {
 let ADMIN_CODE = "200011";
 let isAdminAuthenticated = false;
 let currentActivityTab = 'custom';
+let globalMaxValue = 100; 
 let onlineUsers = {};
 let currentQuestionFilter = 'all';
-let adminSessionStartTime = null;
-let adminTimerInterval = null;
-// გლობალური ცვლადის გამოცხადება (თუ არ არსებობს)
 if (typeof window.onlineUsers === 'undefined') {
     window.onlineUsers = {};
 }
@@ -3080,120 +3248,6 @@ if (typeof window.onlineUsers === 'undefined') {
         const EMAIL_AUTH_KEY = 'adminEmailAuthEnabled';
         let isEmailAuthEnabled = localStorage.getItem(EMAIL_AUTH_KEY) === 'true';
 
-// ადმინისტრატორის სესიის წამზომის დაწყება
-function startAdminSessionTimer() {
-    // მნიშვნელოვანი: ყოველთვის დავაყენოთ ახალი დრო
-    adminSessionStartTime = Date.now();
-    console.log('⏱️ ადმინის სესია დაიწყო:', new Date(adminSessionStartTime).toLocaleTimeString());
-    
-    // თუ უკვე გვაქვს ტაიმერი, გავაუქმოთ და შევქმნათ ახალი
-    if (adminTimerInterval) {
-        clearInterval(adminTimerInterval);
-        adminTimerInterval = null;
-    }
-    
-    // ტაიმერის შექმნა, რომელიც ყოველ წამში განაახლებს UI-ს
-    adminTimerInterval = setInterval(updateAdminTimerDisplay, 1000);
-    
-    // პირველად განვაახლოთ
-    updateAdminTimerDisplay();
-}
-
-// ადმინისტრატორის წამზომის UI-ს განახლება
-function updateAdminTimerDisplay() {
-    if (!adminSessionStartTime) return;
-    
-    const now = Date.now();
-    const elapsedSeconds = Math.floor((now - adminSessionStartTime) / 1000);
-    
-    // წამზომის ფორმატირება
-    const hours = Math.floor(elapsedSeconds / 3600);
-    const minutes = Math.floor((elapsedSeconds % 3600) / 60);
-    const seconds = elapsedSeconds % 60;
-    
-    let timerString;
-    if (hours > 0) {
-        timerString = `${hours}ს ${minutes.toString().padStart(2, '0')}წთ ${seconds.toString().padStart(2, '0')}წმ`;
-    } else {
-        timerString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-    
-    // მოვძებნოთ ელემენტი, სადაც გვინდა წამზომის ჩვენება
-    // მაგალითად, sidebar-ის სათაურში ან სადმე ზედა პანელში
-    const timerElement = document.getElementById('adminSessionTimer');
-    
-    if (timerElement) {
-        timerElement.textContent = timerString;
-    } else {
-        // თუ ელემენტი არ არსებობს, შევქმნათ და დავამატოთ sidebar-ში
-        createAdminTimerElement(timerString);
-    }
-}
-
-// ადმინის წამზომის ელემენტის შექმნა
-function createAdminTimerElement(timerString) {
-    const sidebar = document.getElementById('adminSidebar');
-    if (!sidebar) return;
-    
-    // შევამოწმოთ უკვე არსებობს თუ არა
-    let timerElement = document.getElementById('adminSessionTimer');
-    
-    if (!timerElement) {
-        // შევქმნათ ახალი ელემენტი
-        timerElement = document.createElement('div');
-        timerElement.id = 'adminSessionTimer';
-        timerElement.style.cssText = `
-            background: linear-gradient(135deg, #0ea5a4, #0891b2);
-            color: white;
-            padding: 12px 20px;
-            margin: 10px 20px 0 20px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 18px;
-            text-align: center;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(255,255,255,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        `;
-        
-        // დავამატოთ sidebar-ის header-ის შემდეგ
-        const sidebarHeader = sidebar.querySelector('.sidebar-header');
-        if (sidebarHeader) {
-            sidebarHeader.insertAdjacentElement('afterend', timerElement);
-        } else {
-            // თუ header ვერ ვიპოვეთ, დავამატოთ sidebar-ის დასაწყისში
-            sidebar.insertBefore(timerElement, sidebar.firstChild);
-        }
-    }
-    
-    timerElement.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-        </svg>
-        <span>${timerString}</span>
-    `;
-}
-
-// სესიის დასრულებისას წამზომის გაწმენდა
-function resetAdminSessionTimer() {
-    if (adminTimerInterval) {
-        clearInterval(adminTimerInterval);
-        adminTimerInterval = null;
-    }
-    adminSessionStartTime = null;
-    
-    // დავმალოთ ტაიმერის ელემენტი
-    const timerElement = document.getElementById('adminSessionTimer');
-    if (timerElement) {
-        timerElement.remove();
-    }
-    
-    console.log('⏱️ ადმინის სესიის ტაიმერი გასუფთავდა');
-}
 
 function getModuleName(module) {
     if (!module || module === 'unknown' || module === 'undefined') {
@@ -3662,12 +3716,10 @@ async function loadAllData() {
         // ინიციალიზაცია
         initSettings();
         
-        // loadAllData ფუნქციის ბოლოს დაამატეთ:
-initSettingsPage();
-        // დავაყენოთ რეალურ დროში განახლება
-        setupRealtimeUpdates();
-        // loadAllData ფუნქციის ბოლოს დაამატეთ:
-setupOnlineUsersListener();
+        // === წაშალეთ ან დააკომენტარეთ ეს ხაზები ===
+        // initSettingsPage();      // <-- წაშალეთ
+        // setupRealtimeUpdates();  // <-- წაშალეთ
+        // setupOnlineUsersListener(); // <-- წაშალეთ
         
         console.log("All data loaded successfully with live updates enabled");
         showNotification('📊 Live რეჟიმი აქტიურია - პასუხები მყისიერად აისახება', false);
@@ -5009,6 +5061,10 @@ if (onlineUsers && typeof onlineUsers === 'object') {
         // Load modules stats
         await loadModulesStats();
 
+// ჩატვირთეთ მხოლოდ მიმდინარე კვირა (სწრაფი ჩატვირთვისთვის)
+currentWeekOffset = 0;
+loadWeeklyActivity(0);
+
         // Last registered
         const lastRegisteredList = document.getElementById('lastRegisteredList');
         if (lastRegisteredList) {
@@ -5135,6 +5191,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedAdminCode) {
         ADMIN_CODE = savedAdminCode;
     }
+    
+    // === დაამატეთ ეს ხაზი ===
+    // Realtime updates-ის დაყენება გვერდის ჩატვირთვისას
+    if (firebaseInitialized) {
+        setTimeout(() => {
+            setupRealtimeUpdates();
+        }, 1000);
+    }
 });
 
 document.getElementById('adminCodeBtn').addEventListener('click', async () => {
@@ -5190,7 +5254,6 @@ UniMed`;
             initChat();
             
             startSessionTimerIfNeeded();
-    startAdminSessionTimer();
 
             if (countdownInterval) {
                 clearInterval(countdownInterval);
@@ -5236,7 +5299,6 @@ document.getElementById('verifyEmailCodeBtn').addEventListener('click', () => {
         loadAllData();
         startOnlineTracking();
         initChat();
-            startAdminSessionTimer();
 
         if (countdownInterval) {
             clearInterval(countdownInterval);
@@ -5346,8 +5408,6 @@ document.getElementById('adminLogoutBtn').addEventListener('click', async () => 
     // ჯერ დავასრულოთ მიმდინარე სესია
     await completeCurrentSession();
     
-    // წამზომის გაწმენდა
-    resetAdminSessionTimer();
 
     isAdminAuthenticated = false;
     isAdminCodeValid = false;
@@ -5362,7 +5422,6 @@ document.getElementById('adminLogoutBtn').addEventListener('click', async () => 
     document.getElementById('authError').style.display = 'none';
 });
 
-// Navigation
 // Navigation
 document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
@@ -5385,6 +5444,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
             loadChat();
         } else if (section === 'settings') {
             console.log('Settings section opened');
+            // ეს უკვე სწორად არის - initSettingsPage გამოძახებულია მხოლოდ settings-ის გახსნისას
             if (typeof initSettingsPage === 'function') {
                 initSettingsPage();
             }
@@ -5436,12 +5496,13 @@ async function completeCurrentSession() {
     }
 }
 
-// განახლებული loadStatistics ფუნქცია - ყოველთვის აჩვენებს ყველა მოდულს
+// Replace your existing loadStatistics function with this:
+
 async function loadStatistics() {
     if (!firebaseInitialized || !database) return;
 
     try {
-        // ვამოწმებთ არის თუ არა უკვე ჩატვირთვის პროცესში
+        // Check if already loading
         if (window.isLoadingStatistics) {
             console.log("📊 Statistics already loading, skipping...");
             return;
@@ -5449,27 +5510,27 @@ async function loadStatistics() {
         
         window.isLoadingStatistics = true;
         
-        // ჩავტვირთოთ მოდულების კითხვების რაოდენობა CSV-დან
+        // Show loading indicator
+        const modulesList = document.getElementById('moduleStatisticsList');
+        if (!modulesList) return;
+        
+        modulesList.innerHTML = '<div style="text-align: center; padding: 60px;"><div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 20px;"></div><div style="color: var(--text-muted);">მოდულების ჩატვირთვა...</div></div>';
+        
+        // Load ONLY module counts from CSV (fast, just counts)
         let moduleCounts = {};
         try {
             moduleCounts = await loadAllModuleQuestionCounts();
             console.log("✅ Module counts loaded from CSV:", moduleCounts);
         } catch (csvError) {
             console.error("❌ Error loading CSV module counts:", csvError);
-            // თუ CSV ვერ ჩაიტვირთა, გამოვიყენოთ ცარიელი ობიექტი
             moduleCounts = {};
         }
         
-        // ჩავტვირთოთ მომხმარებლების მონაცემები
+        // Load users data from Firebase (for user counts)
         const usersSnapshot = await database.ref('users').once('value');
         const users = usersSnapshot.val() || {};
         
-        const modulesList = document.getElementById('moduleStatisticsList');
-        if (!modulesList) return;
-        
-        modulesList.innerHTML = '';
-
-        // ყველა მოდულის სია (გარანტირებულად ყოველთვის გამოჩნდება)
+        // All modules list (always show all)
         const allModules = [
             { id: 'samkurnaloo', name: 'სამკურნალო' },
             { id: 'stomatologia', name: 'სტომატოლოგია' },
@@ -5519,16 +5580,13 @@ async function loadStatistics() {
             { id: 'hematologia', name: 'ჰემატოლოგია' }
         ];
 
-        // გამოვთვალოთ თითოეული მოდულისთვის რამდენმა მომხმარებელმა იმუშავა
+        // Calculate user counts for each module (quick calculation from users data)
         const moduleUserCounts = {};
         const uniqueUsersByModule = {};
 
-        // გადავუაროთ ყველა მომხმარებელს
         Object.entries(users).forEach(([userId, userData]) => {
             if (userData.progress) {
-                // გადავუაროთ მოდულებს, რომლებზეც მომხმარებელს აქვს პროგრესი
                 Object.entries(userData.progress).forEach(([moduleId, moduleProgress]) => {
-                    // შევამოწმოთ, აქვს თუ არა მომხმარებელს ნამდვილად ნამუშევარი ამ მოდულზე
                     const hasNormalProgress = moduleProgress.normal?.answeredQuestions && 
                                               Object.keys(moduleProgress.normal.answeredQuestions).length > 0;
                     const hasExamProgress = moduleProgress.exam?.answeredQuestions && 
@@ -5544,34 +5602,25 @@ async function loadStatistics() {
             }
         });
 
-        // გადავიყვანოთ Set-ები რიცხვებში
         Object.keys(uniqueUsersByModule).forEach(moduleId => {
             moduleUserCounts[moduleId] = uniqueUsersByModule[moduleId].size;
         });
 
-        console.log("📊 Module user counts:", moduleUserCounts);
-
-        // === მნიშვნელოვანი: გამოვიყენოთ ყველა მოდული, მაგრამ მხოლოდ ის, რომელსაც აქვს კითხვები CSV-ში ===
-        // თუ CSV ვერ ჩაიტვირთა, მაინც ვაჩვენოთ მოდულები, ოღონდ 0 კითხვით
+        // Filter modules that have questions in CSV
         const modulesToShow = allModules.filter(m => {
-            // თუ CSV მოვიდა, ვაჩვენოთ მხოლოდ ის, რასაც აქვს კითხვები
             if (Object.keys(moduleCounts).length > 0) {
                 return moduleCounts[m.id] > 0;
             }
-            // თუ CSV ვერ ჩაიტვირთა, მაინც ვაჩვენოთ ყველა მოდული
             return true;
         });
 
-        if (modulesToShow.length === 0) {
-            modulesList.innerHTML = '<div style="text-align: center; padding: 60px; color: var(--text-muted);">მოდულები არ არის</div>';
-            window.isLoadingStatistics = false;
-            return;
-        }
-
-        // დავალაგოთ მოდულები ანბანის მიხედვით
+        // Sort modules alphabetically
         modulesToShow.sort((a, b) => a.name.localeCompare(b.name, 'ka'));
-        
-        // თითოეული მოდულისთვის შევქმნათ ბარათი
+
+        // Clear the list
+        modulesList.innerHTML = '';
+
+        // Create a card for each module - WITHOUT loading questions
         modulesToShow.forEach(moduleInfo => {
             const moduleId = moduleInfo.id;
             const moduleName = moduleInfo.name;
@@ -5589,13 +5638,13 @@ async function loadStatistics() {
             
             const safeModuleName = moduleName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             
-            // თუ კითხვების რაოდენობა 0-ია, მაგრამ CSV ვერ ჩაიტვირთა, მაინც გავხსნათ
-            const clickHandler = questionCount > 0 
-                ? `showModuleQuestions('${moduleId}', '${safeModuleName}')`
-                : `showNotification('ამ მოდულის კითხვები ვერ ჩაიტვირთა', true)`;
+            // Click handler - loads questions ONLY when clicked
+            moduleCard.onclick = () => {
+                showModuleQuestions(moduleId, safeModuleName);
+            };
             
             moduleCard.innerHTML = `
-                <div class="table-header" style="cursor: pointer; padding: 16px 24px;" onclick="${clickHandler}">
+                <div class="table-header" style="cursor: pointer; padding: 16px 24px;">
                     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
@@ -5646,7 +5695,7 @@ async function loadStatistics() {
             modulesList.appendChild(moduleCard);
         });
 
-        // დავამატოთ მთლიანი სტატისტიკის შემაჯამებელი
+        // Add summary card
         const totalUsers = Object.keys(users).length;
         const totalQuestions = Object.values(moduleCounts).reduce((a, b) => a + b, 0);
         const modulesWithActivity = Object.keys(moduleUserCounts).length;
@@ -5679,7 +5728,7 @@ async function loadStatistics() {
         `;
         modulesList.appendChild(summaryCard);
         
-        // დავამატოთ ბოლო განახლების დრო
+        // Add last update time
         const lastUpdateTime = document.createElement('div');
         lastUpdateTime.style.marginTop = '16px';
         lastUpdateTime.style.textAlign = 'right';
@@ -5688,11 +5737,14 @@ async function loadStatistics() {
         lastUpdateTime.innerHTML = `ბოლო განახლება: ${new Date().toLocaleTimeString('ka-GE')}`;
         modulesList.appendChild(lastUpdateTime);
 
-        console.log("✅ Statistics loaded successfully with all modules");
+        console.log("✅ Statistics loaded successfully with lazy loading (questions not loaded yet)");
 
     } catch (error) {
         console.error("Error loading statistics:", error);
-        showNotification('შეცდომა სტატისტიკის ჩატვირთვისას', true);
+        const modulesList = document.getElementById('moduleStatisticsList');
+        if (modulesList) {
+            modulesList.innerHTML = '<div style="text-align: center; padding: 60px; color: var(--danger);">❌ შეცდომა მოდულების ჩატვირთვისას</div>';
+        }
     } finally {
         window.isLoadingStatistics = false;
     }
@@ -8097,6 +8149,372 @@ function sendAdminMessage() {
                 displayQuestions(currentModuleQuestions);
             }
         };
+
+
+// ==================== WEEKLY ACTIVITY CHART ====================
+let currentWeekOffset = 0; // 0 = მიმდინარე კვირა, -1 = წინა კვირა, 1 = შემდეგი კვირა
+let weeklyData = null;
+let maxActivityValue = 100; // მაქსიმალური მნიშვნელობა Y ღერძისთვის
+
+// კვირის დღეების სახელები
+const dayNames = ['ორშ', 'სამშ', 'ოთხ', 'ხუთ', 'პარ', 'შაბ', 'კვ'];
+
+// იტვირთავს კვირის აქტივობის მონაცემებს Firebase-დან
+async function loadWeeklyActivity(weekOffset = 0) {
+    if (!firebaseInitialized || !database) {
+        renderDemoWeeklyData(weekOffset);
+        return;
+    }
+    
+    try {
+        // გამოვთვალოთ კვირის დასაწყისი და დასასრული
+        const now = new Date();
+        const currentDay = now.getDay(); // 0 = კვირა, 1 = ორშაბათი, ...
+        
+        // ორშაბათიდან კვირამდე პერიოდი
+        let weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - (currentDay === 0 ? 6 : currentDay - 1) + (weekOffset * 7));
+        weekStart.setHours(0, 0, 0, 0);
+        
+        let weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+        
+        // ფორმატირება ჩვენებისთვის
+        const startStr = weekStart.toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' });
+        const endStr = weekEnd.toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' });
+        document.getElementById('weekRange').textContent = `${startStr} - ${endStr}`;
+        
+        // მიმდინარე კვირის ინფორმაცია
+        if (weekOffset === 0) {
+            document.getElementById('currentWeekInfo').textContent = 'მიმდინარე კვირა';
+        } else if (weekOffset < 0) {
+            document.getElementById('currentWeekInfo').textContent = `${Math.abs(weekOffset)} კვირის წინ`;
+        } else {
+            document.getElementById('currentWeekInfo').textContent = `${weekOffset} კვირის შემდეგ`;
+        }
+        
+        // ღილაკების ჩართვა/გამორთვა
+        const prevBtn = document.getElementById('prevWeekBtn');
+        const nextBtn = document.getElementById('nextWeekBtn');
+        
+        if (prevBtn) {
+            prevBtn.disabled = weekOffset <= -52; // 52 კვირაზე მეტი უკან არ ვატაროთ
+        }
+        
+        if (nextBtn) {
+            nextBtn.disabled = weekOffset >= 4; // 4 კვირაზე მეტი წინ არ ვატაროთ
+        }
+        
+        // ავიღოთ ყველა აქტივობა Firebase-დან
+        const [usersSnapshot, answersSnapshot] = await Promise.all([
+            database.ref('users').once('value'),
+            database.ref('answers').once('value')
+        ]);
+        
+        const users = usersSnapshot.val() || {};
+        const answers = answersSnapshot.val() || {};
+        
+        // შევქმნათ სტრუქტურა 7 დღისთვის
+        const dailyActivity = {};
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(weekStart);
+            date.setDate(weekStart.getDate() + i);
+            const dateKey = date.toISOString().split('T')[0];
+            dailyActivity[dateKey] = {
+                date: date,
+                users: new Set(),
+                sessions: 0,
+                answers: 0,
+                dayIndex: i
+            };
+        }
+        
+        // შევავსოთ მომხმარებლების აქტივობები (ბოლო შესვლების მიხედვით)
+        Object.entries(users).forEach(([userId, userData]) => {
+            if (userData.lastUpdated) {
+                const lastSeen = new Date(userData.lastUpdated);
+                if (lastSeen >= weekStart && lastSeen <= weekEnd) {
+                    const dateKey = lastSeen.toISOString().split('T')[0];
+                    if (dailyActivity[dateKey]) {
+                        dailyActivity[dateKey].users.add(userId);
+                        dailyActivity[dateKey].sessions++;
+                    }
+                }
+            }
+            
+            // ასევე შევამოწმოთ registeredAt
+            if (userData.registeredAt) {
+                const regDate = new Date(userData.registeredAt);
+                if (regDate >= weekStart && regDate <= weekEnd) {
+                    const dateKey = regDate.toISOString().split('T')[0];
+                    if (dailyActivity[dateKey]) {
+                        dailyActivity[dateKey].users.add(userId);
+                        dailyActivity[dateKey].sessions++;
+                    }
+                }
+            }
+        });
+        
+        // შევავსოთ პასუხების აქტივობები
+        Object.values(answers).forEach(answer => {
+            if (answer.timestamp) {
+                const answerDate = new Date(answer.timestamp);
+                if (answerDate >= weekStart && answerDate <= weekEnd) {
+                    const dateKey = answerDate.toISOString().split('T')[0];
+                    if (dailyActivity[dateKey]) {
+                        dailyActivity[dateKey].answers++;
+                        // მომხმარებელი უკვე დამატებულია users-დან, მაგრამ თუ არ არის?
+                        if (answer.userId && !dailyActivity[dateKey].users.has(answer.userId)) {
+                            // სტუმარი ან ახალი მომხმარებელი
+                            dailyActivity[dateKey].users.add(answer.userId);
+                            dailyActivity[dateKey].sessions++;
+                        }
+                    }
+                }
+            }
+        });
+        
+// loadWeeklyActivity ფუნქციაში, მონაცემების დამუშავების შემდეგ:
+const chartData = [];
+let maxValue = 0;
+
+for (let i = 0; i < 7; i++) {
+    // ... მონაცემების დამუშავება ...
+    const userCount = dayData.users.size;
+    if (userCount > maxValue) maxValue = userCount;
+    
+    chartData.push({
+        day: dayNames[i],
+        date: date.toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' }),
+        fullDate: date,
+        count: userCount,
+        sessions: dayData.sessions,
+        answers: dayData.answers,
+        users: Array.from(dayData.users)
+    });
+}
+
+// მაქსიმალური მნიშვნელობის განახლება
+if (maxValue > globalMaxValue) {
+    globalMaxValue = Math.ceil(maxValue / 10) * 10;
+} else if (maxValue < globalMaxValue / 2 && globalMaxValue > 20) {
+    // თუ მონაცემები ძალიან დაბალია, შევამციროთ მაქსიმუმი
+    globalMaxValue = Math.max(10, Math.ceil(maxValue / 10) * 10);
+}
+        
+        weeklyData = chartData;
+        maxActivityValue = Math.max(10, Math.ceil(maxValue / 10) * 10); // დავამრგვალოთ ზემოთ 10-ის ჯერადამდე
+        
+        // ===== გლობალური მაქსიმუმის განახლება =====
+        // განვაახლოთ გლობალური მაქსიმალური მნიშვნელობა
+        const currentMax = Math.max(...chartData.map(d => d.count), 10);
+        if (currentMax > globalMaxValue) {
+            globalMaxValue = Math.ceil(currentMax / 10) * 10; // დავამრგვალოთ ზემოთ 10-ის ჯერადამდე
+        }
+        // ============================================
+        
+        // გამოვთვალოთ სტატისტიკა
+        const totalUsers = chartData.reduce((sum, d) => sum + d.count, 0);
+        const avgDaily = Math.round(totalUsers / 7);
+        document.getElementById('avgDaily').textContent = avgDaily;
+        
+        // პიკის დღე
+        const peak = chartData.reduce((max, d) => d.count > max.count ? d : max, chartData[0]);
+        document.getElementById('peakDay').textContent = `${peak.day} (${peak.count})`;
+        
+        // დავხატოთ დიაგრამა
+        renderWeeklyChart(chartData);
+        
+    } catch (error) {
+        console.error('Error loading weekly activity:', error);
+        renderDemoWeeklyData(weekOffset);
+    }
+}
+
+// დაამატეთ ეს ფუნქცია კოდის ბოლოს
+function debugWeeklyChart() {
+    console.log("=== Weekly Chart Debug ===");
+    console.log("currentWeekOffset:", currentWeekOffset);
+    console.log("globalMaxValue:", globalMaxValue);
+    console.log("weeklyData:", weeklyData);
+    
+    const prevBtn = document.getElementById('prevWeekBtn');
+    const nextBtn = document.getElementById('nextWeekBtn');
+    
+    console.log("prevBtn disabled:", prevBtn ? prevBtn.disabled : 'not found');
+    console.log("nextBtn disabled:", nextBtn ? nextBtn.disabled : 'not found');
+    
+    return { currentWeekOffset, globalMaxValue, weeklyData };
+}
+
+// დემო მონაცემები Firebase-ის გარეშე
+function renderDemoWeeklyData(weekOffset) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - startDate.getDay() + 1 + (weekOffset * 7));
+    
+    const startStr = startDate.toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' });
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
+    const endStr = endDate.toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' });
+    document.getElementById('weekRange').textContent = `${startStr} - ${endStr}`;
+    
+    if (weekOffset === 0) {
+        document.getElementById('currentWeekInfo').textContent = 'მიმდინარე კვირა';
+    } else if (weekOffset < 0) {
+        document.getElementById('currentWeekInfo').textContent = `${Math.abs(weekOffset)} კვირის წინ`;
+    } else {
+        document.getElementById('currentWeekInfo').textContent = `${weekOffset} კვირის შემდეგ`;
+    }
+    
+    document.getElementById('prevWeekBtn').disabled = false;
+    document.getElementById('nextWeekBtn').disabled = weekOffset >= 4;
+    
+    // დემო მონაცემები
+    const demoData = [
+        { day: 'ორშ', date: startDate.toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' }), count: 45 },
+        { day: 'სამშ', date: new Date(startDate.getTime() + 86400000).toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' }), count: 62 },
+        { day: 'ოთხ', date: new Date(startDate.getTime() + 2*86400000).toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' }), count: 78 },
+        { day: 'ხუთ', date: new Date(startDate.getTime() + 3*86400000).toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' }), count: 53 },
+        { day: 'პარ', date: new Date(startDate.getTime() + 4*86400000).toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' }), count: 81 },
+        { day: 'შაბ', date: new Date(startDate.getTime() + 5*86400000).toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' }), count: 34 },
+        { day: 'კვ', date: new Date(startDate.getTime() + 6*86400000).toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' }), count: 27 }
+    ];
+    
+    const total = demoData.reduce((sum, d) => sum + d.count, 0);
+    document.getElementById('avgDaily').textContent = Math.round(total / 7);
+    
+    const peak = demoData.reduce((max, d) => d.count > max.count ? d : max, demoData[0]);
+    document.getElementById('peakDay').textContent = `${peak.day} (${peak.count})`;
+    
+    renderWeeklyChart(demoData);
+}
+
+// დიაგრამის რენდერი - შესწორებული ვერსია 0-ის ჩვენებით
+function renderWeeklyChart(data) {
+    const container = document.getElementById('weeklyChart');
+    if (!container) return;
+    
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="no-data">📊 მონაცემები არ არის</div>';
+        return;
+    }
+    
+    // გამოვიყენოთ გლობალური მაქსიმალური მნიშვნელობა
+    const maxValue = globalMaxValue;
+    const chartHeight = 250;
+    
+    let html = `
+        <div class="chart-grid" style="position: absolute; top: 0; left: 45px; right: 45px; bottom: 25px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none;">
+    `;
+    
+    // 6 ხაზი 0-დან maxValue-მდე (0%, 20%, 40%, 60%, 80%, 100%)
+    for (let i = 0; i <= 5; i++) {
+        const percent = i * 20; // 0%, 20%, 40%, 60%, 80%, 100%
+        const value = Math.round((percent / 100) * maxValue);
+        const bottomPosition = (percent / 100) * 100; // 0-100%
+        
+        html += `
+            <div style="position: absolute; bottom: ${bottomPosition}%; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent);">
+                <span style="position: absolute; left: -35px; top: -8px; font-size: 11px; color: var(--text-muted);">${value}</span>
+            </div>
+        `;
+    }
+    
+    html += `</div>`;
+    
+    // ბარები
+    html += `<div class="chart-bars" style="position: relative; height: 250px; margin-left: 45px; margin-right: 45px; display: flex; align-items: flex-end; justify-content: space-around; gap: 8px; z-index: 2;">`;
+    
+    data.forEach((item, index) => {
+        const barHeight = (item.count / maxValue) * (chartHeight - 40);
+        html += `
+            <div class="bar-container" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; position: relative;">
+                <div class="bar-wrapper" style="width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; position: relative;">
+                    <div class="bar" style="width: 60%; background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-radius: 8px 8px 4px 4px; height: ${Math.max(barHeight, 4)}px; position: relative; min-height: 4px; box-shadow: 0 -2px 10px rgba(14, 165, 164, 0.3); cursor: pointer;">
+                        <span class="bar-value" style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; color: var(--accent); border: 1px solid var(--border); white-space: nowrap; opacity: 0; transition: opacity 0.2s; box-shadow: var(--shadow); z-index: 10;">${item.count}</span>
+                    </div>
+                </div>
+                <div class="bar-label" style="font-size: 12px; font-weight: 500; color: var(--text-muted); text-align: center; margin-top: 8px;">
+                    ${item.day}
+                    <div class="bar-date" style="font-size: 10px; color: var(--text-muted); opacity: 0.7;">${item.date}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `</div>`;
+    
+    // დავამატოთ დამაკავშირებელი ხაზი (SVG) - მხოლოდ თუ მონაცემები არსებობს
+    if (data.some(d => d.count > 0)) {
+        const linePoints = data.map((d, i) => {
+            const x = 45 + 15 + (i * ((container.offsetWidth - 120) / 6));
+            const y = 35 + (chartHeight - 50) * (1 - d.count / maxValue);
+            return `${x},${y}`;
+        }).join(' ');
+        
+        html += `
+            <svg class="line-svg" style="position: absolute; top: 15px; left: 60px; right: 60px; height: ${chartHeight - 30}px; pointer-events: none; z-index: 5;">
+                <polyline points="${linePoints}" style="stroke: var(--warning); stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3));" />
+                ${data.map((d, i) => {
+                    if (d.count === 0) return '';
+                    const x = 45 + 15 + (i * ((container.offsetWidth - 120) / 6));
+                    const y = 35 + (chartHeight - 50) * (1 - d.count / maxValue);
+                    return `<circle cx="${x}" cy="${y}" r="6" style="fill: var(--warning); stroke: white; stroke-width: 2; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); cursor: pointer; pointer-events: all;" onmouseover="showTooltip('${d.day}', ${d.count})" />`;
+                }).join('')}
+            </svg>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+// წინა კვირაზე გადასვლა
+function previousWeek() {
+    if (currentWeekOffset <= -52) return; // არ ჩავიდეთ 1 წელზე მეტად უკან
+    currentWeekOffset--;
+    console.log("Previous week clicked, new offset:", currentWeekOffset);
+    
+    if (firebaseInitialized && database) {
+        loadWeeklyActivity(currentWeekOffset);
+    } else {
+        renderDemoWeeklyData(currentWeekOffset);
+    }
+}
+
+// შემდეგი კვირაზე გადასვლა
+function nextWeek() {
+    if (currentWeekOffset >= 4) {
+        console.log("Cannot go beyond 4 weeks ahead");
+        return;
+    }
+    currentWeekOffset++;
+    console.log("Next week clicked, new offset:", currentWeekOffset);
+    
+    if (firebaseInitialized && database) {
+        loadWeeklyActivity(currentWeekOffset);
+    } else {
+        renderDemoWeeklyData(currentWeekOffset);
+    }
+}
+
+// მიმდინარე კვირაზე დაბრუნება
+function goToCurrentWeek() {
+    currentWeekOffset = 0;
+    console.log("Go to current week");
+    
+    if (firebaseInitialized && database) {
+        loadWeeklyActivity(0);
+    } else {
+        renderDemoWeeklyData(0);
+    }
+}
+
+// ტულტიპის ჩვენება (შეიძლება გაუმჯობესდეს)
+function showTooltip(day, count) {
+    // უბრალოდ კონსოლში ვწერთ, მაგრამ შეგიძლიათ გააკეთოთ ლამაზი ტულტიპი
+    console.log(`${day}: ${count} მომხმარებელი`);
+}
 
         function displayQuestions(questions) {
             const list = document.getElementById('questionsList');
