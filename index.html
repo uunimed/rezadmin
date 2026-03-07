@@ -3692,7 +3692,6 @@ function setupRealtimeUpdates() {
 
 // ==================== UPDATED loadAllData FUNCTION ====================
 
-// loadAllData ფუნქციის განახლება
 async function loadAllData() {
     showLoading();
     try {
@@ -3701,8 +3700,13 @@ async function loadAllData() {
         // ჯერ ჩავტვირთოთ მომხმარებლები
         await loadUsers();
         
-        // შემდეგ დაშბორდი
-        await loadDashboard();
+        // === შესწორება: ჩავტვირთოთ მხოლოდ ერთხელ ===
+        // წავშალოთ loadDashboard() აქედან
+        // await loadDashboard();  <-- წაშალე ეს ხაზი
+        
+        // პირდაპირ ჩავტვირთოთ weekly activity ერთხელ
+        currentWeekOffset = 0;
+        await loadWeeklyActivity(0);  // <-- დაამატე ეს
         
         // შემდეგ აქტივობა
         await loadActivityData();
@@ -3715,6 +3719,8 @@ async function loadAllData() {
         
         // ინიციალიზაცია
         initSettings();
+        
+        // === END შესწორება ===
         
         // === წაშალეთ ან დააკომენტარეთ ეს ხაზები ===
         // initSettingsPage();      // <-- წაშალეთ
@@ -4567,42 +4573,42 @@ async function loadModulesStats() {
                 };
                 moduleItem.onclick = () => showModuleDetails(module);
                 
-               moduleItem.innerHTML = `
-    <div style="display: flex; flex-direction: column; gap: 12px;">
+moduleItem.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <!-- მარცხენა მხარე: # და მოდულის სახელი -->
         <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="font-weight: 700; color: var(--accent); background: var(--surface-light); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">#${index + 1}</span>
-            <span style="font-weight: 600; font-size: 16px; color: var(--text); flex: 1;">${module.name}</span>
+            <span style="font-weight: 700; color: var(--accent); background: var(--surface-light); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">#${index + 1}</span>
+            <span style="font-weight: 600; font-size: 16px; color: var(--text);">${module.name}</span>
         </div>
         
-        <div style="display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); padding-left: 40px;">
-            <div style="display: flex; align-items: center; gap: 24px;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
-                    </svg>
-                    <span style="font-weight: 600; color: var(--text);">${module.totalUsers}</span>
-                    <span style="font-size: 13px;">მუშაობს</span>
-                </div>
-                
-                ${module.activeUsers > 0 ? `
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <span class="online-dot" style="width: 8px; height: 8px; background: var(--success);"></span>
-                        <span style="font-size: 13px; color: var(--success);">${module.activeUsers} აქტიური</span>
-                    </div>
-                ` : ''}
-            </div>
-            
-            <!-- ტესტების რაოდენობა გადატანილია ბოლოში -->
-            <div style="display: flex; align-items: center; gap: 8px; background: var(--surface-light); padding: 6px 14px; border-radius: 40px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+        <!-- მარჯვენა მხარე: კითხვების რაოდენობა და მუშაობს -->
+        <div style="display: flex; align-items: center; gap: 24px;">
+            <!-- კითხვების რაოდენობა -->
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                     <line x1="3" y1="9" x2="21" y2="9"/>
                     <line x1="9" y1="21" x2="9" y2="9"/>
                 </svg>
-                <span style="font-weight: 700; color: var(--accent);">${module.count}</span>
-                <span style="font-size: 13px; color: var(--text-muted);">ტესტი</span>
+                <span style="font-weight: 700; font-size: 18px; color: var(--accent);">${module.count}</span>
             </div>
+            
+            <!-- მუშაობს (მომხმარებლების რაოდენობა) -->
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span style="font-weight: 600; color: var(--text);">${module.totalUsers}</span>
+                <span style="font-size: 14px; color: var(--text-muted);">მუშაობს</span>
+            </div>
+            
+            ${module.activeUsers > 0 ? `
+                <div style="display: flex; align-items: center; gap: 4px;" title="აქტიური ახლა">
+                    <span class="online-dot" style="width: 8px; height: 8px; background: var(--success);"></span>
+                    <span style="font-size: 13px; color: var(--success);">${module.activeUsers}</span>
+                </div>
+            ` : ''}
         </div>
     </div>
 `;
@@ -5076,7 +5082,6 @@ if (onlineUsers && typeof onlineUsers === 'object') {
 
 // ჩატვირთეთ მხოლოდ მიმდინარე კვირა (სწრაფი ჩატვირთვისთვის)
 currentWeekOffset = 0;
-loadWeeklyActivity(0);
 
         // Last registered
         const lastRegisteredList = document.getElementById('lastRegisteredList');
@@ -8396,8 +8401,8 @@ async function loadWeeklyActivity(weekOffset = 0) {
             });
         }
         
-        // მაქსიმალური მნიშვნელობა Y ღერძისთვის (ადგილობრივი, არა გლობალური)
-        const localMaxValue = Math.max(10, Math.ceil(maxValue / 10) * 10);
+// ** შესწორება: თუ ყველა მნიშვნელობა 0-ია, მაქსიმუმი მაინც 10 იყოს **
+const localMaxValue = maxValue === 0 ? 10 : Math.max(10, Math.ceil(maxValue / 10) * 10);
         
         // გამოვთვალოთ სტატისტიკა
         const totalUsersWeek = chartData.reduce((sum, d) => sum + d.count, 0);
@@ -8484,7 +8489,6 @@ function renderDemoWeeklyData(weekOffset) {
     renderWeeklyChart(demoData);
 }
 
-// დიაგრამის რენდერი - განახლებული ვერსია
 function renderWeeklyChart(data, maxValue) {
     const container = document.getElementById('weeklyChart');
     if (!container) return;
@@ -8494,14 +8498,13 @@ function renderWeeklyChart(data, maxValue) {
         return;
     }
     
-    const chartHeight = 220; // შევამციროთ სიმაღლე
-    const baseLine = chartHeight - 20; // ქვედა ხაზი (0-ის დონე)
+    const chartHeight = 220; // დიაგრამის სიმაღლე
     
     let html = `
         <div class="chart-grid" style="position: absolute; top: 10px; left: 45px; right: 45px; bottom: 30px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none;">
     `;
     
-    // 6 ხაზი 0-დან maxValue-მდე (0%, 20%, 40%, 60%, 80%, 100%)
+    // 6 ხაზი maxValue-ს მიხედვით
     for (let i = 0; i <= 5; i++) {
         const percent = i * 20; // 0%, 20%, 40%, 60%, 80%, 100%
         const value = Math.round((percent / 100) * maxValue);
@@ -8516,69 +8519,45 @@ function renderWeeklyChart(data, maxValue) {
     
     html += `</div>`;
     
-    // ბარები
-    html += `<div class="chart-bars" style="position: relative; height: ${chartHeight}px; margin-left: 45px; margin-right: 45px; display: flex; align-items: flex-end; justify-content: space-around; gap: 8px; z-index: 2; margin-top: 10px;">`;
-    
+    // ბარები - იწყება ქვემოდან (0-დან)
+    html += `<div class="chart-bars" style="position: relative; height: ${chartHeight}px; margin-left: 45px; margin-right: 45px; display: flex; align-items: flex-end; justify-content: space-around; gap: 8px; z-index: 2; margin-top: 20px;">`;
+
     data.forEach((item, index) => {
-        // გამოვთვალოთ ბარის სიმაღლე - პროპორციული maxValue-სთან
-        // ბარი იწყება 0-დან (baseLine) და ადის ზემოთ
-        const barHeight = (item.count / maxValue) * (chartHeight - 30);
+        // ბარის სიმაღლე - პროპორციული maxValue-სთან
+        // 40px არის რეზერვი ქვედა ნაწილში დღეების სახელებისთვის
+        const maxBarHeight = chartHeight - 70; // მაქსიმალური სიმაღლე
+        const barHeight = item.count > 0 ? (item.count / maxValue) * maxBarHeight : 0;
         
         html += `
             <div class="bar-container" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; position: relative;">
                 <div class="bar-wrapper" style="width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; position: relative;">
-                    <div class="bar" style="width: 60%; background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-radius: 8px 8px 4px 4px; height: ${Math.max(barHeight, 4)}px; position: relative; min-height: 4px; box-shadow: 0 -2px 10px rgba(14, 165, 164, 0.3); cursor: pointer; margin-bottom: 0;" 
+                    <div class="bar" style="width: 60%; background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-radius: 8px 8px 4px 4px; height: ${barHeight}px; position: relative; min-height: ${barHeight > 0 ? '4px' : '0'}; box-shadow: 0 -2px 10px rgba(14, 165, 164, 0.3); cursor: pointer; margin-bottom: 0;" 
                          onmouseover="this.querySelector('.bar-value').style.opacity='1'"
                          onmouseout="this.querySelector('.bar-value').style.opacity='0'">
                         <span class="bar-value" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--accent); border: 1px solid var(--border); white-space: nowrap; opacity: 0; transition: opacity 0.2s; box-shadow: var(--shadow); z-index: 10; pointer-events: none; text-align: center;">
                             <div>${item.count} მომხმარებელი</div>
                             <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-                                ✦ რეგ: ${item.registered} | 🧑 სტუმ: ${item.guests}
+                                ✦ რეგ: ${item.registered || 0} | 🧑 სტუმ: ${item.guests || 0}
                             </div>
                             <div style="font-size: 10px; color: var(--text-muted);">
-                                📝 პასუხი: ${item.answers}
+                                📝 პასუხი: ${item.answers || 0}
                             </div>
                         </span>
                     </div>
                 </div>
-                <div class="bar-label" style="font-size: 12px; font-weight: 500; color: var(--text-muted); text-align: center; margin-top: 8px;">
+                <div class="bar-label" style="font-size: 12px; font-weight: 500; color: var(--text-muted); text-align: center; margin-top: 8px; position: absolute; bottom: -25px;">
                     ${item.day}
                     <div class="bar-date" style="font-size: 10px; color: var(--text-muted); opacity: 0.7;">${item.date}</div>
                 </div>
             </div>
         `;
     });
-    
+
     html += `</div>`;
     
-    // დავამატოთ 0-ის მნიშვნელობის ხაზი
-    html += `<div style="position: absolute; bottom: 40px; left: 45px; right: 45px; height: 2px; background: var(--border); z-index: 1;"></div>`;
-    
-    // დავამატოთ დამაკავშირებელი ხაზი (SVG) - მხოლოდ თუ მონაცემები არსებობს
-    if (data.some(d => d.count > 0)) {
-        const points = [];
-        for (let i = 0; i < data.length; i++) {
-            const barHeight = (data[i].count / maxValue) * (chartHeight - 30);
-            const x = 45 + 20 + (i * ((container.offsetWidth - 120) / 6));
-            const y = 20 + (chartHeight - 30 - barHeight);
-            points.push(`${x},${y}`);
-        }
-        
-        html += `
-            <svg class="line-svg" style="position: absolute; top: 10px; left: 0; right: 0; height: ${chartHeight}px; pointer-events: none; z-index: 5; width: 100%;">
-                <polyline points="${points.join(' ')}" style="stroke: var(--warning); stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3));" />
-                ${data.map((d, i) => {
-                    if (d.count === 0) return '';
-                    const barHeight = (d.count / maxValue) * (chartHeight - 30);
-                    const x = 45 + 20 + (i * ((container.offsetWidth - 120) / 6));
-                    const y = 20 + (chartHeight - 30 - barHeight);
-                    return `<circle cx="${x}" cy="${y}" r="6" style="fill: var(--warning); stroke: white; stroke-width: 2; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); cursor: pointer; pointer-events: all;" 
-                                 onmouseover="showTooltip('${d.day}', ${d.count})" />`;
-                }).join('')}
-            </svg>
-        `;
-    }
-    
+    // 0-ის მკაფიო ხაზი (სურვილისამებრ - შეგიძლია წაშალო)
+    html += `<div style="position: absolute; bottom: 40px; left: 45px; right: 45px; height: 1px; background: var(--accent); opacity: 0.3; z-index: 1; pointer-events: none;"></div>`;
+
     container.innerHTML = html;
     
     // დავამატოთ CSS კლასი კონტეინერისთვის
