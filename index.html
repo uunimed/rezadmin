@@ -7776,6 +7776,9 @@ window.viewUserDetails = async function(userId) {
             return;
         }
 
+        // ჩავტვირთოთ მოდულების კითხვების რაოდენობა CSV-დან
+        const moduleCounts = await loadAllModuleQuestionCounts();
+
         // შევამოწმოთ არის თუ არა მომხმარებელი ონლაინ
         const now = Date.now();
         let isOnline = false;
@@ -7816,6 +7819,125 @@ window.viewUserDetails = async function(userId) {
                 minute: '2-digit',
                 second: '2-digit'
             }) : 'უცნობია';
+
+        // მოდულების სტატისტიკის შეგროვება
+        let modulesHtml = '';
+        const userProgress = user.progress || {};
+        
+        // გავარჩიოთ მოდულები
+        const modulesWithProgress = Object.entries(userProgress)
+            .filter(([_, progress]) => {
+                const hasNormal = progress.normal?.answeredQuestions && 
+                                 Object.keys(progress.normal.answeredQuestions).length > 0;
+                const hasExam = progress.exam?.answeredQuestions && 
+                               Object.keys(progress.exam.answeredQuestions).length > 0;
+                return hasNormal || hasExam;
+            });
+
+        if (modulesWithProgress.length > 0) {
+            modulesWithProgress.forEach(([moduleId, progress]) => {
+                const moduleName = getModuleName(moduleId);
+                const questionCount = moduleCounts[moduleId] || 0;
+                
+                // ნორმალური რეჟიმის სტატისტიკა
+                const normalAnswers = progress.normal?.answeredQuestions || {};
+                const normalCount = Object.keys(normalAnswers).length;
+                const normalCorrect = Object.values(normalAnswers).filter(a => a.isCorrect).length;
+                
+                // საგამოცდო რეჟიმის სტატისტიკა
+                const examAnswers = progress.exam?.answeredQuestions || {};
+                const examCount = Object.keys(examAnswers).length;
+                const examCorrect = Object.values(examAnswers).filter(a => a.isCorrect).length;
+                const examScore = examCorrect; // საგამოცდო რეჟიმში ქულა = სწორი პასუხების რაოდენობა
+                
+                modulesHtml += `
+                    <div style="background: var(--surface-light); border-radius: 16px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--border);">
+                        <h4 style="margin: 0 0 12px 0; color: var(--accent); font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                                <polyline points="2 17 12 22 22 17"/>
+                                <polyline points="2 12 12 17 22 12"/>
+                            </svg>
+                            ${moduleName}
+                        </h4>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <!-- სტანდარტული ტესტები -->
+                            <div style="background: var(--surface); border-radius: 12px; padding: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                    </svg>
+                                    <span style="font-weight: 600; font-size: 14px;">სტანდარტული ტესტები</span>
+                                </div>
+                                
+                                ${normalCount > 0 ? `
+                                    <div style="padding: 8px 0;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                            <span style="color: var(--text-muted);">გაიარა ${normalCount} ტესტი</span>
+                                            <span style="background: ${normalCorrect === normalCount ? 'rgba(22,163,74,0.1)' : 'rgba(245,158,11,0.1)'}; color: ${normalCorrect === normalCount ? 'var(--success)' : 'var(--warning)'}; padding: 2px 8px; border-radius: 40px; font-size: 11px;">
+                                                სწორი: ${normalCorrect}/${normalCount}
+                                            </span>
+                                        </div>
+                                        <div style="height: 6px; background: var(--surface-light); border-radius: 3px; overflow: hidden;">
+                                            <div style="height: 100%; width: ${(normalCorrect / (normalCount || 1)) * 100}%; background: ${normalCorrect === normalCount ? 'var(--success)' : 'var(--warning)'}; border-radius: 3px;"></div>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div style="color: var(--text-muted); font-size: 13px; padding: 8px 0;">
+                                        ⚪ არ გაუვლია
+                                    </div>
+                                `}
+                            </div>
+                            
+                            <!-- საგამოცდო ტესტები -->
+                            <div style="background: var(--surface); border-radius: 12px; padding: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                    <span style="font-weight: 600; font-size: 14px;">საგამოცდო ტესტები</span>
+                                </div>
+                                
+                                ${examCount > 0 ? `
+                                    <div style="padding: 8px 0;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                            <span style="color: var(--text-muted);">დაწერა</span>
+                                            <span style="background: ${examScore >= 150 ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)'}; color: ${examScore >= 150 ? 'var(--success)' : 'var(--danger)'}; padding: 2px 8px; border-radius: 40px; font-weight: 600;">
+                                                შედეგი: ${examScore}
+                                            </span>
+                                        </div>
+                                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                                            ${examScore >= 150 ? '✅ ჩაბარებული (≥150)' : '❌ ჩაჭრილი (<150)'}
+                                        </div>
+                                        <div style="height: 6px; background: var(--surface-light); border-radius: 3px; overflow: hidden; margin-top: 8px;">
+                                            <div style="height: 100%; width: ${(examScore / 200) * 100}%; background: ${examScore >= 150 ? 'var(--success)' : 'var(--danger)'}; border-radius: 3px;"></div>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div style="color: var(--text-muted); font-size: 13px; padding: 8px 0;">
+                                        ⚪ არ დაუწერია
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            modulesHtml = `
+                <div style="background: var(--surface-light); border-radius: 16px; padding: 30px; text-align: center; color: var(--text-muted);">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto 16px;">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <div>ამ მომხმარებელს არცერთ მოდულზე არ უმუშავია</div>
+                </div>
+            `;
+        }
 
         modalContent.innerHTML = `
             <div style="margin-bottom: 20px;">
@@ -7858,6 +7980,17 @@ window.viewUserDetails = async function(userId) {
                         </div>
                     ` : ''}
                 </div>
+                
+                <h3 style="margin: 24px 0 16px 0; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                        <polyline points="2 17 12 22 22 17"/>
+                        <polyline points="2 12 12 17 22 12"/>
+                    </svg>
+                    მოდულები რომელზეც უმუშავია
+                </h3>
+                
+                ${modulesHtml}
             </div>
         `;
 
@@ -7972,10 +8105,7 @@ async function checkUserData() {
     });
 }
 
-// გამოიძახეთ კონსოლიდან საჭიროების შემთხვევაში
-// checkUserData();
-
-// Load activity data - UPDATED VERSION
+// Load activity data - UPDATED VERSION WITH CORRECT STATS CARDS
 async function loadActivityData() {
     if (!firebaseInitialized || !database) return;
 
@@ -8018,53 +8148,10 @@ async function loadActivityData() {
             startTime = now - timeRanges[currentActivityTab];
         }
 
-        // === მთავარი სტატისტიკა (სტატისტიკის ბარათები) ===
-        let activeUsers = 0;
-        let newRegistrations = 0;
-        let totalTests = 0;
-        let correctTests = 0;
-
-        Object.values(users).forEach(user => {
-            if (user.lastUpdated && user.lastUpdated >= startTime && user.lastUpdated <= endTime) {
-                activeUsers++;
-            }
-            if (user.registeredAt && user.registeredAt >= startTime && user.registeredAt <= endTime) {
-                newRegistrations++;
-            }
-        });
-
-        Object.values(answers).forEach(answer => {
-            if (answer.timestamp && answer.timestamp >= startTime && answer.timestamp <= endTime) {
-                totalTests++;
-                if (answer.isCorrect) correctTests++;
-            }
-        });
-
-        // განვაახლოთ სტატისტიკის ბარათები
-        document.getElementById('activityStats').innerHTML = `
-            <div class="stat-card">
-                <div class="stat-title">აქტიური მომხმარებელი</div>
-                <div class="stat-value">${activeUsers}</div>
-                <div class="stat-change">${((activeUsers / Object.keys(users).length) * 100 || 0).toFixed(1)}%</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-title">ახალი რეგისტრაცია</div>
-                <div class="stat-value">${newRegistrations}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-title">შესრულებული ტესტი</div>
-                <div class="stat-value">${totalTests}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-title">სწორი პასუხი</div>
-                <div class="stat-value">${((correctTests / totalTests) * 100 || 0).toFixed(1)}%</div>
-                <div class="stat-change">${correctTests}/${totalTests}</div>
-            </div>
-        `;
-
-        // === მოდულების სტატისტიკა ===
+        // === 1. ცხრილის მონაცემების შეგროვება (მოდულების მიხედვით) ===
+        const moduleData = {};
         
-        // 1. შევქმნათ ყველა მოდულის სია CSV მონაცემებით
+        // ყველა მოდულის სია
         const allModules = [
             { id: 'samkurnaloo', name: 'სამკურნალო' },
             { id: 'stomatologia', name: 'სტომატოლოგია' },
@@ -8117,123 +8204,187 @@ async function loadActivityData() {
         // გავფილტროთ მხოლოდ ის მოდულები, რომლებსაც აქვთ კითხვები CSV-ში
         const modulesWithQuestions = allModules.filter(m => moduleCounts[m.id] > 0);
         
-        // შევქმნათ მონაცემთა სტრუქტურა თითოეული მოდულისთვის
-        const moduleData = {};
+        // მოდულების მონაცემების ინიციალიზაცია
+        modulesWithQuestions.forEach(moduleInfo => {
+            moduleData[moduleInfo.id] = {
+                name: moduleInfo.name,
+                activeUsers: new Set(),      // აქტიური მომხმარებლები
+                newRegistrations: new Set(), // ახალი რეგისტრაციები
+                testsCompleted: 0,            // შესრულებული ტესტები
+                correctAnswers: 0              // სწორი პასუხები (პირველივე ცდით)
+            };
+        });
 
-        // 2. შევავსოთ მონაცემები users პროგრესიდან
+        // === 2. შევავსოთ მონაცემები users პროგრესიდან ===
         Object.entries(users).forEach(([userId, userData]) => {
+            // რეგისტრაციის თარიღის შემოწმება
+            if (userData.registeredAt && userData.registeredAt >= startTime && userData.registeredAt <= endTime) {
+                // ეს მომხმარებელი დარეგისტრირდა ამ პერიოდში
+                modulesWithQuestions.forEach(moduleInfo => {
+                    moduleData[moduleInfo.id].newRegistrations.add(userId);
+                });
+            }
+            
+            // მომხმარებლის აქტივობის შემოწმება მოდულების მიხედვით
             if (userData.progress) {
                 Object.entries(userData.progress).forEach(([moduleId, moduleProgress]) => {
-                    // შევამოწმოთ, აქვს თუ არა მომხმარებელს ნამუშევარი ამ მოდულზე
-                    const hasNormalProgress = moduleProgress.normal?.answeredQuestions && 
-                                              Object.keys(moduleProgress.normal.answeredQuestions).length > 0;
-                    const hasExamProgress = moduleProgress.exam?.answeredQuestions && 
-                                           Object.keys(moduleProgress.exam.answeredQuestions).length > 0;
-                    
-                    if (hasNormalProgress || hasExamProgress) {
-                        if (!moduleData[moduleId]) {
-                            moduleData[moduleId] = {
-                                users: new Set(),
-                                tests: 0,
-                                correctFirstTry: 0,
-                                firstTryUserQuestions: {} // userId -> Set of questionIds answered correctly first try
-                            };
-                        }
-                        moduleData[moduleId].users.add(userId);
+                    if (moduleData[moduleId]) {
+                        // შევამოწმოთ, აქვს თუ არა მომხმარებელს ნამუშევარი ამ მოდულზე
+                        const hasNormalProgress = moduleProgress.normal?.answeredQuestions && 
+                                                  Object.keys(moduleProgress.normal.answeredQuestions).length > 0;
+                        const hasExamProgress = moduleProgress.exam?.answeredQuestions && 
+                                               Object.keys(moduleProgress.exam.answeredQuestions).length > 0;
                         
-                        // 3. დავითვალოთ ტესტები და პირველივე ცდით სწორი პასუხები
-                        if (hasNormalProgress) {
-                            Object.entries(moduleProgress.normal.answeredQuestions).forEach(([questionId, answerData]) => {
-                                // ტესტების რაოდენობა - ყველა პასუხი
-                                moduleData[moduleId].tests++;
-                                
-                                // პირველივე ცდით სწორი პასუხების დათვლა
-                                if (answerData.isCorrect) {
-                                    // შევამოწმოთ, არის თუ არა ეს პირველი ცდა
-                                    if (!answerData.attemptCount || answerData.attemptCount === 1) {
-                                        // შევქმნათ სტრუქტურა, რომ თითოეული მომხმარებელი თითო კითხვაზე მხოლოდ ერთხელ ჩავთვალოთ
-                                        if (!moduleData[moduleId].firstTryUserQuestions[userId]) {
-                                            moduleData[moduleId].firstTryUserQuestions[userId] = new Set();
-                                        }
-                                        moduleData[moduleId].firstTryUserQuestions[userId].add(questionId);
+                        if (hasNormalProgress || hasExamProgress) {
+                            // აქტიური მომხმარებელი
+                            moduleData[moduleId].activeUsers.add(userId);
+                            
+                            // ტესტების რაოდენობა და სწორი პასუხები
+                            if (hasNormalProgress) {
+                                Object.entries(moduleProgress.normal.answeredQuestions).forEach(([questionId, answerData]) => {
+                                    // ყველა პასუხი ითვლება ტესტად
+                                    moduleData[moduleId].testsCompleted++;
+                                    
+                                    // პირველივე ცდით სწორი პასუხი
+                                    if (answerData.isCorrect && (!answerData.attemptCount || answerData.attemptCount === 1)) {
+                                        moduleData[moduleId].correctAnswers++;
                                     }
-                                }
-                            });
-                        }
-                        
-                        // საგამოცდო რეჟიმშიც ჩავთვალოთ
-                        if (hasExamProgress) {
-                            Object.entries(moduleProgress.exam.answeredQuestions).forEach(([questionId, answerData]) => {
-                                moduleData[moduleId].tests++;
-                                
-                                // საგამოცდო რეჟიმშიც შეგვიძლია ჩავთვალოთ პირველივე ცდად
-                                if (answerData.isCorrect) {
-                                    if (!moduleData[moduleId].firstTryUserQuestions[userId]) {
-                                        moduleData[moduleId].firstTryUserQuestions[userId] = new Set();
+                                });
+                            }
+                            
+                            if (hasExamProgress) {
+                                Object.entries(moduleProgress.exam.answeredQuestions).forEach(([questionId, answerData]) => {
+                                    moduleData[moduleId].testsCompleted++;
+                                    if (answerData.isCorrect && (!answerData.attemptCount || answerData.attemptCount === 1)) {
+                                        moduleData[moduleId].correctAnswers++;
                                     }
-                                    moduleData[moduleId].firstTryUserQuestions[userId].add(questionId);
-                                }
-                            });
+                                });
+                            }
                         }
                     }
                 });
             }
         });
 
-        // 4. გადავთვალოთ firstTryUserQuestions Set-ებიდან ჯამური რაოდენობა
-        Object.keys(moduleData).forEach(moduleId => {
-            let totalFirstTryCorrect = 0;
-            if (moduleData[moduleId].firstTryUserQuestions) {
-                Object.values(moduleData[moduleId].firstTryUserQuestions).forEach(questionSet => {
-                    totalFirstTryCorrect += questionSet.size;
-                });
+        // === 3. answers ცხრილიდან დამატებითი მონაცემები (თუ არის) ===
+        Object.entries(answers).forEach(([answerKey, answerData]) => {
+            if (answerData.timestamp && answerData.timestamp >= startTime && answerData.timestamp <= endTime) {
+                const moduleId = answerData.module;
+                if (moduleData[moduleId]) {
+                    // თუ მომხმარებელი უკვე არ არის დამატებული activeUsers-ში, დავამატოთ
+                    if (answerData.userId) {
+                        moduleData[moduleId].activeUsers.add(answerData.userId);
+                    }
+                    
+                    // ტესტების რაოდენობა
+                    moduleData[moduleId].testsCompleted++;
+                    
+                    // სწორი პასუხები
+                    if (answerData.isCorrect && (!answerData.attemptCount || answerData.attemptCount === 1)) {
+                        moduleData[moduleId].correctAnswers++;
+                    }
+                }
             }
-            moduleData[moduleId].correctFirstTry = totalFirstTryCorrect;
         });
 
-        // 5. მოვამზადოთ ცხრილის მონაცემები (ყველა მოდული, რომელსაც აქვს კითხვები)
+        // === 4. გამოვთვალოთ ჯამური სტატისტიკა ცხრილიდან ===
+        let totalActiveUsers = 0;
+        let totalNewRegistrations = 0;
+        let totalTestsCompleted = 0;
+        let totalCorrectAnswers = 0;
+
+        // გავაერთიანოთ ყველა მოდულის მონაცემები
+        Object.values(moduleData).forEach(data => {
+            totalActiveUsers += data.activeUsers.size;
+            totalNewRegistrations += data.newRegistrations.size;
+            totalTestsCompleted += data.testsCompleted;
+            totalCorrectAnswers += data.correctAnswers;
+        });
+
+        // მხოლოდ უნიკალური მომხმარებლების დათვლა
+        const uniqueActiveUsers = new Set();
+        const uniqueNewRegistrations = new Set();
+        
+        Object.values(moduleData).forEach(data => {
+            data.activeUsers.forEach(userId => uniqueActiveUsers.add(userId));
+            data.newRegistrations.forEach(userId => uniqueNewRegistrations.add(userId));
+        });
+
+        // სწორი პასუხების პროცენტი
+        const correctPercent = totalTestsCompleted > 0 ? 
+            ((totalCorrectAnswers / totalTestsCompleted) * 100).toFixed(1) : 0;
+
+        // === 5. განვაახლოთ სტატისტიკის ბარათები ===
+        document.getElementById('activityStats').innerHTML = `
+            <div class="stat-card">
+                <div class="stat-title">აქტიური მომხმარებელი</div>
+                <div class="stat-value">${uniqueActiveUsers.size}</div>
+                <div class="stat-change">${Object.keys(users).length > 0 ? ((uniqueActiveUsers.size / Object.keys(users).length) * 100).toFixed(1) : 0}%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">ახალი რეგისტრაცია</div>
+                <div class="stat-value">${uniqueNewRegistrations.size}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">შესრულებული ტესტი</div>
+                <div class="stat-value">${totalTestsCompleted}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">სწორი პასუხი</div>
+                <div class="stat-value">${correctPercent}%</div>
+                <div class="stat-change">${totalCorrectAnswers}/${totalTestsCompleted}</div>
+            </div>
+        `;
+
+        // === 6. ცხრილის განახლება ===
         const tableRows = [];
         
         modulesWithQuestions.forEach(moduleInfo => {
-            const moduleId = moduleInfo.id;
-            const data = moduleData[moduleId] || { 
-                users: new Set(), 
-                tests: 0, 
-                correctFirstTry: 0 
+            const data = moduleData[moduleInfo.id] || { 
+                activeUsers: new Set(), 
+                newRegistrations: new Set(), 
+                testsCompleted: 0, 
+                correctAnswers: 0 
             };
             
             tableRows.push({
-                id: moduleId,
+                id: moduleInfo.id,
                 name: moduleInfo.name,
-                usersCount: data.users.size,
-                testsCount: data.tests,
-                correctFirstTry: data.correctFirstTry
+                activeUsers: data.activeUsers.size,
+                newRegistrations: data.newRegistrations.size,
+                testsCompleted: data.testsCompleted,
+                correctAnswers: data.correctAnswers
             });
         });
 
         // დავალაგოთ მოდულები მომხმარებლების რაოდენობის მიხედვით (ყველაზე აქტიური პირველ რიგში)
-        tableRows.sort((a, b) => b.usersCount - a.usersCount);
+        tableRows.sort((a, b) => b.activeUsers - a.activeUsers);
 
-        // 6. განვაახლოთ ცხრილი
         const tableBody = document.getElementById('activityTableBody');
         tableBody.innerHTML = tableRows.map(row => `
             <tr>
                 <td><strong>${escapeHtml(row.name)}</strong></td>
-                <td>${row.usersCount}</td>
-                <td>${row.testsCount}</td>
-                <td>${row.correctFirstTry}</td>
+                <td>${row.activeUsers}</td>
+                <td>${row.testsCompleted}</td>
+                <td>${row.correctAnswers}</td>
             </tr>
         `).join('');
 
-        // თუ არცერთი მოდული არ არის
         if (tableRows.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--text-muted);">📭 მონაცემები არ არის</td></tr>';
         }
 
-        console.log("Activity data loaded successfully with all modules");
+        console.log("✅ Activity data loaded successfully", {
+            activeUsers: uniqueActiveUsers.size,
+            newRegistrations: uniqueNewRegistrations.size,
+            testsCompleted: totalTestsCompleted,
+            correctAnswers: totalCorrectAnswers,
+            correctPercent: correctPercent,
+            modulesCount: tableRows.length
+        });
 
     } catch (error) {
-        console.error("Error loading activity:", error);
+        console.error("❌ Error loading activity:", error);
         const tableBody = document.getElementById('activityTableBody');
         if (tableBody) {
             tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--danger);">❌ შეცდომა მონაცემების ჩატვირთვისას</td></tr>';
