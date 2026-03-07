@@ -1,3 +1,9 @@
+ამ კოდში მომხმარებლების გვერდზე წერია, რომ რეგისტრაციის თარიღი უცნობია. რეგისტრაციის თარიღი ყველა მომხმარებელზე უნდა ეწეროს - 
+რეგისტრაცია register / sign up
+შესვლა sign in
+
+ამ კოდში რეგისტრაციის და ბოლო ავტორიზაციის დროს ერთიდაიგივეს აჩვენებს. რეგისტრაციის დრო არის signed up, რეგისტრაცია მხოლოდ პირველად ხდება
+
 <!DOCTYPE html>
 <html lang="ka">
 <head>
@@ -6908,6 +6914,84 @@ function setupOnlineUsersListener() {
     });
 }
 
+// დაამატეთ ეს ფუნქცია კოდში
+async function registerUser(username, password) {
+    if (!firebaseInitialized || !database) {
+        showNotification('Firebase არ არის ხელმისაწვდომი', true);
+        return;
+    }
+    
+    const userId = username.replace(/[.#$[\]]/g, '_');
+    const now = Date.now();
+    
+    try {
+        await database.ref(`users/${userId}`).set({
+            username: username,
+            password: password,
+            registeredAt: now,  // ეს არის მნიშვნელოვანი - რეგისტრაციის თარიღი
+            lastUpdated: now,
+            progress: {}
+        });
+        
+        console.log(`✅ მომხმარებელი ${username} დარეგისტრირდა ${new Date(now).toLocaleString()}`);
+        showNotification(`✅ მომხმარებელი ${username} წარმატებით დარეგისტრირდა`, false);
+        
+        // განვაახლოთ მომხმარებლების სია
+        loadUsers();
+        
+    } catch (error) {
+        console.error('❌ რეგისტრაციის შეცდომა:', error);
+        showNotification('❌ რეგისტრაცია ვერ მოხერხდა', true);
+    }
+}
+
+// მომხმარებლების რეგისტრაციის თარიღის გამოსწორება
+// დაამატეთ ეს ფუნქცია კოდში (მაგალითად, loadUsers ფუნქციის შემდეგ)
+async function fixMissingRegistrationDates() {
+    if (!firebaseInitialized || !database) return;
+    
+    showLoading();
+    
+    try {
+        const snapshot = await database.ref('users').once('value');
+        const users = snapshot.val() || {};
+        
+        const updates = {};
+        let fixedCount = 0;
+        
+        Object.entries(users).forEach(([key, user]) => {
+            if (!user.registeredAt) {
+                // გამოვიყენოთ lastUpdated ან მიმდინარე დრო
+                const regDate = user.lastUpdated || Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 დღის წინ
+                updates[`users/${key}/registeredAt`] = regDate;
+                fixedCount++;
+                console.log(`🔧 Fixing user ${key}: setting registeredAt to ${new Date(regDate).toLocaleString()}`);
+            }
+        });
+        
+        if (Object.keys(updates).length > 0) {
+            await database.ref().update(updates);
+            console.log(`✅ Fixed ${fixedCount} users`);
+            showNotification(`✅ ${fixedCount} მომხმარებელს დაემატა რეგისტრაციის თარიღი`, false);
+            
+            // განვაახლოთ მომხმარებლების სია
+            loadUsers();
+        } else {
+            console.log("✅ ყველა მომხმარებელს უკვე აქვს registeredAt");
+            showNotification("✅ ყველა მომხმარებელს უკვე აქვს რეგისტრაციის თარიღი", false);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error fixing missing registration dates:', error);
+        showNotification('❌ შეცდომა', true);
+    } finally {
+        hideLoading();
+    }
+}
+
+// გამოიძახეთ კონსოლიდან:
+fixMissingRegistrationDates()
+
 // დამატებითი ფუნქცია - ასუფთავებს ძველ სესიებს
 async function cleanupOldSessions() {
     if (!firebaseInitialized || !database) return;
@@ -7493,7 +7577,6 @@ function debugOnlineUsers() {
 // გამოიძახეთ კონსოლიდან:
 // debugOnlineUsers()
 
-// Load users
 async function loadUsers() {
     if (!firebaseInitialized || !database) return;
 
@@ -7503,19 +7586,11 @@ async function loadUsers() {
         
         const now = Date.now();
         const usersList = Object.entries(users).map(([key, data]) => {
-            // შევამოწმოთ არის თუ არა ეს მომხმარებელი ონლაინ (ნებისმიერ მოწყობილობაზე)
+            // შევამოწმოთ არის თუ არა ეს მომხმარებელი ონლაინ
             let isOnline = false;
             
-            // გადავუაროთ ყველა ონლაინ სესიას
             Object.values(onlineUsers).forEach(u => {
-                // თუ userId ემთხვევა - ეს რეგისტრირებული მომხმარებელია
-                if (u.userId === key) {
-                    if (u.lastSeen && (now - u.lastSeen) < 30000) {
-                        isOnline = true;
-                    }
-                }
-                // თუ name ემთხვევა username-ს - ესეც რეგისტრირებული მომხმარებელია (ძველი ფორმატი)
-                else if (u.name === data.username) {
+                if (u.userId === key || u.name === data.username) {
                     if (u.lastSeen && (now - u.lastSeen) < 30000) {
                         isOnline = true;
                     }
@@ -7526,7 +7601,7 @@ async function loadUsers() {
                 id: key,
                 username: data.username || key,
                 password: data.password || '',
-                registeredAt: data.registeredAt || 0,
+                registeredAt: data.registeredAt || 0,  // რეგისტრაციის თარიღი
                 lastUpdated: data.lastUpdated || 0,
                 progress: data.progress || {},
                 isOnline: isOnline
@@ -7551,21 +7626,20 @@ function renderUsersTable(users) {
     tbody.innerHTML = '';
 
     users.sort((a, b) => b.isOnline - a.isOnline).forEach(user => {
-        // რეგისტრაციის თარიღი
-        let registrationDate = 'უცნობია';
-        if (user.registeredAt && user.registeredAt > 0) {
-            try {
-                registrationDate = new Date(user.registeredAt).toLocaleString('ka-GE', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            } catch (e) {
-                console.error('რეგისტრაციის თარიღის ფორმატირების შეცდომა:', e);
-            }
-        }
+let registrationDate = 'უცნობია';
+if (user.registeredAt && user.registeredAt > 0) {
+    try {
+        registrationDate = new Date(user.registeredAt).toLocaleString('ka-GE', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (e) {
+        console.error('რეგისტრაციის თარიღის ფორმატირების შეცდომა:', e);
+    }
+}
         
         // ბოლო შესვლის თარიღი
         let lastLogin = 'უცნობია';
@@ -7594,7 +7668,7 @@ function renderUsersTable(users) {
                     ${user.isOnline ? 'ონლაინ' : 'ოფლაინ'}
                 </div>
             </td>
-            <td>${registrationDate}</td>
+            <td>${registrationDate}</td>  <!-- ეს არის რეგისტრაციის თარიღი -->
             <td>${lastLogin}</td>
             <td>
                 <div class="action-buttons">
@@ -7876,6 +7950,16 @@ window.viewUserDetails = async function(userId) {
             
             loadActivityData();
         };
+
+// დაამატეთ ფუნქცია მომხმარებლების თარიღის მიხედვით გაფილტვრისთვის
+function filterUsersByDate(users, startDate, endDate) {
+    const start = startDate ? new Date(startDate).setHours(0, 0, 0, 0) : 0;
+    const end = endDate ? new Date(endDate).setHours(23, 59, 59, 999) : Date.now();
+    
+    return users.filter(user => 
+        user.registeredAt >= start && user.registeredAt <= end
+    );
+}
 
 async function checkUserData() {
     if (!firebaseInitialized || !database) return;
