@@ -5656,43 +5656,38 @@ async function loadStatistics() {
                 showModuleQuestions(moduleId, safeModuleName);
             };
             
-            moduleCard.innerHTML = `
-                <div class="table-header" style="cursor: pointer; padding: 16px 24px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                                <polyline points="2 17 12 22 22 17"/>
-                                <polyline points="2 12 12 17 22 12"/>
-                            </svg>
-                            <span style="font-weight: 600; color: var(--text); font-size: 16px;">${moduleName}</span>
-                        </div>
-                        
-                        <div style="display: flex; align-items: center; gap: 32px;">
-                            <div style="display: flex; align-items: center; gap: 8px;" title="${questionCount > 0 ? questionCount + ' კითხვა' : 'კითხვების რაოდენობა უცნობია'}">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${questionCount > 0 ? 'var(--accent)' : 'var(--text-muted)'}" stroke-width="2">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                                    <line x1="3" y1="9" x2="21" y2="9"/>
-                                    <line x1="9" y1="21" x2="9" y2="9"/>
-                                </svg>
-                                <span class="question-count-${moduleId}" style="color: ${questionCount > 0 ? 'var(--text)' : 'var(--text-muted)'}; font-weight: 500;">${questionCount > 0 ? questionCount : '?'}</span>
-                            </div>
-                            
-                            <div style="display: flex; align-items: center; gap: 8px; min-width: 100px;" title="${userCount > 0 ? userCount + ' მომხმარებელი მუშაობდა' : 'ჯერ არ უმუშავია'}">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${userCount > 0 ? 'var(--success)' : 'var(--text-muted)'}" stroke-width="2">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                    <circle cx="9" cy="7" r="4"/>
-                                </svg>
-                                <span class="user-count-${moduleId}" style="color: ${userCount > 0 ? 'var(--success)' : 'var(--text-muted)'}; font-weight: 500;">${userCount}</span>
-                            </div>
-                            
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-                                <polyline points="9 18 15 12 9 6"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            `;
+moduleItem.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <!-- მარცხენა მხარე: # და მოდულის სახელი -->
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-weight: 700; color: var(--accent); background: var(--surface-light); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">${index + 1}</span>
+            <span style="font-weight: 600; font-size: 16px; color: var(--text);">${module.name}</span>
+        </div>
+        
+        <!-- მარჯვენა მხარე: კითხვების რაოდენობა და მუშაობს -->
+        <div style="display: flex; align-items: center; gap: 24px;">
+            <!-- კითხვების რაოდენობა -->
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="3" y1="9" x2="21" y2="9"/>
+                    <line x1="9" y1="21" x2="9" y2="9"/>
+                </svg>
+                <span style="font-weight: 700; font-size: 18px; color: var(--accent);">${module.count}</span>
+            </div>
+            
+            <!-- მუშაობს (მომხმარებლების რაოდენობა) -->
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span style="font-weight: 600; color: var(--text);">${module.totalUsers}</span>
+                <span style="font-size: 14px; color: var(--text-muted);">მუშაობს</span>
+            </div>
+        </div>
+    </div>
+`;
             
             moduleCard.onmouseover = () => {
                 moduleCard.style.transform = 'translateY(-2px)';
@@ -8179,6 +8174,14 @@ async function loadWeeklyActivity(weekOffset = 0) {
         return;
     }
     
+    // თუ იგივე მონაცემები გვაქვს ქეშში და 5 წამზე ნაკლებია გასული, არ განვაახლოთ
+    if (window.cachedWeeklyData && 
+        window.cachedWeeklyData.offset === weekOffset && 
+        Date.now() - window.cachedWeeklyData.timestamp < 5000) {
+        renderWeeklyChart(window.cachedWeeklyData.data);
+        return;
+    }
+    
     try {
         // გამოვთვალოთ კვირის დასაწყისი და დასასრული
         const now = new Date();
@@ -8219,112 +8222,203 @@ async function loadWeeklyActivity(weekOffset = 0) {
             nextBtn.disabled = weekOffset >= 4; // 4 კვირაზე მეტი წინ არ ვატაროთ
         }
         
-        // ავიღოთ ყველა აქტივობა Firebase-დან
-        const [usersSnapshot, answersSnapshot] = await Promise.all([
+        // ავიღოთ ყველა საჭირო მონაცემი Firebase-დან
+        const [usersSnapshot, answersSnapshot, onlineSnapshot] = await Promise.all([
             database.ref('users').once('value'),
-            database.ref('answers').once('value')
+            database.ref('answers').once('value'),
+            database.ref('chat/onlineUsers').once('value')
         ]);
         
         const users = usersSnapshot.val() || {};
         const answers = answersSnapshot.val() || {};
+        const onlineUsers = onlineSnapshot.val() || {};
         
-// შევქმნათ სტრუქტურა 7 დღისთვის
-const dailyActivity = {};
-for (let i = 0; i < 7; i++) {
-    const date = new Date(weekStart);
-    date.setDate(weekStart.getDate() + i);
-    const dateKey = date.toISOString().split('T')[0];
-    dailyActivity[dateKey] = {
-        date: date,
-        users: new Set(),
-        sessions: 0,
-        answers: 0,
-        dayIndex: i
-    };
-}
-
-// აქ დავითვალოთ რეალური მომხმარებლები (არა სესიები)
-// გადავუაროთ ყველა მომხმარებელს და შევამოწმოთ მათი აქტივობა
-Object.entries(users).forEach(([userId, userData]) => {
-    // შევამოწმოთ მომხმარებლის ბოლო აქტივობა
-    if (userData.lastUpdated) {
-        const lastSeen = new Date(userData.lastUpdated);
-        if (lastSeen >= weekStart && lastSeen <= weekEnd) {
-            const dateKey = lastSeen.toISOString().split('T')[0];
-            if (dailyActivity[dateKey]) {
-                dailyActivity[dateKey].users.add(userId); // მხოლოდ უნიკალური მომხმარებლები
-            }
+        // შევქმნათ სტრუქტურა 7 დღისთვის
+        const dailyActivity = {};
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(weekStart);
+            date.setDate(weekStart.getDate() + i);
+            const dateKey = date.toISOString().split('T')[0];
+            dailyActivity[dateKey] = {
+                date: date,
+                registered: new Set(),     // რეგისტრირებული მომხმარებლები
+                guests: new Set(),          // სტუმრები
+                total: 0,                    // ჯამური
+                sessions: 0,
+                answers: 0,
+                dayIndex: i
+            };
         }
-    }
-    
-    // შევამოწმოთ რეგისტრაციის თარიღიც
-    if (userData.registeredAt) {
-        const regDate = new Date(userData.registeredAt);
-        if (regDate >= weekStart && regDate <= weekEnd) {
-            const dateKey = regDate.toISOString().split('T')[0];
-            if (dailyActivity[dateKey]) {
-                dailyActivity[dateKey].users.add(userId);
+        
+        // 1. რეგისტრირებული მომხმარებლების აქტივობა (users ცხრილიდან)
+        Object.entries(users).forEach(([userId, userData]) => {
+            // შევამოწმოთ ბოლო აქტივობა
+            if (userData.lastUpdated) {
+                const lastSeen = new Date(userData.lastUpdated);
+                if (lastSeen >= weekStart && lastSeen <= weekEnd) {
+                    const dateKey = lastSeen.toISOString().split('T')[0];
+                    if (dailyActivity[dateKey]) {
+                        dailyActivity[dateKey].registered.add(userId);
+                    }
+                }
             }
-        }
-    }
-});
-
-// დავითვალოთ პასუხების აქტივობები - ეს არ იმოქმედებს მომხმარებლების რაოდენობაზე
-Object.values(answers).forEach(answer => {
-    if (answer.timestamp && answer.userId) {
-        const answerDate = new Date(answer.timestamp);
-        if (answerDate >= weekStart && answerDate <= weekEnd) {
-            const dateKey = answerDate.toISOString().split('T')[0];
-            if (dailyActivity[dateKey]) {
-                dailyActivity[dateKey].answers++;
+            
+            // შევამოწმოთ რეგისტრაციის თარიღიც
+            if (userData.registeredAt) {
+                const regDate = new Date(userData.registeredAt);
+                if (regDate >= weekStart && regDate <= weekEnd) {
+                    const dateKey = regDate.toISOString().split('T')[0];
+                    if (dailyActivity[dateKey]) {
+                        dailyActivity[dateKey].registered.add(userId);
+                    }
+                }
             }
+            
+            // შევამოწმოთ პროგრესის განახლებები
+            if (userData.progress) {
+                Object.values(userData.progress).forEach(moduleProgress => {
+                    if (moduleProgress.lastUpdated) {
+                        const progressDate = new Date(moduleProgress.lastUpdated);
+                        if (progressDate >= weekStart && progressDate <= weekEnd) {
+                            const dateKey = progressDate.toISOString().split('T')[0];
+                            if (dailyActivity[dateKey]) {
+                                dailyActivity[dateKey].registered.add(userId);
+                            }
+                        }
+                    }
+                });
+            }
+        });
+        
+        // 2. სტუმრების აქტივობა (onlineUsers-დან)
+        Object.entries(onlineUsers).forEach(([sessionId, sessionData]) => {
+            if (sessionData && sessionData.lastSeen) {
+                const lastSeen = new Date(sessionData.lastSeen);
+                if (lastSeen >= weekStart && lastSeen <= weekEnd) {
+                    // შევამოწმოთ არის თუ არა სტუმარი
+                    const isGuest = (sessionData.userId && sessionData.userId.startsWith('guest_')) || 
+                                   (sessionData.name && sessionData.name.includes('სტუმარი'));
+                    
+                    if (isGuest) {
+                        const dateKey = lastSeen.toISOString().split('T')[0];
+                        if (dailyActivity[dateKey]) {
+                            // სტუმრის იდენტიფიკატორი
+                            const guestId = sessionData.userId || sessionId;
+                            dailyActivity[dateKey].guests.add(guestId);
+                        }
+                    } else {
+                        // თუ რეგისტრირებული მომხმარებელია onlineUsers-ში, მაგრამ არ გვაქვს users-ში
+                        const userId = sessionData.userId;
+                        if (userId && !dailyActivity[dateKey]?.registered.has(userId)) {
+                            const dateKey = lastSeen.toISOString().split('T')[0];
+                            if (dailyActivity[dateKey]) {
+                                dailyActivity[dateKey].registered.add(userId);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // 3. ავტორიზაციის ისტორიიდან (თუ გვაქვს)
+        try {
+            const authSnapshot = await database.ref('admin/authHistory').once('value');
+            const authHistory = authSnapshot.val() || {};
+            
+            Object.values(authHistory).forEach(entry => {
+                if (entry.timestamp && entry.username) {
+                    const loginDate = new Date(entry.timestamp);
+                    if (loginDate >= weekStart && loginDate <= weekEnd) {
+                        const dateKey = loginDate.toISOString().split('T')[0];
+                        if (dailyActivity[dateKey]) {
+                            // ადმინის გამოვრიცხოთ
+                            if (entry.username !== 'ადმინისტრატორი') {
+                                dailyActivity[dateKey].registered.add(entry.username);
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (e) {
+            console.log("Auth history not available");
         }
-    }
-});
         
-// loadWeeklyActivity ფუნქციაში, მონაცემების დამუშავების შემდეგ:
-const chartData = [];
-let maxValue = 0;
-
-for (let i = 0; i < 7; i++) {
-    // ... მონაცემების დამუშავება ...
-    const userCount = dayData.users.size;
-    if (userCount > maxValue) maxValue = userCount;
-    
-    chartData.push({
-        day: dayNames[i],
-        date: date.toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' }),
-        fullDate: date,
-        count: userCount,
-        sessions: dayData.sessions,
-        answers: dayData.answers,
-        users: Array.from(dayData.users)
-    });
-}
-
-// მაქსიმალური მნიშვნელობის განახლება
-if (maxValue > globalMaxValue) {
-    globalMaxValue = Math.ceil(maxValue / 10) * 10;
-} else if (maxValue < globalMaxValue / 2 && globalMaxValue > 20) {
-    // თუ მონაცემები ძალიან დაბალია, შევამციროთ მაქსიმუმი
-    globalMaxValue = Math.max(10, Math.ceil(maxValue / 10) * 10);
-}
+        // 4. პასუხების აქტივობები (მხოლოდ სტატისტიკისთვის, არ იმოქმედებს მომხმარებლების რაოდენობაზე)
+        Object.values(answers).forEach(answer => {
+            if (answer.timestamp) {
+                const answerDate = new Date(answer.timestamp);
+                if (answerDate >= weekStart && answerDate <= weekEnd) {
+                    const dateKey = answerDate.toISOString().split('T')[0];
+                    if (dailyActivity[dateKey]) {
+                        dailyActivity[dateKey].answers++;
+                        
+                        // თუ მომხმარებელი უკვე არ არის დამატებული, დავამატოთ
+                        if (answer.userId) {
+                            const isGuest = answer.userId && answer.userId.startsWith('guest_');
+                            if (isGuest) {
+                                dailyActivity[dateKey].guests.add(answer.userId);
+                            } else {
+                                dailyActivity[dateKey].registered.add(answer.userId);
+                            }
+                        }
+                    }
+                }
+            }
+        });
         
-        weeklyData = chartData;
-        maxActivityValue = Math.max(10, Math.ceil(maxValue / 10) * 10); // დავამრგვალოთ ზემოთ 10-ის ჯერადამდე
+        // შევქმნათ chartData
+        const chartData = [];
+        let maxValue = 0;
         
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(weekStart);
+            date.setDate(weekStart.getDate() + i);
+            const dateKey = date.toISOString().split('T')[0];
+            const dayData = dailyActivity[dateKey] || { registered: new Set(), guests: new Set(), answers: 0 };
+            
+            // ჯამური = რეგისტრირებული + სტუმრები
+            const registeredCount = dayData.registered.size;
+            const guestsCount = dayData.guests.size;
+            const totalUsers = registeredCount + guestsCount;
+            
+            if (totalUsers > maxValue) maxValue = totalUsers;
+            
+            chartData.push({
+                day: dayNames[i],
+                date: date.toLocaleDateString('ka-GE', { day: 'numeric', month: 'numeric' }),
+                fullDate: date,
+                count: totalUsers,
+                registered: registeredCount,
+                guests: guestsCount,
+                answers: dayData.answers,
+                users: Array.from(dayData.registered),
+                guestList: Array.from(dayData.guests)
+            });
+        }
+        
+        // მაქსიმალური მნიშვნელობა Y ღერძისთვის (ადგილობრივი, არა გლობალური)
+        const localMaxValue = Math.max(10, Math.ceil(maxValue / 10) * 10);
         
         // გამოვთვალოთ სტატისტიკა
-        const totalUsers = chartData.reduce((sum, d) => sum + d.count, 0);
-        const avgDaily = Math.round(totalUsers / 7);
+        const totalUsersWeek = chartData.reduce((sum, d) => sum + d.count, 0);
+        const avgDaily = Math.round(totalUsersWeek / 7);
         document.getElementById('avgDaily').textContent = avgDaily;
         
         // პიკის დღე
         const peak = chartData.reduce((max, d) => d.count > max.count ? d : max, chartData[0]);
         document.getElementById('peakDay').textContent = `${peak.day} (${peak.count})`;
         
-        // დავხატოთ დიაგრამა
-        renderWeeklyChart(chartData);
+        // შევინახოთ მონაცემები ქეშში
+        window.cachedWeeklyData = {
+            offset: weekOffset,
+            data: chartData,
+            timestamp: Date.now()
+        };
+        
+        // დავხატოთ დიაგრამა (გადავცეთ localMaxValue)
+        renderWeeklyChart(chartData, localMaxValue);
+        
+        console.log(`📊 კვირის მონაცემები:`, chartData);
         
     } catch (error) {
         console.error('Error loading weekly activity:', error);
@@ -8390,8 +8484,8 @@ function renderDemoWeeklyData(weekOffset) {
     renderWeeklyChart(demoData);
 }
 
-// დიაგრამის რენდერი - შესწორებული ვერსია 0-ის ჩვენებით
-function renderWeeklyChart(data) {
+// დიაგრამის რენდერი - განახლებული ვერსია
+function renderWeeklyChart(data, maxValue) {
     const container = document.getElementById('weeklyChart');
     if (!container) return;
     
@@ -8400,8 +8494,7 @@ function renderWeeklyChart(data) {
         return;
     }
     
-    // გამოვიყენოთ გლობალური მაქსიმალური მნიშვნელობა
-    const maxValue = globalMaxValue;
+    // გამოვიყენოთ გადმოცემული maxValue
     const chartHeight = 250;
     
     let html = `
@@ -8431,8 +8524,18 @@ function renderWeeklyChart(data) {
         html += `
             <div class="bar-container" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; position: relative;">
                 <div class="bar-wrapper" style="width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; position: relative;">
-                    <div class="bar" style="width: 60%; background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-radius: 8px 8px 4px 4px; height: ${Math.max(barHeight, 4)}px; position: relative; min-height: 4px; box-shadow: 0 -2px 10px rgba(14, 165, 164, 0.3); cursor: pointer;">
-                        <span class="bar-value" style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; color: var(--accent); border: 1px solid var(--border); white-space: nowrap; opacity: 0; transition: opacity 0.2s; box-shadow: var(--shadow); z-index: 10;">${item.count}</span>
+                    <div class="bar" style="width: 60%; background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-radius: 8px 8px 4px 4px; height: ${Math.max(barHeight, 4)}px; position: relative; min-height: 4px; box-shadow: 0 -2px 10px rgba(14, 165, 164, 0.3); cursor: pointer;" 
+                         onmouseover="this.querySelector('.bar-value').style.opacity='1'"
+                         onmouseout="this.querySelector('.bar-value').style.opacity='0'">
+                        <span class="bar-value" style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); background: var(--surface); padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--accent); border: 1px solid var(--border); white-space: nowrap; opacity: 0; transition: opacity 0.2s; box-shadow: var(--shadow); z-index: 10; pointer-events: none; text-align: center;">
+                            <div>${item.count} მომხმარებელი</div>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                                ✦ რეგ: ${item.registered} | 🧑 სტუმ: ${item.guests}
+                            </div>
+                            <div style="font-size: 10px; color: var(--text-muted);">
+                                📝 პასუხი: ${item.answers}
+                            </div>
+                        </span>
                     </div>
                 </div>
                 <div class="bar-label" style="font-size: 12px; font-weight: 500; color: var(--text-muted); text-align: center; margin-top: 8px;">
@@ -8460,7 +8563,8 @@ function renderWeeklyChart(data) {
                     if (d.count === 0) return '';
                     const x = 45 + 15 + (i * ((container.offsetWidth - 120) / 6));
                     const y = 35 + (chartHeight - 50) * (1 - d.count / maxValue);
-                    return `<circle cx="${x}" cy="${y}" r="6" style="fill: var(--warning); stroke: white; stroke-width: 2; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); cursor: pointer; pointer-events: all;" onmouseover="showTooltip('${d.day}', ${d.count})" />`;
+                    return `<circle cx="${x}" cy="${y}" r="6" style="fill: var(--warning); stroke: white; stroke-width: 2; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); cursor: pointer; pointer-events: all;" 
+                                 onmouseover="showTooltip('${d.day}', ${d.count})" />`;
                 }).join('')}
             </svg>
         `;
@@ -8470,17 +8574,30 @@ function renderWeeklyChart(data) {
 }
 
 function previousWeek() {
-    // ეს ფუნქცია არაფერს აკეთებს - წინა კვირებზე გადასვლა აკრძალულია
-    console.log("წინა კვირებზე გადასვლა აკრძალულია");
-    showNotification('მხოლოდ მიმდინარე კვირის ნახვაა შესაძლებელი', false);
-    // არაფერს ვცვლით
+    if (currentWeekOffset <= -52) return; // 52 კვირაზე მეტი უკან არ ვატაროთ
+    currentWeekOffset--;
+    console.log("Previous week clicked, new offset:", currentWeekOffset);
+    
+    if (firebaseInitialized && database) {
+        loadWeeklyActivity(currentWeekOffset);
+    } else {
+        renderDemoWeeklyData(currentWeekOffset);
+    }
 }
 
 function nextWeek() {
-    // ეს ფუნქცია არაფერს აკეთებს - შემდეგ კვირებზე გადასვლა აკრძალულია
-    console.log("შემდეგ კვირებზე გადასვლა აკრძალულია");
-    showNotification('მხოლოდ მიმდინარე კვირის ნახვაა შესაძლებელი', false);
-    // არაფერს ვცვლით
+    if (currentWeekOffset >= 4) {
+        console.log("Cannot go beyond 4 weeks ahead");
+        return;
+    }
+    currentWeekOffset++;
+    console.log("Next week clicked, new offset:", currentWeekOffset);
+    
+    if (firebaseInitialized && database) {
+        loadWeeklyActivity(currentWeekOffset);
+    } else {
+        renderDemoWeeklyData(currentWeekOffset);
+    }
 }
 
 function goToCurrentWeek() {
