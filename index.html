@@ -8401,8 +8401,10 @@ async function loadWeeklyActivity(weekOffset = 0) {
             });
         }
         
-// ** შესწორება: თუ ყველა მნიშვნელობა 0-ია, მაქსიმუმი მაინც 10 იყოს **
-const localMaxValue = maxValue === 0 ? 10 : Math.max(10, Math.ceil(maxValue / 10) * 10);
+// ** მთავარი შესწორება: maxValue უნდა იყოს ზუსტად მაქსიმალური მნიშვნელობა **
+// თუ maxValue = 5, მაშინ 5-ვე მომხმარებელი იქნება 100%-ზე
+// არ ვამრგვალებთ ზემოთ, რომ ზუსტი პროპორცია იყოს
+const localMaxValue = maxValue === 0 ? 10 : maxValue;
         
         // გამოვთვალოთ სტატისტიკა
         const totalUsersWeek = chartData.reduce((sum, d) => sum + d.count, 0);
@@ -8523,10 +8525,9 @@ function renderWeeklyChart(data, maxValue) {
     html += `<div class="chart-bars" style="position: relative; height: ${chartHeight}px; margin-left: 45px; margin-right: 45px; display: flex; align-items: flex-end; justify-content: space-around; gap: 8px; z-index: 2; margin-top: 20px;">`;
 
     data.forEach((item, index) => {
-        // ბარის სიმაღლე - პროპორციული maxValue-სთან
-        // 40px არის რეზერვი ქვედა ნაწილში დღეების სახელებისთვის
+        // ** მთავარი შესწორება: ბარის სიმაღლე ზუსტად პროპორციული maxValue-სთან **
         const maxBarHeight = chartHeight - 70; // მაქსიმალური სიმაღლე
-        const barHeight = item.count > 0 ? (item.count / maxValue) * maxBarHeight : 0;
+        const barHeight = (item.count / maxValue) * maxBarHeight; // პირდაპირი პროპორცია
         
         html += `
             <div class="bar-container" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; position: relative;">
@@ -8555,12 +8556,10 @@ function renderWeeklyChart(data, maxValue) {
 
     html += `</div>`;
     
-    // 0-ის მკაფიო ხაზი (სურვილისამებრ - შეგიძლია წაშალო)
+    // 0-ის მკაფიო ხაზი
     html += `<div style="position: absolute; bottom: 40px; left: 45px; right: 45px; height: 1px; background: var(--accent); opacity: 0.3; z-index: 1; pointer-events: none;"></div>`;
 
     container.innerHTML = html;
-    
-    // დავამატოთ CSS კლასი კონტეინერისთვის
     container.style.position = 'relative';
     container.style.minHeight = '280px';
 }
